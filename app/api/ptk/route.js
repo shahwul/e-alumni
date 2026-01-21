@@ -21,12 +21,16 @@ export async function GET(request) {
     // Filter Wilayah
     const kabupaten = searchParams.get('kabupaten') || '';
     const kecamatan = searchParams.get('kecamatan') || '';
+    const kecamatanArray = kecamatan ? kecamatan.split(',') : []; // Split jadi array
     
     // Filter Spesifik Diklat (BARU) 
     const rumpunId = searchParams.get('rumpun');             // ID Topik
     const subRumpunId = searchParams.get('sub_rumpun');      // ID Sub-Topik
     const diklatId = searchParams.get('diklat_id');          // ID Diklat Spesifik
     const judulDiklat = searchParams.get('judul_diklat');    // Search Nama Diklat
+
+    const startDate = searchParams.get('start_date'); // Format: YYYY-MM-DD
+    const endDate = searchParams.get('end_date');     // Format: YYYY-MM-DD
 
     // ==========================================
     // 2. BANGUN QUERY DINAMIS
@@ -58,15 +62,34 @@ export async function GET(request) {
 
     // --- Filter 4: Wilayah ---
     if (kabupaten) {
-      baseQuery += ` AND mv.kabupaten ILIKE $${counter}`;
-      values.push(kabupaten);
+      baseQuery += ` AND UPPER(mv.kabupaten) ILIKE $${counter}`;
+      values.push(kabupaten.toUpperCase());
       counter++;
     }
 
-    if (kecamatan) {
-      baseQuery += ` AND mv.kecamatan ILIKE $${counter}`;
-      values.push(kecamatan);
-      counter++;
+    // --- Filter Kecamatan (Multi) ---
+    if (kecamatanArray.length > 0) {
+       // Logic IN clause ($1, $2, $3)
+       const placeholders = kecamatanArray.map((_, i) => `$${counter + i}`).join(',');
+       baseQuery += ` AND UPPER(mv.kecamatan) IN (${placeholders})`;
+       kecamatanArray.forEach(k => values.push(k.toUpperCase()));
+       counter += kecamatanArray.length;
+    }
+
+    if (startDate && endDate) {
+      baseQuery += ` 
+        AND EXISTS (
+          SELECT 1 FROM data_alumni da
+          JOIN master_diklat md ON da.id_diklat = md.id
+          WHERE da.nik = mv.nik 
+          AND da.status_kelulusan = 'Lulus'
+          AND md.start_date >= $${counter} 
+          AND md.end_date <= $${counter + 1}
+        )
+      `;
+      values.push(startDate); // counter
+      values.push(endDate);   // counter + 1
+      counter += 2;
     }
 
     // --- Filter 5: Status Pelatihan ---
