@@ -1,65 +1,66 @@
-import Image from "next/image";
+// app/page.js (atau app/dashboard/page.js)
+import pool from '@/lib/db';
 
-export default function Home() {
+// 1. Fungsi buat ambil data (Langsung Query SQL)
+async function getDashboardData() {
+  try {
+    // Query ke Materialized View yang udah kita buat
+    const query = `
+      SELECT 
+        kabupaten, 
+        kecamatan, 
+        COUNT(nik) as total_guru, 
+        SUM(case when is_sudah_pelatihan then 1 else 0 end) as sudah_latih
+      FROM mv_dashboard_analitik
+      GROUP BY kabupaten, kecamatan
+      ORDER BY kabupaten ASC
+      LIMIT 10
+    `;
+    
+    const res = await pool.query(query);
+    return res.rows; // Data ada di sini
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}
+
+// 2. Component Utama (Async)
+export default async function DashboardPage() {
+  const dataWilayah = await getDashboardData();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main style={{ padding: '2rem' }}>
+      <h1>Dashboard Sebaran Guru & Pelatihan</h1>
+      
+      {/* Contoh Tabel Sederhana */}
+      <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <thead>
+          <tr>
+            <th>Kabupaten</th>
+            <th>Kecamatan</th>
+            <th>Total Guru</th>
+            <th>Sudah Pelatihan</th>
+            <th>Progress (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dataWilayah.map((row, index) => {
+            // Hitung persentase manual di JS
+            const persentase = ((row.sudah_latih / row.total_guru) * 100).toFixed(1);
+            
+            return (
+              <tr key={index}>
+                <td>{row.kabupaten}</td>
+                <td>{row.kecamatan}</td>
+                <td>{row.total_guru}</td>
+                <td>{row.sudah_latih}</td>
+                <td>{persentase}%</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </main>
   );
 }
