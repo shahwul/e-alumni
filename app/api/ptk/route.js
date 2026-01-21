@@ -12,19 +12,25 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 10;
     const offset = (page - 1) * limit;
 
+    // Filter Basic
     const search = searchParams.get('search') || '';         // Nama Guru / NIK
     const sekolah = searchParams.get('sekolah') || '';       // Nama Sekolah
     const jenjang = searchParams.get('jenjang') || '';       // SD, SMP, SMA
     const status = searchParams.get('status') || '';         // 'sudah' atau 'belum'
     
-    // Filter Khusus (Hanya diproses jika status = 'sudah')
-    const rumpunId = searchParams.get('rumpun');             // ID Topik (Ref_Topik)
-    const subRumpunId = searchParams.get('sub_rumpun');      // ID Sub-Topik (Ref_SubTopik)
+    // Filter Wilayah
+    const kabupaten = searchParams.get('kabupaten') || '';
+    const kecamatan = searchParams.get('kecamatan') || '';
+    
+    // Filter Spesifik Diklat (BARU) 
+    const rumpunId = searchParams.get('rumpun');             // ID Topik
+    const subRumpunId = searchParams.get('sub_rumpun');      // ID Sub-Topik
+    const diklatId = searchParams.get('diklat_id');          // ID Diklat Spesifik
+    const judulDiklat = searchParams.get('judul_diklat');    // Search Nama Diklat
 
     // ==========================================
     // 2. BANGUN QUERY DINAMIS
     // ==========================================
-    // Kita mulai dari Materialized View (Data Utama)
     let baseQuery = `FROM mv_dashboard_analitik mv WHERE 1=1`;
     const values = [];
     let counter = 1;
@@ -43,75 +49,111 @@ export async function GET(request) {
       counter++;
     }
 
-    // --- Filter 3: Jenjang (Bentuk Pendidikan) ---
+    // --- Filter 3: Jenjang ---
     if (jenjang) {
-      baseQuery += ` AND mv.bentuk_pendidikan = $${counter}`;
+      baseQuery += ` AND mv.bentuk_pendidikan ILIKE $${counter}`;
       values.push(jenjang);
       counter++;
     }
 
-    // --- Filter 4: Status Pelatihan (Sudah/Belum) ---
+    // --- Filter 4: Wilayah ---
+    if (kabupaten) {
+      baseQuery += ` AND mv.kabupaten ILIKE $${counter}`;
+      values.push(kabupaten);
+      counter++;
+    }
+
+    if (kecamatan) {
+      baseQuery += ` AND mv.kecamatan ILIKE $${counter}`;
+      values.push(kecamatan);
+      counter++;
+    }
+
+    // --- Filter 5: Status Pelatihan ---
     if (status === 'sudah') {
       baseQuery += ` AND mv.is_sudah_pelatihan = TRUE`;
-      
-      // === LOGIC FILTER RUMPUN (Advanced) ===
-      // Filter ini hanya jalan kalau user sudah pernah pelatihan.
-      // Kita harus "mengintip" ke tabel history (data_alumni & master_diklat)
-      // menggunakan teknik EXISTS (Subquery) agar performa tetap cepat.
-      
-      if (rumpunId) {
-        // Cari guru yang PERNAH ikut diklat dengan topik ID sekian
-        baseQuery += ` 
-          AND EXISTS (
-            SELECT 1 FROM data_alumni da
-            JOIN master_diklat md ON da.id_diklat = md.id
-            JOIN ref_sub_topik rst ON md.sub_topic_id = rst.id
-            WHERE da.nik = mv.nik 
-            AND da.status_kelulusan = 'Lulus'
-            AND rst.topic_id = $${counter}
-          )
-        `;
-        values.push(rumpunId);
-        counter++;
-      }
-
-      if (subRumpunId) {
-        // Cari guru yang PERNAH ikut diklat dengan sub-topik ID sekian
-        baseQuery += ` 
-          AND EXISTS (
-            SELECT 1 FROM data_alumni da
-            JOIN master_diklat md ON da.id_diklat = md.id
-            WHERE da.nik = mv.nik 
-            AND da.status_kelulusan = 'Lulus'
-            AND md.sub_topic_id = $${counter}
-          )
-        `;
-        values.push(subRumpunId);
-        counter++;
-      }
-
     } else if (status === 'belum') {
       baseQuery += ` AND mv.is_sudah_pelatihan = FALSE`;
     }
 
+    // --- Filter 6: Rumpun / Topik ---
+    if (rumpunId) {
+      baseQuery += ` 
+        AND EXISTS (
+          SELECT 1 FROM data_alumni da
+          JOIN master_diklat md ON da.id_diklat = md.id
+          JOIN ref_sub_topik rst ON md.sub_topic_id = rst.id
+          WHERE da.nik = mv.nik 
+          AND da.status_kelulusan = 'Lulus'
+          AND rst.topic_id = $${counter}
+        )
+      `;
+      values.push(rumpunId);
+      counter++;
+    }
+
+    if (subRumpunId) {
+      baseQuery += ` 
+        AND EXISTS (
+          SELECT 1 FROM data_alumni da
+          JOIN master_diklat md ON da.id_diklat = md.id
+          WHERE da.nik = mv.nik 
+          AND da.status_kelulusan = 'Lulus'
+          AND md.sub_topic_id = $${counter}
+        )
+      `;
+      values.push(subRumpunId);
+      counter++;
+    }
+
+    // --- Filter 7: Spesifik Diklat (BARU) ---
+    // Cari guru yang pernah ikut diklat dengan ID tertentu
+    if (diklatId) {
+      baseQuery += ` 
+        AND EXISTS (
+          SELECT 1 FROM data_alumni da
+          WHERE da.nik = mv.nik 
+          AND da.status_kelulusan = 'Lulus'
+          AND da.id_diklat = $${counter}
+        )
+      `;
+      values.push(diklatId);
+      counter++;
+    }
+
+    // Cari guru yang pernah ikut diklat dengan JUDUL mengandung kata tertentu
+    if (judulDiklat) {
+      baseQuery += ` 
+        AND EXISTS (
+          SELECT 1 FROM data_alumni da
+          JOIN master_diklat md ON da.id_diklat = md.id
+          WHERE da.nik = mv.nik 
+          AND da.status_kelulusan = 'Lulus'
+          AND md.title ILIKE $${counter}
+        )
+      `;
+      values.push(`%${judulDiklat}%`);
+      counter++;
+    }
+
     // ==========================================
-    // 3. EKSEKUSI QUERY (Count & Data)
+    // 3. EKSEKUSI QUERY
     // ==========================================
     
-    // A. Hitung Total Data (Untuk Pagination)
+    // Hitung Total (Pagination)
     const countSql = `SELECT COUNT(*) as total ${baseQuery}`;
     const countRes = await pool.query(countSql, values);
     const totalData = parseInt(countRes.rows[0].total);
     const totalPage = Math.ceil(totalData / limit);
 
-    // B. Ambil Data Sebenarnya
-    // Kita tambahkan kolom detail
+    // Ambil Data
     const dataSql = `
       SELECT 
         mv.nik, 
         mv.nama_ptk, 
         mv.nama_sekolah, 
         mv.bentuk_pendidikan as jenjang,
+        mv.kabupaten,
         mv.kecamatan, 
         mv.status_kepegawaian, 
         mv.is_sudah_pelatihan, 
@@ -121,18 +163,11 @@ export async function GET(request) {
       LIMIT $${counter} OFFSET $${counter + 1}
     `;
     
-    // Tambahkan parameter limit & offset
     const dataValues = [...values, limit, offset];
-    
     const res = await pool.query(dataSql, dataValues);
 
     return NextResponse.json({
-      meta: {
-        page,
-        limit,
-        totalData,
-        totalPage
-      },
+      meta: { page, limit, totalData, totalPage },
       data: res.rows
     });
 
