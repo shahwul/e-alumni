@@ -100,13 +100,60 @@ export default function DataPTKPage() {
         setLoading(false);
       }
     }
-
     const timeout = setTimeout(() => {
       fetchData();
     }, 500);
 
     return () => clearTimeout(timeout);
   }, [search, activeFilters, sorting]);
+
+   const handleExport = () => {
+    // 1. Siapkan wadah parameter URL
+    const params = new URLSearchParams();
+    
+    // 2. Masukkan parameter Search (kalau ada isinya)
+    if (search) params.append("search", search);
+    
+    // 3. Masukkan parameter Filter Wilayah (Array -> Comma Separated)
+    if (activeFilters.kabupaten.length > 0) {
+        params.append("kabupaten", activeFilters.kabupaten.join(","));
+    }
+    if (activeFilters.kecamatan.length > 0) {
+        params.append("kecamatan", activeFilters.kecamatan.join(","));
+    }
+    
+    // 4. Masukkan Filter Dropdown (Jenjang, Status, Sekolah)
+    if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
+    if (activeFilters.status) params.append("status", activeFilters.status);
+    if (activeFilters.sekolah) params.append("sekolah", activeFilters.sekolah);
+    
+    // 5. Masukkan Filter Diklat (Judul, Rumpun)
+    if (activeFilters.judul_diklat) params.append("judul_diklat", activeFilters.judul_diklat);
+    if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") {
+        params.append("rumpun", activeFilters.rumpun);
+    }
+    if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL") {
+        params.append("sub_rumpun", activeFilters.sub_rumpun);
+    }
+    
+    // 6. Masukkan Filter Tanggal (Format dulu ke YYYY-MM-DD)
+    if (activeFilters.dateRange?.from) {
+      const startDateStr = format(activeFilters.dateRange.from, "yyyy-MM-dd");
+      params.append("start_date", startDateStr);
+      
+      // Kalau user cuma pilih start date (1 hari), end date disamakan
+      const endDateStr = activeFilters.dateRange.to 
+          ? format(activeFilters.dateRange.to, "yyyy-MM-dd") 
+          : startDateStr;
+          
+      params.append("end_date", endDateStr);
+    }
+
+    // 7. Redirect Browser ke URL API (Trigger Download)
+    // Browser akan otomatis download file .xlsx karena header API-nya attachment
+    window.location.href = `/api/ptk/export?${params.toString()}`;
+  };
+
 
   return (
     <div className="space-y-6 p-1">
@@ -122,7 +169,7 @@ export default function DataPTKPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-           <Button variant="outline" className="gap-2">
+           <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download size={16} /> Export
           </Button>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
