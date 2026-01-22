@@ -1,16 +1,61 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Copy, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DetailPTKDialog } from "./DetailPTKDialog"; // Pastikan file ini ada
 
+// --- KOMPONEN KHUSUS UNTUK CELL ACTIONS ---
+// Kita butuh komponen terpisah agar bisa pakai useState untuk Dialog
+const ActionCell = ({ row }) => {
+  const ptk = row.original;
+  const [openDetail, setOpenDetail] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+          
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(ptk.nik)}>
+            <Copy className="mr-2 h-4 w-4" /> Salin NIK
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
+          
+          {/* Tombol Trigger Popup Detail */}
+          <DropdownMenuItem onSelect={() => setOpenDetail(true)}>
+             <Eye className="mr-2 h-4 w-4" /> Lihat Detail History
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Popup Dialog-nya dirender di sini */}
+      <DetailPTKDialog 
+        open={openDetail} 
+        onOpenChange={setOpenDetail} 
+        nik={ptk.nik} 
+      />
+    </>
+  );
+};
+
+// --- DEFINISI KOLOM ---
 export const columns = [
   {
     accessorKey: "nama_ptk",
@@ -63,25 +108,7 @@ export const columns = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const ptk = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(ptk.nik)}>
-              Salin NIK
-            </DropdownMenuItem>
-            <DropdownMenuItem>Lihat Detail History</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    // Panggil komponen ActionCell yang kita buat di atas
+    cell: ({ row }) => <ActionCell row={row} />,
   },
 ];

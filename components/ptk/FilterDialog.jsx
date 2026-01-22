@@ -14,16 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Filter, Check, ChevronsUpDown, XCircle, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, sub } from "date-fns";
 import { Calendar } from "@/components/ui/calendar"; 
 import { id } from "date-fns/locale";
 
 // ID Rumpun harus sesuai database (ref_topik)
 const LIST_RUMPUN = [
   { id: "1", label: "Substansi" },
-  { id: "2", label: "Kelompok Umum" },
-  { id: "3", label: "Manajerial" },
-  { id: "4", label: "Penunjang" },
+  { id: "2", label: "Pedagogi" },
+  { id: "3", label: "TIK" },
+  { id: "4", label: "Teknis" },
 ];
 
 export function FilterDialog({ onApplyFilter }) {
@@ -31,13 +31,14 @@ export function FilterDialog({ onApplyFilter }) {
   
   // --- STATE UTAMA FILTER ---
   const [filters, setFilters] = useState({
-    kabupaten: "",
+    kabupaten: [],
     kecamatan: [],
     jenjang: "",
     status: "",
     sekolah: "",
     judul_diklat: "",
     rumpun: "",
+    sub_rumpun: "",
     dateRange: { from: undefined, to: undefined }
   });
 
@@ -45,6 +46,7 @@ export function FilterDialog({ onApplyFilter }) {
   const [dataWilayah, setDataWilayah] = useState([]); // Data dari API Wilayah
   
   // State Popover & Search
+  const [openKabupaten, setOpenKabupaten] = useState(false);
   const [openKecamatan, setOpenKecamatan] = useState(false);
   
   const [openSekolah, setOpenSekolah] = useState(false);
@@ -56,6 +58,7 @@ export function FilterDialog({ onApplyFilter }) {
   const [diklatOptions, setDiklatOptions] = useState([]);
   const [diklatSearch, setDiklatSearch] = useState("");
   const [loadingDiklat, setLoadingDiklat] = useState(false);
+  const [subRumpunOptions, setSubRumpunOptions] = useState([]);
 
   // 1. FETCH WILAYAH SAAT MOUNT (GANTI HARDCODE)
   useEffect(() => {
@@ -88,23 +91,92 @@ export function FilterDialog({ onApplyFilter }) {
 
   // 3. SEARCH DIKLAT (AUTOFILL)
   useEffect(() => {
-    if (!diklatSearch) { setDiklatOptions([]); return; }
+    // Kalau input kosong, reset opsi
+    if (!diklatSearch) { 
+        setDiklatOptions([]); 
+        return; 
+    }
 
     const timer = setTimeout(async () => {
       if (diklatSearch.length > 2) {
         setLoadingDiklat(true);
         try {
-          const res = await fetch(`/api/diklat/search?q=${diklatSearch}`);
-          if(res.ok) setDiklatOptions(await res.json());
-        } catch (e) { console.error(e); }
-        finally { setLoadingDiklat(false); }
+          // Buat URL Params dinamis
+          const params = new URLSearchParams();
+          params.append("q", diklatSearch);
+
+          // Kalau user udah milih Rumpun, kirim ID-nya
+          if (filters.rumpun && filters.rumpun !== "ALL") {
+             params.append("topic_id", filters.rumpun);
+          }
+          
+          // Kalau user udah milih Sub Rumpun, kirim ID-nya
+          if (filters.sub_rumpun && filters.sub_rumpun !== "ALL") {
+             params.append("sub_topic_id", filters.sub_rumpun);
+          }
+
+          const res = await fetch(`/api/diklat/search?${params.toString()}`);
+          
+          if(res.ok) {
+              setDiklatOptions(await res.json());
+          }
+        } catch (e) { 
+            console.error(e); 
+        } finally { 
+            setLoadingDiklat(false); 
+        }
       }
     }, 500);
+
     return () => clearTimeout(timer);
-  }, [diklatSearch]);
+
+  }, [diklatSearch, filters.rumpun, filters.sub_rumpun]);
+
+  // Fetch Sub Rumpun kalau Rumpun dipilih
+  useEffect(() => {
+    // Kalau Rumpun kosong/ALL, reset Sub Rumpun
+    if (!filters.rumpun || filters.rumpun === "ALL") {
+        setSubRumpunOptions([]);
+        setFilters(prev => ({ ...prev, sub_rumpun: "" }));
+        return;
+    }
+
+    async function fetchSub() {
+      try {
+        const res = await fetch(`/api/ref/sub-rumpun?topic_id=${filters.rumpun}`);
+        if (res.ok) {
+            setSubRumpunOptions(await res.json());
+        }
+      } catch (e) { console.error(e); }
+    }
+    
+    // Reset pilihan sub_rumpun saat induknya berubah, lalu fetch baru
+    setFilters(prev => ({ ...prev, sub_rumpun: "" }));
+    fetchSub();
+
+  }, [filters.rumpun]);
 
   // --- HANDLER FUNCTIONS ---
   
+  // 1. Toggle Kabupaten (Logic Baru Multi Select)
+  const toggleKabupaten = (namaKab) => {
+    setFilters((prev) => {
+      const current = prev.kabupaten;
+      const isSelected = current.includes(namaKab);
+      let newKabupaten;
+      
+      if (isSelected) {
+        newKabupaten = current.filter((k) => k !== namaKab);
+      } else {
+        newKabupaten = [...current, namaKab];
+      }
+
+      // Opsional: Kalau Kabupaten di-uncheck, kecamatan di dalamnya mau dihapus gak?
+      // Kalau mau simpel, biarin aja. Nanti user hapus sendiri.
+      return { ...prev, kabupaten: newKabupaten };
+    });
+  };
+
   const toggleKecamatan = (namaKecamatan) => {
     setFilters((prev) => {
       const current = prev.kecamatan;
@@ -118,8 +190,8 @@ export function FilterDialog({ onApplyFilter }) {
 
   const handleReset = () => {
     const empty = {
-      kabupaten: "", kecamatan: [], jenjang: "", status: "", sekolah: "",
-      judul_diklat: "", rumpun: "", dateRange: { from: undefined, to: undefined }
+      kabupaten: [], kecamatan: [], jenjang: "", status: "", sekolah: "",
+      judul_diklat: "", rumpun: "", sub_rumpun: "", dateRange: { from: undefined, to: undefined }
     };
     setFilters(empty);
     onApplyFilter(empty);
@@ -132,15 +204,15 @@ export function FilterDialog({ onApplyFilter }) {
 
   // Logic: Filter opsi kecamatan berdasarkan kabupaten yang dipilih
   // Jika 'ALL' atau kosong, tampilkan semua grouped data.
-  const displayedWilayah = filters.kabupaten 
-    ? dataWilayah.filter(w => w.kabupaten === filters.kabupaten)
+    const displayedWilayah = filters.kabupaten.length > 0
+    ? dataWilayah.filter(w => filters.kabupaten.includes(w.kabupaten))
     : dataWilayah;
 
-  // Hitung jumlah filter aktif
-  const activeCount = [
-    filters.kabupaten, filters.jenjang, filters.status, 
-    filters.sekolah, filters.judul_diklat, filters.rumpun, filters.dateRange?.from
-  ].filter(Boolean).length + filters.kecamatan.length;
+  // Hitung jumlah aktif
+     const activeCount = [
+     filters.jenjang, filters.status, filters.sekolah, 
+     filters.judul_diklat, filters.rumpun, filters.sub_rumpun, filters.dateRange?.from
+    ].filter(Boolean).length + filters.kecamatan.length + filters.kabupaten.length;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -170,36 +242,82 @@ export function FilterDialog({ onApplyFilter }) {
             </h4>
             
             <div className="flex flex-col gap-4">
-              {/* Kabupaten Dropdown (Dinamis dari API) */}
+              {/* 1. KABUPATEN (MULTI SELECT) */}
               <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Kabupaten/Kota</Label>
-                <Select 
-                  value={filters.kabupaten} 
-                  onValueChange={(val) => {
-                    // Reset kecamatan saat ganti kabupaten biar konsisten
-                    setFilters({...filters, kabupaten: val === "ALL" ? "" : val, kecamatan: []})
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Pilih Kabupaten..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Kabupaten</SelectItem>
-                    {dataWilayah.map((w) => (
-                      <SelectItem key={w.kabupaten} value={w.kabupaten}>{w.kabupaten}</SelectItem>
+                <Label className="text-xs text-slate-500">Kabupaten/Kota (Bisa pilih banyak)</Label>
+                <Popover open={openKabupaten} onOpenChange={setOpenKabupaten}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between px-3 font-normal text-sm">
+                       <span className="truncate">
+                        {filters.kabupaten.length === 0 ? "Semua Kabupaten" : `${filters.kabupaten.length} Kabupaten Terpilih`}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[450px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Cari kabupaten..." />
+                      <CommandList>
+                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                        <CommandGroup>
+                           {/* Loop Data Wilayah ambil Kabupatennya aja */}
+                           {dataWilayah.map((w) => (
+                             <CommandItem key={w.kabupaten} value={w.kabupaten} onSelect={() => toggleKabupaten(w.kabupaten)}>
+                                <div className={cn("mr-2 flex h-4 w-4 items-center justify-center border rounded-sm", 
+                                   filters.kabupaten.includes(w.kabupaten) ? "bg-primary border-primary text-primary-foreground" : "opacity-50 border-slate-400"
+                                )}>
+                                   <Check className={cn("h-3 w-3", filters.kabupaten.includes(w.kabupaten) ? "opacity-100" : "opacity-0")} />
+                                </div>
+                                {w.kabupaten}
+                             </CommandItem>
+                           ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Badge Kabupaten */}
+                {filters.kabupaten.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {filters.kabupaten.map((k) => (
+                      <Badge 
+                        key={k} 
+                        variant="secondary" 
+                        className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 pointer-events-auto pr-1" // Tambah pointer-events-auto & padding kanan
+                      >
+                        {k} 
+                        <button
+                          className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Stop klik biar gak nembus
+                            toggleKabupaten(k);
+                          }}
+                        >
+                          <XCircle className="h-3 w-3 text-blue-400 hover:text-red-500" />
+                        </button>
+                      </Badge>
                     ))}
-                  </SelectContent>
-                </Select>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-5 text-[10px] text-red-500 hover:bg-red-50" 
+                        onClick={() => setFilters(prev => ({...prev, kabupaten: []}))}
+                    >
+                        Reset Kab
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Kecamatan Multi-Select (Grouped) */}
+{/* 2. KECAMATAN (MULTI SELECT - DEPENDENT) */}
               <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Kecamatan (Multi-select)</Label>
+                <Label className="text-xs text-slate-500">Kecamatan</Label>
                 <Popover open={openKecamatan} onOpenChange={setOpenKecamatan}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" className="w-full justify-between px-3 font-normal text-sm">
                       <span className="truncate">
-                        {filters.kecamatan.length === 0 ? "Pilih Kecamatan..." : `${filters.kecamatan.length} Terpilih`}
+                        {filters.kecamatan.length === 0 ? "Pilih Kecamatan..." : `${filters.kecamatan.length} Kecamatan Terpilih`}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
@@ -210,6 +328,7 @@ export function FilterDialog({ onApplyFilter }) {
                       <CommandList>
                         <CommandEmpty>Tidak ditemukan.</CommandEmpty>
                         <div className="max-h-[300px] overflow-y-auto">
+                            {/* Loop displayedWilayah (yang sudah terfilter berdasarkan kabupaten yg dipilih) */}
                             {displayedWilayah.map((group) => (
                               <CommandGroup key={group.kabupaten} heading={group.kabupaten}>
                                 {group.kecamatan?.map((kec) => (
@@ -229,19 +348,40 @@ export function FilterDialog({ onApplyFilter }) {
                     </Command>
                   </PopoverContent>
                 </Popover>
+
+                {/* Badge Kecamatan */}
+                {filters.kecamatan.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {filters.kecamatan.map((k) => (
+                      <Badge 
+                        key={k} 
+                        variant="secondary" 
+                        className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 pointer-events-auto pr-1"
+                      >
+                        {k} 
+                        <button
+                          className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation(); 
+                            toggleKecamatan(k);
+                          }}
+                        >
+                          <XCircle className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-5 text-[10px] text-red-500 hover:bg-red-50" 
+                        onClick={() => setFilters(prev => ({...prev, kecamatan: []}))}
+                    >
+                        Reset Kec
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Badge List Kecamatan */}
-              {filters.kecamatan.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {filters.kecamatan.map((k) => (
-                    <Badge key={k} variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 hover:bg-blue-100 gap-1 border border-blue-200">
-                      {k} <XCircle className="h-3 w-3 cursor-pointer text-blue-400 hover:text-red-500" onClick={() => toggleKecamatan(k)} />
-                    </Badge>
-                  ))}
-                  <Button variant="ghost" size="sm" className="h-5 text-[10px] text-red-500 hover:bg-red-50" onClick={() => setFilters(prev => ({...prev, kecamatan: []}))}>Clear</Button>
-                </div>
-              )}
             </div>
           </div>
 
@@ -258,9 +398,10 @@ export function FilterDialog({ onApplyFilter }) {
                   <Select value={filters.jenjang} onValueChange={(val) => setFilters({...filters, jenjang: val === "ALL" ? "" : val})}>
                     <SelectTrigger><SelectValue placeholder="Semua" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ALL">Semua</SelectItem>
+                      <SelectItem value="ALL">Semua</SelectItem><SelectItem value="PAUD">PAUD</SelectItem> 
                       <SelectItem value="SD">SD</SelectItem> <SelectItem value="SMP">SMP</SelectItem> 
-                      <SelectItem value="SMA">SMA</SelectItem> <SelectItem value="SMK">SMK</SelectItem> <SelectItem value="SLB">SLB</SelectItem>
+                      <SelectItem value="SMA">SMA</SelectItem> <SelectItem value="SMK">SMK</SelectItem> <SelectItem value="Semua Jenjang">Semua Jenjang</SelectItem>
+                      <SelectItem value="Lainnya">Lainnya</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -366,16 +507,45 @@ export function FilterDialog({ onApplyFilter }) {
                    </Popover>
               </div>
   
-              {/* Rumpun */}
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="text-xs text-slate-500">Rumpun / Topik</Label>
-                <Select value={filters.rumpun} onValueChange={(val) => setFilters({...filters, rumpun: val === "ALL" ? "" : val})}>
-                  <SelectTrigger><SelectValue placeholder="Pilih Rumpun..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Rumpun</SelectItem>
-                    {LIST_RUMPUN.map((r) => (<SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>))}
-                  </SelectContent>
-                </Select>
+              {/* Rumpun & Sub Rumpun */}
+              <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                
+                {/* RUMPUN (INDUK) */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Rumpun / Topik</Label>
+                  <Select 
+                    value={filters.rumpun} 
+                    onValueChange={(val) => setFilters({...filters, rumpun: val === "ALL" ? "" : val})}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Pilih..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Semua</SelectItem>
+                      {LIST_RUMPUN.map((r) => (<SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* SUB RUMPUN (ANAK) */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Sub Rumpun</Label>
+                  <Select 
+                    disabled={!filters.rumpun || filters.rumpun === "ALL"} // Disable kalau belum pilih induk
+                    value={filters.sub_rumpun} 
+                    onValueChange={(val) => setFilters({...filters, sub_rumpun: val === "ALL" ? "" : val})}
+                  >
+                    <SelectTrigger>
+                        <SelectValue placeholder={filters.rumpun ? "Pilih Sub..." : "-"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Semua Sub</SelectItem>
+                      {subRumpunOptions.map((sub) => (
+                        // Pastikan value diconvert ke String biar aman
+                        <SelectItem key={sub.id} value={String(sub.id)}>{sub.sub_topic_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
               </div>
             </div>
           </div>

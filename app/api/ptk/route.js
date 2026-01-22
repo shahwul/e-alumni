@@ -21,6 +21,7 @@ export async function GET(request) {
     // Filter Wilayah
     const kabupaten = searchParams.get('kabupaten') || '';
     const kecamatan = searchParams.get('kecamatan') || '';
+    const kabupatenArray = kabupaten ? kabupaten.split(',') : []; // Split jadi array
     const kecamatanArray = kecamatan ? kecamatan.split(',') : []; // Split jadi array
     
     // Filter Spesifik Diklat (BARU) 
@@ -61,10 +62,12 @@ export async function GET(request) {
     }
 
     // --- Filter 4: Wilayah ---
-    if (kabupaten) {
-      baseQuery += ` AND UPPER(mv.kabupaten) ILIKE $${counter}`;
-      values.push(kabupaten.toUpperCase());
-      counter++;
+    if (kabupatenArray.length > 0) {
+       // Logic IN clause ($1, $2, $3)
+       const placeholders = kabupatenArray.map((_, i) => `$${counter + i}`).join(',');
+        baseQuery += ` AND UPPER(mv.kabupaten) IN (${placeholders})`;
+        kabupatenArray.forEach(k => values.push(k.toUpperCase()));
+        counter += kabupatenArray.length;
     }
 
     // --- Filter Kecamatan (Multi) ---
