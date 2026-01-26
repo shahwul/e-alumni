@@ -11,7 +11,7 @@ export const columns = (onViewPeserta) => [
     accessorKey: "title",
     header: "Judul Diklat",
     cell: ({ row }) => (
-        <div className="max-w-[300px]">
+        <div className="max-w-[500px]">
             <div className="font-semibold text-slate-800 line-clamp-2">{row.original.title}</div>
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
                <span className="bg-slate-100 px-1.5 py-0.5 rounded border">{row.original.rumpun || "Umum"}</span>
