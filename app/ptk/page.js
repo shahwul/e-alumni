@@ -33,6 +33,7 @@ export default function DataPTKPage() {
     judul_diklat: "",
     rumpun: "",
     sub_rumpun: "",
+    mode_filter: "history",
     dateRange: { from: undefined, to: undefined }
   });
 
@@ -55,6 +56,9 @@ export default function DataPTKPage() {
         if (activeFilters.judul_diklat) params.append("judul_diklat", activeFilters.judul_diklat);
         if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") params.append("rumpun", activeFilters.rumpun);
         if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL") params.append("sub_rumpun", activeFilters.sub_rumpun);
+        if (activeFilters.mode_filter) {
+            params.append("mode_filter", activeFilters.mode_filter);
+        }
         
         if (activeFilters.dateRange?.from) {
           const startDateStr = format(activeFilters.dateRange.from, "yyyy-MM-dd");
@@ -127,8 +131,16 @@ export default function DataPTKPage() {
     if (activeFilters.status) params.append("status", activeFilters.status);
     if (activeFilters.sekolah) params.append("sekolah", activeFilters.sekolah);
     
-    // 5. Masukkan Filter Diklat (Judul, Rumpun)
-    if (activeFilters.judul_diklat) params.append("judul_diklat", activeFilters.judul_diklat);
+    // Handle Array Judul Diklat (Join pakai separator aman '||')
+    if (activeFilters.judul_diklat && activeFilters.judul_diklat.length > 0) {
+        params.append("judul_diklat", activeFilters.judul_diklat.join("||"));
+    }
+    
+    // Kirim Mode Filter
+    if (activeFilters.mode_filter) {
+        params.append("mode_filter", activeFilters.mode_filter);
+    }
+
     if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") {
         params.append("rumpun", activeFilters.rumpun);
     }

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
 export async function GET(request, { params }) {
-  const { id } = params; // ID Diklat
+  // PERBAIKAN: Tambahkan 'await' sebelum 'params'
+  const { id } = await params; 
 
   try {
     const query = `
@@ -23,6 +24,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(res.rows);
 
   } catch (error) {
+    console.error("Error API Peserta:", error);
     return NextResponse.json({ error: 'Gagal ambil peserta' }, { status: 500 });
   }
 }

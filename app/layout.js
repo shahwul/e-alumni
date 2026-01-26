@@ -2,6 +2,7 @@
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import 'leaflet/dist/leaflet.css';
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
