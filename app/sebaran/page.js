@@ -13,6 +13,12 @@ const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.Map
 const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
 import "leaflet/dist/leaflet.css";
 
+const YOGYA_BOUNDS = [
+  [-8.20, 110.00], // Southwest
+  [-7.50, 110.80], // Northeast
+];
+
+
 // --- KONSTANTA & HELPER ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#a4de6c'];
 
@@ -64,7 +70,8 @@ const ChartCard = ({ title, children }) => (
 );
 
 // --- KOMPONEN DATA SECTION ---
-const DataSection = ({ selectedKab, selectedKec, selectedYear, kabupatenName }) => {
+// data fetches here
+const DataSection = ({ selectedKab, selectedKec, selectedYear, kabupatenName }) => { 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -102,6 +109,7 @@ const DataSection = ({ selectedKab, selectedKec, selectedYear, kabupatenName }) 
   const triwulanData = useMemo(() => data?.trenTriwulan?.map(d => ({...d, alumni: Number(d.alumni)})) || [], [data]);
   const tahunanData = useMemo(() => data?.trenTahunan?.map(d => ({...d, alumni: Number(d.alumni)})) || [], [data]);
 
+  // Tooltip for stat hover 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0];
@@ -313,7 +321,14 @@ export default function DashboardContent() {
           <div className="absolute top-3 left-3 z-[400] bg-white/90 backdrop-blur px-3 py-1.5 rounded shadow-sm border border-slate-200"><span className="text-sm font-bold">Peta Yogyakarta</span></div>
           <div className="w-full h-full bg-slate-200">
              {geoJsonData ? (
-                <MapContainer center={[-7.88, 110.45]} zoom={10} className="w-full h-full z-0" zoomControl={false}>
+                <MapContainer   center={[-7.88, 110.45]}
+  zoom={10}
+  minZoom={9}
+  maxZoom={13}
+  maxBounds={YOGYA_BOUNDS}
+  maxBoundsViscosity={1.0}
+  className="w-full h-full z-0"
+  zoomControl={false}>
                   <GeoJSON key={JSON.stringify(geoJsonData) + selectedKab + selectedKec + wilayahData.length} data={geoJsonData} style={mapStyle} onEachFeature={onEachFeature} />
                 </MapContainer>
              ) : (<div className="flex items-center justify-center h-full text-slate-400">Memuat Peta...</div>)}
