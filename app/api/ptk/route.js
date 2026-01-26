@@ -21,7 +21,8 @@ export async function GET(request) {
     const kecamatanArray = kecamatan ? kecamatan.split(',') : []; 
     
     const rumpunId = searchParams.get('rumpun');             
-    const subRumpunId = searchParams.get('sub_rumpun');      
+    const subRumpunId = searchParams.get('sub_rumpun');
+    const kategoriId = searchParams.get('kategori_id');      
     
     const judulDiklatRaw = searchParams.get('judul_diklat'); 
     let judulDiklatArray = [];
@@ -115,6 +116,12 @@ export async function GET(request) {
       const clause = ` AND mv.sub_topic_id = $${counter}`;
       baseQuery += clause; countQuery += clause;
       values.push(subRumpunId); counter++;
+    }
+
+    if (kategoriId && kategoriId !== 'ALL') {
+      const clause = ` AND mv.kategori_id = $${counter}`;
+      baseQuery += clause; countQuery += clause;
+      values.push(kategoriId); counter++;
     }
 
     // ============================================================

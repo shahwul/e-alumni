@@ -412,7 +412,7 @@ export function FilterDialog({ onApplyFilter }) {
                 </div>
              </div>
 
-{/* Info Box */}
+            {/* Info Box */}
              <div className={cn("p-3 rounded-md text-xs border flex items-start gap-2", 
                 filters.mode_filter === 'eligible' ? "bg-green-50 border-green-200 text-green-800" : "bg-blue-50 border-blue-200 text-blue-800"
              )}>

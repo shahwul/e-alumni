@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
   Map, 
@@ -33,6 +34,8 @@ function SidebarItem({ icon, label, active = false, onClick }) {
 
 // --- LAYOUT UTAMA ---
 export default function DashboardLayout({ children }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isDatabaseOpen, setDatabaseOpen] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(true); // Buat mobile responsive
 
@@ -57,9 +60,9 @@ export default function DashboardLayout({ children }) {
 
         {/* Menu Items */}
         <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-700">
-          <SidebarItem icon={<LayoutDashboard size={18} />} label="Beranda" />
-          <SidebarItem icon={<Map size={18} />} label="Sebaran & Infografis" />
-          <SidebarItem icon={<FileInput size={18} />} label="Input Data" />
+          <SidebarItem icon={<LayoutDashboard size={18} />} label="Beranda" active={pathname === '/beranda'} onClick={() => router.push('/beranda')} />
+          <SidebarItem icon={<Map size={18} />} label="Sebaran & Infografis" active={pathname === '/sebaran'} onClick={() => router.push('/sebaran')} />
+          <SidebarItem icon={<FileInput size={18} />} label="Input Data" active={pathname === '/input-data'} onClick={() => router.push('/input-data')} />
 
           {/* Menu Database (Accordion) */}
           <div className="pt-2">
@@ -80,14 +83,11 @@ export default function DashboardLayout({ children }) {
             {/* Sub Menu */}
             {isDatabaseOpen && (
               <div className="ml-4 mt-1 space-y-1 border-l border-slate-700 pl-3 animate-in slide-in-from-top-2 duration-200">
-                <div className="block px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-md cursor-pointer shadow-sm">
+                <div onClick={() => router.push('/ptk')} className={`block px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${pathname === '/ptk' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                   Data PTK
                 </div>
-                <div className="block px-3 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-md cursor-pointer transition-colors">
+                <div onClick={() => router.push('/diklat')} className={`block px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${pathname === '/diklat' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                   Data Diklat
-                </div>
-                <div className="block px-3 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-md cursor-pointer transition-colors">
-                  Data Alumni
                 </div>
               </div>
             )}
