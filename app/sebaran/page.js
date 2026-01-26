@@ -321,14 +321,7 @@ export default function DashboardContent() {
           <div className="absolute top-3 left-3 z-[400] bg-white/90 backdrop-blur px-3 py-1.5 rounded shadow-sm border border-slate-200"><span className="text-sm font-bold">Peta Yogyakarta</span></div>
           <div className="w-full h-full bg-slate-200">
              {geoJsonData ? (
-                <MapContainer   center={[-7.88, 110.45]}
-  zoom={10}
-  minZoom={9}
-  maxZoom={13}
-  maxBounds={YOGYA_BOUNDS}
-  maxBoundsViscosity={1.0}
-  className="w-full h-full z-0"
-  zoomControl={false}>
+                <MapContainer   center={[-7.88, 110.45]} zoom={10} minZoom={9}  maxZoom={13} maxBounds={YOGYA_BOUNDS} maxBoundsViscosity={1.0}  className="w-full h-full z-0"  zoomControl={false}>
                   <GeoJSON key={JSON.stringify(geoJsonData) + selectedKab + selectedKec + wilayahData.length} data={geoJsonData} style={mapStyle} onEachFeature={onEachFeature} />
                 </MapContainer>
              ) : (<div className="flex items-center justify-center h-full text-slate-400">Memuat Peta...</div>)}
