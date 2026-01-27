@@ -31,6 +31,8 @@ export default function DataPTKPage() {
     status: "",
     sekolah: "",
     judul_diklat: "",
+    kategori: "", 
+    program: "",
     rumpun: "",
     sub_rumpun: "",
     mode_filter: "history",
@@ -54,6 +56,10 @@ export default function DataPTKPage() {
         if (activeFilters.status) params.append("status", activeFilters.status);
         if (activeFilters.sekolah) params.append("sekolah", activeFilters.sekolah);
         if (activeFilters.judul_diklat) params.append("judul_diklat", activeFilters.judul_diklat);
+
+        if (activeFilters.kategori) params.append("kategori", activeFilters.kategori);
+        if (activeFilters.program) params.append("program", activeFilters.program);
+
         if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") params.append("rumpun", activeFilters.rumpun);
         if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL") params.append("sub_rumpun", activeFilters.sub_rumpun);
         if (activeFilters.mode_filter) {

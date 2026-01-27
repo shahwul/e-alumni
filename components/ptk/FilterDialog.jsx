@@ -15,7 +15,11 @@ import { Filter, Check, ChevronsUpDown, XCircle, Calendar as CalendarIcon, Info 
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar"; 
-import { id, is } from "date-fns/locale";
+import { id } from "date-fns/locale";
+
+// OPSI BARU
+const KATEGORI_OPTIONS = ["Pelatihan", "Non Pelatihan"];
+const PROGRAM_OPTIONS = ["Nasional", "BBGTK DIY"];
 
 export function FilterDialog({ onApplyFilter }) {
   const [open, setOpen] = useState(false);
@@ -28,6 +32,11 @@ export function FilterDialog({ onApplyFilter }) {
     status: "",
     sekolah: "",
     judul_diklat: [], 
+    
+    // State Baru
+    kategori: "", 
+    program: "", 
+
     mode_filter: "history", 
     rumpun: "",
     sub_rumpun: "",
@@ -36,9 +45,8 @@ export function FilterDialog({ onApplyFilter }) {
 
   // --- STATE DATA MASTER ---
   const [dataWilayah, setDataWilayah] = useState([]);
-  const [rumpunOptions, setRumpunOptions] = useState([]); // State untuk Rumpun dari DB
+  const [rumpunOptions, setRumpunOptions] = useState([]); 
   
-  // State Popover & Search
   const [openKabupaten, setOpenKabupaten] = useState(false);
   const [openKecamatan, setOpenKecamatan] = useState(false);
   
@@ -65,11 +73,10 @@ export function FilterDialog({ onApplyFilter }) {
     fetchWilayah();
   }, []);
 
-  // 2. FETCH RUMPUN (Topik) DARI DB
+  // 2. FETCH RUMPUN
   useEffect(() => {
     async function fetchRumpun() {
       try {
-        // Asumsi endpoint api/ref/rumpun atau api/ref/topik tersedia
         const res = await fetch('/api/ref/rumpun'); 
         if (res.ok) {
             const data = await res.json();
@@ -96,29 +103,23 @@ export function FilterDialog({ onApplyFilter }) {
     return () => clearTimeout(timer);
   }, [sekolahSearch]);
 
-  // 4. SEARCH DIKLAT (INDEPENDENT)
+  // 4. SEARCH DIKLAT
   useEffect(() => {
     if (!diklatSearch) { setDiklatOptions([]); return; }
-
     const timer = setTimeout(async () => {
       if (diklatSearch.length > 2) {
         setLoadingDiklat(true);
         try {
           const params = new URLSearchParams();
           params.append("q", diklatSearch);
-          
-          // UPDATE: HAPUS dependency Rumpun & Sub Rumpun disini
-          // Biar search judul diklatnya global / bebas
-
           const res = await fetch(`/api/diklat/search?${params.toString()}`);
           if(res.ok) setDiklatOptions(await res.json());
         } catch (e) { console.error(e); } 
         finally { setLoadingDiklat(false); }
       }
     }, 500);
-
     return () => clearTimeout(timer);
-  }, [diklatSearch]); // Dependency cuma diklatSearch
+  }, [diklatSearch]); 
 
   // 5. FETCH SUB RUMPUN
   useEffect(() => {
@@ -168,6 +169,7 @@ export function FilterDialog({ onApplyFilter }) {
     const empty = {
       kabupaten: [], kecamatan: [], jenjang: "", status: "", sekolah: "",
       judul_diklat: [], mode_filter: "history", 
+      kategori: "", program: "", // Reset field baru
       rumpun: "", sub_rumpun: "", dateRange: { from: undefined, to: undefined }
     };
     setFilters(empty);
@@ -185,13 +187,12 @@ export function FilterDialog({ onApplyFilter }) {
 
   const activeCount = [
      filters.jenjang, filters.status, filters.sekolah, 
-     filters.rumpun, filters.sub_rumpun, filters.dateRange?.from
-  ].filter(Boolean).length + filters.kecamatan.length + filters.kabupaten.length + filters.judul_diklat.length;
+     filters.rumpun, filters.sub_rumpun, 
+     filters.kategori, filters.program, // Hitung field baru
+     filters.dateRange?.from
+  ].filter(val => val && val !== "ALL").length + filters.kecamatan.length + filters.kabupaten.length + filters.judul_diklat.length;
 
-  // Cek apakah user sedang memfilter tanggal
   const isDateSelected = !!filters.dateRange?.from;
-  
-  // Cek apakah user sedang memfilter judul diklat
   const isJudulSelected = filters.judul_diklat.length > 0;
 
   return (
@@ -207,7 +208,7 @@ export function FilterDialog({ onApplyFilter }) {
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[600px] bg-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Filter Data PTK</DialogTitle>
           <DialogDescription>Saring data berdasarkan wilayah, sekolah, atau riwayat.</DialogDescription>
@@ -215,16 +216,15 @@ export function FilterDialog({ onApplyFilter }) {
 
         <div className="grid gap-5 py-4">
           
-          {/* === SECTION 1: WILAYAH === */}
+          {/* === SECTION 1: WILAYAH (SAMA SEPERTI SEBELUMNYA) === */}
           <div className="space-y-3">
             <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
               <span className="h-4 w-1 bg-blue-600 rounded-full"></span> Wilayah
             </h4>
-            
             <div className="flex flex-col gap-4">
               {/* KABUPATEN */}
               <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Kabupaten/Kota (Bisa pilih banyak)</Label>
+                <Label className="text-xs text-slate-500">Kabupaten/Kota</Label>
                 <Popover open={openKabupaten} onOpenChange={setOpenKabupaten}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" className="w-full justify-between px-3 font-normal text-sm">
@@ -255,22 +255,9 @@ export function FilterDialog({ onApplyFilter }) {
                     </Command>
                   </PopoverContent>
                 </Popover>
-                {filters.kabupaten.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {filters.kabupaten.map((k) => (
-                      <Badge key={k} variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 pointer-events-auto pr-1">
-                        {k} 
-                        <button className="ml-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleKabupaten(k); }}>
-                          <XCircle className="h-3 w-3 text-blue-400 hover:text-red-500" />
-                        </button>
-                      </Badge>
-                    ))}
-                    <Button variant="ghost" size="sm" className="h-5 text-[10px] text-red-500" onClick={() => setFilters(prev => ({...prev, kabupaten: []}))}>Reset Kab</Button>
-                  </div>
-                )}
               </div>
 
-              {/* KECAMATAN */}
+              {/* FILTER KECAMATAN */}
               <div className="space-y-2">
                 <Label className="text-xs text-slate-500">Kecamatan</Label>
                 <Popover open={openKecamatan} onOpenChange={setOpenKecamatan}>
@@ -282,12 +269,17 @@ export function FilterDialog({ onApplyFilter }) {
                       <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[450px] p-0" align="start">
-                    <Command>
+                  <PopoverContent   className="w-[450px] p-0"
+                                    align="start"
+                                    sideOffset={4}>
+                    <Command className="h-full">
                       <CommandInput placeholder="Cari kecamatan..." />
-                      <CommandList>
+                      <CommandList  className="h-[280px] overflow-y-auto overscroll-contain"
+                                    onWheel={(e) => e.stopPropagation()}>
                         <CommandEmpty>Tidak ditemukan.</CommandEmpty>
-                        <div className="max-h-[300px] overflow-y-auto">
+                        
+                        {/* KEMBALIKAN DIV PEMBUNGKUS INI (SOLUSI PTK) */}
+                        <div> 
                             {displayedWilayah.map((group) => (
                               <CommandGroup key={group.kabupaten} heading={group.kabupaten}>
                                 {group.kecamatan?.map((kec) => (
@@ -303,10 +295,13 @@ export function FilterDialog({ onApplyFilter }) {
                               </CommandGroup>
                             ))}
                         </div>
+
                       </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
+
+                {/* BADGES */}
                 {filters.kecamatan.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {filters.kecamatan.map((k) => (
@@ -317,7 +312,9 @@ export function FilterDialog({ onApplyFilter }) {
                         </button>
                       </Badge>
                     ))}
-                    <Button variant="ghost" size="sm" className="h-5 text-[10px] text-red-500" onClick={() => setFilters(prev => ({...prev, kecamatan: []}))}>Reset Kec</Button>
+                    <Button variant="ghost" size="sm" className="h-5 text-[10px] text-red-500 hover:bg-red-50" onClick={() => setFilters(prev => ({...prev, kecamatan: []}))}>
+                      Reset Kec
+                    </Button>
                   </div>
                 )}
               </div>
@@ -326,7 +323,7 @@ export function FilterDialog({ onApplyFilter }) {
 
           <Separator />
 
-          {/* === SECTION 2: KRITERIA PTK === */}
+          {/* === SECTION 2: KRITERIA PTK (SAMA) === */}
           <div className="space-y-3">
              <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
                <span className="h-4 w-1 bg-green-500 rounded-full"></span> Kriteria PTK
@@ -383,15 +380,13 @@ export function FilterDialog({ onApplyFilter }) {
 
           <Separator />
 
-          {/* === SECTION 3: DIKLAT & FILTER === */}
+          {/* === SECTION 3: DIKLAT & FILTER (UPDATED) === */}
           <div className="space-y-4">
-             {/* Header Section dengan Switch Mode */}
+             {/* Mode Filter Switch */}
              <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
                     <span className="h-4 w-1 bg-purple-500 rounded-full"></span> Filter Diklat
                 </h4>
-                
-                {/* SWITCH MODE FILTER */}
                 <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
                     <button
                         onClick={() => setFilters({...filters, mode_filter: 'history'})}
@@ -418,84 +413,42 @@ export function FilterDialog({ onApplyFilter }) {
              )}>
                 <Info size={16} className="shrink-0 mt-0.5" />
                 {filters.mode_filter === 'eligible' ? (
-                     <div>
-                        <p className="font-semibold mb-1">Mode Kandidat (Eligible)</p>
-                        {filters.dateRange?.from ? (
-                            <p>
-                                Mencari guru yang <b>BELUM LULUS</b> diklat terpilih dalam periode <b>{format(filters.dateRange.from, "dd MMM y", {locale:id})}</b> s/d <b>{filters.dateRange.to ? format(filters.dateRange.to, "dd MMM y", {locale:id}) : '...'}</b>.
-                                <br/><span className="italic opacity-80">(Guru yang lulus DILUAR tanggal ini akan tetap muncul / dianggap perlu refresh).</span>
-                            </p>
-                        ) : (
-                            <p>Mencari guru yang <b>BELUM PERNAH</b> lulus diklat terpilih (Seumur Hidup).</p>
-                        )}
-                     </div>
+                     <p>Mencari guru yang <b>BELUM LULUS</b> diklat dengan kriteria di bawah ini.</p>
                 ) : (
-                     <div>
-                        <p className="font-semibold mb-1">Mode Riwayat</p>
-                        <p>Mencari guru yang <b>SUDAH LULUS</b> diklat terpilih.</p>
-                     </div>
+                     <p>Mencari guru yang <b>SUDAH LULUS</b> diklat dengan kriteria di bawah ini.</p>
                 )}
              </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {/* Tanggal */}
-              <div className="space-y-2 sm:col-span-2">
-                <div className="flex justify-between items-center">
-                    <Label className={cn("text-xs", isJudulSelected ? "text-slate-400" : "text-slate-500")}>
-                        Rentang Tanggal Pelaksanaan
-                    </Label>
-                    {/* Helper Text jika disabled */}
-                    {isJudulSelected && (
-                        <span className="text-[10px] text-red-500 italic">
-                          Reset judul diklat untuk memilih tanggal
-                        </span>
-                    )}
-                </div>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button 
-                        variant={"outline"} 
-                        disabled={isJudulSelected} // <--- KUNCI DISINI
-                        className={cn(
-                            "w-full justify-start text-left font-normal", 
-                            !filters.dateRange?.from && "text-muted-foreground",
-                            isJudulSelected ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "" // Styling Disabled
-                        )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      
-                      {/* Logic Teks Tombol */}
-                      {isJudulSelected ? (
-                          <span>Terkunci (Mode Judul Aktif)</span>
-                      ) : (
-                          filters.dateRange?.from ? (
-                            filters.dateRange.to ? 
-                            `${format(filters.dateRange.from, "dd MMM y", {locale:id})} - ${format(filters.dateRange.to, "dd MMM y", {locale:id})}` : 
-                            format(filters.dateRange.from, "dd MMM y", {locale:id})
-                          ) : <span>Pilih tanggal...</span>
-                      )}
-
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar initialFocus mode="range" defaultMonth={filters.dateRange?.from} selected={filters.dateRange} onSelect={(range) => setFilters({...filters, dateRange: range})} numberOfMonths={2} locale={id} />
-                  </PopoverContent>
-                </Popover>
+              
+              {/* --- FILTER BARU: Kategori & Program --- */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-500">Kategori Kegiatan</Label>
+                <Select value={filters.kategori} onValueChange={(val) => setFilters({...filters, kategori: val === "ALL" ? "" : val})}>
+                  <SelectTrigger><SelectValue placeholder="Semua Kategori" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua</SelectItem>
+                    {KATEGORI_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Judul Diklat (Multi Select) */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-500">Sumber Program</Label>
+                <Select value={filters.program} onValueChange={(val) => setFilters({...filters, program: val === "ALL" ? "" : val})}>
+                  <SelectTrigger><SelectValue placeholder="Semua Program" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua</SelectItem>
+                    {PROGRAM_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Judul Diklat */}
               <div className="space-y-2 sm:col-span-2">
-                   <div className="flex justify-between items-center">
-                      <Label className={cn("text-xs", isDateSelected ? "text-slate-400" : "text-slate-500")}>
+                   <Label className={cn("text-xs", isDateSelected ? "text-slate-400" : "text-slate-500")}>
                         Judul Diklat (Multi Select)
-                      </Label>
-                      {isDateSelected && (
-                        <span className="text-[10px] text-red-500 italic">
-                          Reset tanggal untuk memilih judul
-                        </span>
-                      )}
-                   </div>
+                   </Label>
                    <Popover open={openDiklat} onOpenChange={setOpenDiklat}>
                       <PopoverTrigger asChild>
                         <Button disabled={isDateSelected} variant="outline" role="combobox" className="w-full justify-between px-3 h-auto min-h-[40px] font-normal text-slate-700 text-left">
@@ -528,11 +481,10 @@ export function FilterDialog({ onApplyFilter }) {
                         </Command>
                       </PopoverContent>
                    </Popover>
-                   {/* Badge Selected Titles */}
                    {filters.judul_diklat.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {filters.judul_diklat.map((t, i) => (
-                          <Badge key={i} variant="secondary" className="text-[10px] bg-white border border-slate-200 pointer-events-auto pr-1 py-1 h-auto whitespace-normal text-left max-w-full">
+                          <Badge key={i} variant="secondary" className="text-[10px] bg-white border border-slate-200 pointer-events-auto pr-1 py-1">
                             <span className="mr-1">{t}</span>
                             <button className="shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleDiklat(t); }}>
                                <XCircle size={14} className="text-slate-400 hover:text-red-500"/>
@@ -544,17 +496,34 @@ export function FilterDialog({ onApplyFilter }) {
                    )}
               </div>
 
+              {/* Tanggal */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label className={cn("text-xs", isJudulSelected ? "text-slate-400" : "text-slate-500")}>
+                    Rentang Tanggal
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} disabled={isJudulSelected} className={cn("w-full justify-start text-left font-normal", !filters.dateRange?.from && "text-muted-foreground", isJudulSelected ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.dateRange?.from ? (
+                        filters.dateRange.to ? `${format(filters.dateRange.from, "dd MMM y", {locale:id})} - ${format(filters.dateRange.to, "dd MMM y", {locale:id})}` : format(filters.dateRange.from, "dd MMM y", {locale:id})
+                      ) : <span>Pilih tanggal...</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar initialFocus mode="range" defaultMonth={filters.dateRange?.from} selected={filters.dateRange} onSelect={(range) => setFilters({...filters, dateRange: range})} numberOfMonths={2} locale={id} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               {/* Rumpun */}
               <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Rumpun / Topik</Label>
+                <Label className="text-xs text-slate-500">Rumpun</Label>
                 <Select disabled={isDateSelected} value={filters.rumpun} onValueChange={(val) => setFilters({...filters, rumpun: val === "ALL" ? "" : val})}>
-                  <SelectTrigger><SelectValue placeholder={isDateSelected ? "Terkunci (Mode Tanggal Aktif)" : "Pilih..."} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Pilih..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">Semua</SelectItem>
-                    {/* Render Rumpun from DB State */}
-                    {rumpunOptions.map((r) => (
-                        <SelectItem key={r.id} value={String(r.id)}>{r.topic_name}</SelectItem> 
-                    ))}
+                    {rumpunOptions.map((r) => (<SelectItem key={r.id} value={String(r.id)}>{r.topic_name}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -562,17 +531,11 @@ export function FilterDialog({ onApplyFilter }) {
               {/* Sub Rumpun */}
               <div className="space-y-2">
                 <Label className="text-xs text-slate-500">Sub Rumpun</Label>
-                <Select 
-                    disabled={!filters.rumpun || filters.rumpun === "ALL"} 
-                    value={filters.sub_rumpun} 
-                    onValueChange={(val) => setFilters({...filters, sub_rumpun: val === "ALL" ? "" : val})}
-                >
-                    <SelectTrigger><SelectValue placeholder={filters.rumpun ? "Pilih Sub..." : "-"} /></SelectTrigger>
+                <Select disabled={!filters.rumpun || filters.rumpun === "ALL"} value={filters.sub_rumpun} onValueChange={(val) => setFilters({...filters, sub_rumpun: val === "ALL" ? "" : val})}>
+                    <SelectTrigger><SelectValue placeholder="Pilih Sub..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">Semua Sub</SelectItem>
-                      {subRumpunOptions.map((sub) => (
-                        <SelectItem key={sub.id} value={String(sub.id)}>{sub.sub_topic_name}</SelectItem> 
-                      ))}
+                      {subRumpunOptions.map((sub) => (<SelectItem key={sub.id} value={String(sub.id)}>{sub.sub_topic_name}</SelectItem>))}
                     </SelectContent>
                 </Select>
               </div>

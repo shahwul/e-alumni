@@ -1,9 +1,5 @@
-import { Button } from "@/components/ui/button"
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <div>
-      <Button variant="default">Click me</Button>
-    </div>
-  )
+export default function RootPage() {
+  redirect("/sebaran"); 
 }
