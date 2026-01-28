@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { columns } from "@/components/ptk/columns"; 
-import { DataTable } from "@/components/ui/data-table"; 
+import { columns } from "@/components/ptk/columns";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Download } from "lucide-react";
-import { FilterDialog } from "@/components/ptk/FilterDialog"; 
+import { FilterDialog } from "@/components/ptk/filter/FilterDialog";
 import { format } from "date-fns";
 
 export default function DataPTKPage() {
@@ -22,8 +22,8 @@ export default function DataPTKPage() {
 
   // --- STATE UTAMA ---
   const [search, setSearch] = useState("");
-  const [sorting, setSorting] = useState("nama_asc"); 
-  
+  const [sorting, setSorting] = useState("nama_asc");
+
   const [activeFilters, setActiveFilters] = useState({
     kabupaten: [],
     kecamatan: [],
@@ -31,10 +31,12 @@ export default function DataPTKPage() {
     status: "",
     sekolah: "",
     judul_diklat: "",
+    kategori: "",
+    program: "",
     rumpun: "",
     sub_rumpun: "",
     mode_filter: "history",
-    dateRange: { from: undefined, to: undefined }
+    dateRange: { from: undefined, to: undefined },
   });
 
   // --- FETCH DATA ---
@@ -43,58 +45,92 @@ export default function DataPTKPage() {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        
+
         // 1. Params Search
         if (search) params.append("search", search);
-        
+
         // 2. Params Filter
-        if (activeFilters.kabupaten.length > 0) params.append("kabupaten", activeFilters.kabupaten.join(","));
-        if (activeFilters.kecamatan.length > 0) params.append("kecamatan", activeFilters.kecamatan.join(","));
-        if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
+        if (activeFilters.kabupaten.length > 0)
+          params.append("kabupaten", activeFilters.kabupaten.join(","));
+        if (activeFilters.kecamatan.length > 0)
+          params.append("kecamatan", activeFilters.kecamatan.join(","));
+        if (activeFilters.jenjang)
+          params.append("jenjang", activeFilters.jenjang);
         if (activeFilters.status) params.append("status", activeFilters.status);
-        if (activeFilters.sekolah) params.append("sekolah", activeFilters.sekolah);
-        if (activeFilters.judul_diklat) params.append("judul_diklat", activeFilters.judul_diklat);
-        if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") params.append("rumpun", activeFilters.rumpun);
-        if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL") params.append("sub_rumpun", activeFilters.sub_rumpun);
+        if (activeFilters.sekolah)
+          params.append("sekolah", activeFilters.sekolah);
+        if (activeFilters.judul_diklat)
+          params.append("judul_diklat", activeFilters.judul_diklat);
+
+        if (activeFilters.kategori)
+          params.append("kategori", activeFilters.kategori);
+        if (activeFilters.program)
+          params.append("program", activeFilters.program);
+
+        if (activeFilters.rumpun && activeFilters.rumpun !== "ALL")
+          params.append("rumpun", activeFilters.rumpun);
+        if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL")
+          params.append("sub_rumpun", activeFilters.sub_rumpun);
         if (activeFilters.mode_filter) {
-            params.append("mode_filter", activeFilters.mode_filter);
+          params.append("mode_filter", activeFilters.mode_filter);
         }
-        
+
         if (activeFilters.dateRange?.from) {
-          const startDateStr = format(activeFilters.dateRange.from, "yyyy-MM-dd");
+          const startDateStr = format(
+            activeFilters.dateRange.from,
+            "yyyy-MM-dd",
+          );
           params.append("start_date", startDateStr);
-          const endDateStr = activeFilters.dateRange.to 
-              ? format(activeFilters.dateRange.to, "yyyy-MM-dd") 
-              : startDateStr;
+          const endDateStr = activeFilters.dateRange.to
+            ? format(activeFilters.dateRange.to, "yyyy-MM-dd")
+            : startDateStr;
           params.append("end_date", endDateStr);
         }
 
         const res = await fetch(`/api/ptk?${params.toString()}`);
         const result = await res.json();
-        
+
         let fetchedData = result.data || [];
 
         // --- CLIENT SIDE SORTING ---
         if (sorting === "nama_asc") {
           fetchedData.sort((a, b) => a.nama_ptk.localeCompare(b.nama_ptk));
         } else if (sorting === "nama_desc") {
-           fetchedData.sort((a, b) => b.nama_ptk.localeCompare(a.nama_ptk));
+          fetchedData.sort((a, b) => b.nama_ptk.localeCompare(a.nama_ptk));
         } else if (sorting === "sekolah_asc") {
-           fetchedData.sort((a, b) => a.nama_sekolah.localeCompare(b.nama_sekolah));
-        
-        // Sorting Status Kepegawaian (PNS, GTY, dll)
+          fetchedData.sort((a, b) =>
+            a.nama_sekolah.localeCompare(b.nama_sekolah),
+          );
+
+          // Sorting Status Kepegawaian (PNS, GTY, dll)
         } else if (sorting === "status_asc") {
-           fetchedData.sort((a, b) => (a.status_kepegawaian || "").localeCompare(b.status_kepegawaian || ""));
+          fetchedData.sort((a, b) =>
+            (a.status_kepegawaian || "").localeCompare(
+              b.status_kepegawaian || "",
+            ),
+          );
         } else if (sorting === "status_desc") {
-           fetchedData.sort((a, b) => (b.status_kepegawaian || "").localeCompare(a.status_kepegawaian || ""));
-        
-        // === BARU: Sorting Status Pelatihan (Sudah/Belum) ===
+          fetchedData.sort((a, b) =>
+            (b.status_kepegawaian || "").localeCompare(
+              a.status_kepegawaian || "",
+            ),
+          );
+
+          // === BARU: Sorting Status Pelatihan (Sudah/Belum) ===
         } else if (sorting === "pelatihan_sudah") {
-           // Yang SUDAH (true) di atas
-           fetchedData.sort((a, b) => (b.is_sudah_pelatihan === true ? 1 : 0) - (a.is_sudah_pelatihan === true ? 1 : 0));
+          // Yang SUDAH (true) di atas
+          fetchedData.sort(
+            (a, b) =>
+              (b.is_sudah_pelatihan === true ? 1 : 0) -
+              (a.is_sudah_pelatihan === true ? 1 : 0),
+          );
         } else if (sorting === "pelatihan_belum") {
-           // Yang BELUM (false) di atas
-           fetchedData.sort((a, b) => (a.is_sudah_pelatihan === true ? 1 : 0) - (b.is_sudah_pelatihan === true ? 1 : 0));
+          // Yang BELUM (false) di atas
+          fetchedData.sort(
+            (a, b) =>
+              (a.is_sudah_pelatihan === true ? 1 : 0) -
+              (b.is_sudah_pelatihan === true ? 1 : 0),
+          );
         }
 
         setData(fetchedData);
@@ -111,53 +147,53 @@ export default function DataPTKPage() {
     return () => clearTimeout(timeout);
   }, [search, activeFilters, sorting]);
 
-   const handleExport = () => {
+  const handleExport = () => {
     // 1. Siapkan wadah parameter URL
     const params = new URLSearchParams();
-    
+
     // 2. Masukkan parameter Search (kalau ada isinya)
     if (search) params.append("search", search);
-    
+
     // 3. Masukkan parameter Filter Wilayah (Array -> Comma Separated)
     if (activeFilters.kabupaten.length > 0) {
-        params.append("kabupaten", activeFilters.kabupaten.join(","));
+      params.append("kabupaten", activeFilters.kabupaten.join(","));
     }
     if (activeFilters.kecamatan.length > 0) {
-        params.append("kecamatan", activeFilters.kecamatan.join(","));
+      params.append("kecamatan", activeFilters.kecamatan.join(","));
     }
-    
+
     // 4. Masukkan Filter Dropdown (Jenjang, Status, Sekolah)
     if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
     if (activeFilters.status) params.append("status", activeFilters.status);
     if (activeFilters.sekolah) params.append("sekolah", activeFilters.sekolah);
-    
+
     // Handle Array Judul Diklat (Join pakai separator aman '||')
     if (activeFilters.judul_diklat && activeFilters.judul_diklat.length > 0) {
-        params.append("judul_diklat", activeFilters.judul_diklat.join("||"));
+      params.append("judul_diklat", activeFilters.judul_diklat.join("||"));
     }
-    
+
     // Kirim Mode Filter
     if (activeFilters.mode_filter) {
-        params.append("mode_filter", activeFilters.mode_filter);
+      params.append("mode_filter", activeFilters.mode_filter);
     }
 
     if (activeFilters.rumpun && activeFilters.rumpun !== "ALL") {
-        params.append("rumpun", activeFilters.rumpun);
+      params.append("rumpun", activeFilters.rumpun);
     }
     if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL") {
-        params.append("sub_rumpun", activeFilters.sub_rumpun);
+      params.append("sub_rumpun", activeFilters.sub_rumpun);
     }
-    
+
     // 6. Masukkan Filter Tanggal (Format dulu ke YYYY-MM-DD)
     if (activeFilters.dateRange?.from) {
       const startDateStr = format(activeFilters.dateRange.from, "yyyy-MM-dd");
       params.append("start_date", startDateStr);
-      
+
       // Kalau user cuma pilih start date (1 hari), end date disamakan
-      const endDateStr = activeFilters.dateRange.to 
-          ? format(activeFilters.dateRange.to, "yyyy-MM-dd") 
-          : startDateStr;
-          
+      const endDateStr = activeFilters.dateRange.to
+        ? format(activeFilters.dateRange.to, "yyyy-MM-dd")
+        : startDateStr;
+
       params.append("end_date", endDateStr);
     }
 
@@ -166,10 +202,8 @@ export default function DataPTKPage() {
     window.location.href = `/api/ptk/export?${params.toString()}`;
   };
 
-
   return (
     <div className="space-y-6 p-1">
-      
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -181,7 +215,7 @@ export default function DataPTKPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-           <Button variant="outline" className="gap-2" onClick={handleExport}>
+          <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download size={16} /> Export
           </Button>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
@@ -192,7 +226,6 @@ export default function DataPTKPage() {
 
       {/* Toolbar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        
         {/* KIRI: Sorting Dropdown */}
         <div className="w-full md:w-[240px]">
           <Select value={sorting} onValueChange={setSorting}>
@@ -203,22 +236,30 @@ export default function DataPTKPage() {
               <SelectItem value="nama_asc">Nama (A-Z)</SelectItem>
               <SelectItem value="nama_desc">Nama (Z-A)</SelectItem>
               <SelectItem value="sekolah_asc">Sekolah (A-Z)</SelectItem>
-              
-              <SelectItem value="status_asc">Status Kepegawaian (A-Z)</SelectItem>
-              
+
+              <SelectItem value="status_asc">
+                Status Kepegawaian (A-Z)
+              </SelectItem>
+
               {/* === MENU SORTING BARU === */}
-              <SelectItem value="pelatihan_sudah">Pelatihan (Sudah - Belum)</SelectItem>
-              <SelectItem value="pelatihan_belum">Pelatihan (Belum - Sudah)</SelectItem>
-              
+              <SelectItem value="pelatihan_sudah">
+                Pelatihan (Sudah - Belum)
+              </SelectItem>
+              <SelectItem value="pelatihan_belum">
+                Pelatihan (Belum - Sudah)
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* TENGAH: Search Bar */}
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <Input 
-            placeholder="Cari berdasarkan NIK atau Nama PTK..." 
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={18}
+          />
+          <Input
+            placeholder="Cari berdasarkan NIK atau Nama PTK..."
             className="pl-10 border-slate-200 focus-visible:ring-blue-600"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -232,12 +273,11 @@ export default function DataPTKPage() {
       {/* Tabel */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
-            <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="p-8 text-center text-slate-500">Memuat data...</div>
         ) : (
-            <DataTable columns={columns} data={data} />
+          <DataTable columns={columns} data={data} />
         )}
       </div>
-
     </div>
   );
 }

@@ -22,7 +22,10 @@ export async function GET(request) {
     
     const rumpunId = searchParams.get('rumpun');             
     const subRumpunId = searchParams.get('sub_rumpun');
-    const kategoriId = searchParams.get('kategori_id');      
+    const kategoriId = searchParams.get('kategori_id');   
+
+    const kategoriParam = searchParams.get('kategori');
+    const programParam = searchParams.get('program');
     
     const judulDiklatRaw = searchParams.get('judul_diklat'); 
     let judulDiklatArray = [];
@@ -124,53 +127,67 @@ export async function GET(request) {
       values.push(kategoriId); counter++;
     }
 
-    // ============================================================
-    // UPDATE LOGIC FILTER DIKLAT (FIX MATCHING ISSUE)
-    // ============================================================
-    if (judulDiklatArray.length > 0) {
-        const placeholders = judulDiklatArray.map((_, i) => `$${counter + i}`).join(',');
+    // Cek apakah ada filter yang berhubungan dengan master_diklat
+    const hasDiklatFilter = judulDiklatArray.length > 0 || kategoriParam || programParam;
+
+    if (hasDiklatFilter) {
         let clause = '';
+        
+        // Bangun kondisi tambahan untuk Kategori & Program
+        let extraConditions = '';
+        if (kategoriParam) {
+            extraConditions += ` AND md.jenis_kegiatan::text = '${kategoriParam}'`;
+        }
+        if (programParam) {
+            extraConditions += ` AND md.jenis_program::text = '${programParam}'`;
+        }
+        
+        // Bangun kondisi Judul (jika ada)
+        let titleCondition = '';
+        if (judulDiklatArray.length > 0) {
+             const placeholders = judulDiklatArray.map((_, i) => `$${counter + i}`).join(',');
+             titleCondition = ` AND md.title = ANY(ARRAY[${placeholders}])`;
+             // Push values title ke array utama
+             judulDiklatArray.forEach(t => values.push(t.trim()));
+             counter += judulDiklatArray.length;
+        }
 
         if (modeFilter === 'eligible') {
-            // [MODE KANDIDAT]
-            // Cari yang TIDAK ADA di history.
+            // [MODE KANDIDAT / BELUM PERNAH]
+            // Cari guru yang TIDAK ADA di history diklat yang sesuai kriteria
             
-            // Cek apakah ada filter tanggal?
-            // Jika ada, berarti kita cari yang belum lulus PADA TANGGAL ITU.
-            // (Hati-hati: X yg lulus tahun lalu akan MUNCUL jika filter tanggal tahun ini aktif)
             let dateSubQuery = '';
             if (startDate && endDate) {
-                // Kita inject string tanggal langsung karena keterbatasan counter parameter di nested block
-                // Asumsi startDate valid YYYY-MM-DD dari frontend
                 dateSubQuery = ` AND md.start_date >= '${startDate}' AND md.end_date <= '${endDate}' `;
             }
 
-              clause = ` 
+            clause = ` 
                 AND mv.nik NOT IN (
                     SELECT da.nik 
                     FROM data_alumni da
                     JOIN master_diklat md ON da.id_diklat = md.id
                     WHERE da.status_kelulusan ILIKE 'Lulus'
-                    AND md.title = ANY(ARRAY[${placeholders}])
+                    ${titleCondition}
+                    ${extraConditions}
                     ${dateSubQuery}
                 )
             `;
         } else {
-            // [MODE RIWAYAT]
+            // [MODE RIWAYAT / SUDAH PERNAH]
+            // Cari guru yang ADA di history diklat yang sesuai kriteria
             clause = ` 
                 AND EXISTS (
                     SELECT 1 FROM data_alumni da
                     JOIN master_diklat md ON da.id_diklat = md.id
                     WHERE da.nik::text = mv.nik::text 
-                    AND da.status_kelulusan ILIKE 'Lulus'     -- FIX 2
-                    AND md.title = ANY(ARRAY[${placeholders}])
+                    AND da.status_kelulusan ILIKE 'Lulus'
+                    ${titleCondition}
+                    ${extraConditions}
                 )
             `;
         }
         
         baseQuery += clause; countQuery += clause;
-        judulDiklatArray.forEach(t => values.push(t.trim()));
-        counter += judulDiklatArray.length;
     }
 
     // ==========================================
