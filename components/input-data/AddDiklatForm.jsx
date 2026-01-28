@@ -10,52 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Untuk memanggil API input-data
-async function onSubmit(values) {
-  try {
-    // Panggil API yang sudah kita buat tadi
-    const response = await fetch("/api/input-data", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values), // 'values' berisi semua inputan form sesuai Zod
-    });
+  //Valid atau nggaknya isi forom diatur di sini
+  const formSchema = z.object({
+    title: z.string().min(5, "Judul minimal 5 karakter"), //nggak ada optional -> wajib diisi 
+    description: z.string().optional(), //karena ditambahin optional -> ga dicek diisi atau nggaknya
+    kode_judul: z.string().min(1, "Wajib diisi"),
+    start_date: z.string(),
+    end_date: z.string(),
+    jenis_perekrutan: z.string(),
+    kategori: z.string(),
+    moda: z.string(),
+    jenjang: z.string(),
+    rumpun: z.string(),
+    sub_rumpun: z.string(),
+    sasaran: z.string(),
+    total_peserta: z.coerce.number(),
+    total_jp: z.coerce.number(),
+    lokasi: z.string(),
+  });
 
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("Sukses: " + result.message); // Munculkan pesan sukses
-      form.reset();         // Kosongkan form setelah berhasil
-    } else {
-        alert("Error: " + result.error);
-    }
-  } catch (error) {
-    console.error("Gagal menyambung ke server:", error);
-    alert("Koneksi gagal!");
-  }
-}
-
-//Valid atau nggaknya isi forom diatur di sini
-const formSchema = z.object({
-  title: z.string().min(5, "Judul minimal 5 karakter"), //nggak ada optional -> wajib diisi 
-  description: z.string().optional(), //karena ditambahin optional -> ga dicek diisi atau nggaknya
-  kode_judul: z.string().min(1, "Wajib diisi"),
-  start_date: z.string(),
-  end_date: z.string(),
-  jenis_perekrutan: z.string(),
-  kategori: z.string(),
-  moda: z.string(),
-  jenjang: z.string(),
-  rumpun: z.string(),
-  sub_rumpun: z.string(),
-  sasaran: z.string(),
-  total_peserta: z.coerce.number(),
-  total_jp: z.coerce.number(),
-  lokasi: z.string(),
-});
-
-export function AddDiklatForm() {
+export default function AddDiklatForm({onBack, onSuccess}) {
   //menghunbungkan zod tadi ke dalam useForm pake zodResolver
   const form = useForm({
     resolver: zodResolver(formSchema), //ngecek input vs ketentuan di formSchema
@@ -65,6 +39,33 @@ export function AddDiklatForm() {
       total_jp: 0,
     },
   });
+
+  // Untuk memanggil API input-data
+  async function onSubmit(values) {
+    try {
+      // Panggil API yang sudah kita buat tadi
+      const response = await fetch("/api/input-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values), // 'values' berisi semua inputan form sesuai Zod
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Sukses: " + result.message); // Munculkan pesan sukses
+        form.reset();         // Kosongkan form setelah berhasil
+      } else {
+          alert("Error: " + result.error);
+      }
+    } catch (error) {
+      console.error("Gagal menyambung ke server:", error);
+      alert("Koneksi gagal!");
+    }
+  }
+
 
   async function onSubmit(values) {
     console.log(values);
@@ -301,7 +302,7 @@ export function AddDiklatForm() {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button variant="outline" type="button">Batal</Button>
+          <Button onClick={onBack} variant="outline" type="button">Batal</Button>
           <Button type="submit">Simpan Data Pelatihan</Button>
         </div>
       </form>
