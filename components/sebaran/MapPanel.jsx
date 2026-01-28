@@ -21,12 +21,50 @@ export default function MapPanel({
 }) {
   const mapStyle = (feature) => {
     const kabCode = feature.properties.code.substring(0, 5);
+    const kecName = feature.properties.name;
+
     const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
+    const isSameKab = kabCode === selectedKab;
+    const isSameKec =
+      selectedKec && kecName.toUpperCase() === selectedKec.toUpperCase();
 
-    if (selectedKab && kabCode !== selectedKab)
-      return { fillColor: "#94a3b8", fillOpacity: 0.2 };
+    // Selected kecamatan (strong highlight)
+    if (isSameKab && isSameKec) {
+      return {
+        fillColor: "#4f46e5",
+        fillOpacity: 1,
+        weight: 3,
+        color: "#fff",
+      };
+    }
 
-    return { fillColor: baseColor, fillOpacity: 0.8, weight: 1, color: "#fff" };
+    // Selected kabupaten
+    if (isSameKab) {
+      return {
+        fillColor: baseColor,
+        fillOpacity: 0.8,
+        weight: 1,
+        color: "#fff",
+      };
+    }
+
+    // Other kabupaten when one is selected
+    if (selectedKab) {
+      return {
+        fillColor: "#94a3b8",
+        fillOpacity: 0.2,
+        weight: 0.5,
+        color: "#fff",
+      };
+    }
+
+    // Default
+    return {
+      fillColor: baseColor,
+      fillOpacity: 0.6,
+      weight: 1,
+      color: "#fff",
+    };
   };
 
   const onEachFeature = (feature, layer) => {
@@ -62,8 +100,8 @@ export default function MapPanel({
         ) {
           e.target.setStyle({
             weight: 1,
-            color: "white",
-            fillOpacity: 0.8,
+            color: "#fff",
+            fillOpacity: 0.6,
           });
         }
       },
