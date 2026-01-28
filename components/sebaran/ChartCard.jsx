@@ -1,9 +1,7 @@
-"use client";
-
 export default function ChartCard({
   title,
   children,
-  height = 250,
+  height = 400,
   className = "",
 }) {
   return (
@@ -19,8 +17,8 @@ export default function ChartCard({
       )}
 
       <div
-        className="px-4 pb-4 flex-1 relative"
-        style={{ height }}
+        className="px-4 pb-4 relative"
+        style={{ height: `${height}px` }}
       >
         {children}
       </div>
