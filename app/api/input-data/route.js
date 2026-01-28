@@ -49,7 +49,8 @@ export async function POST(request) {
     // 1. Logic Generate Short Title
     const course_code = "ID" + Math.random().toString(36).substring(2, 8).toUpperCase();
     const year = new Date().getFullYear();
-    const generatedShortTitle = `${course_code}-${rumpunName.substring(0, 3).toUpperCase()}-${subRumpunName.substring(0, 3).toUpperCase()}-${year}-1`;
+    const semester = (new Date(data.start_date).getMonth() < 6) ? "1" : "2";
+    const generatedShortTitle = `${course_code}-${rumpunName.substring(0, 3).toUpperCase()}-${subRumpunName.substring(0, 3).toUpperCase()}-${year}-${semester}`;
     const generatedChainCode = `0${data.jenjang}0${data.rumpun}${data.sub_rumpun}`;
     // 2. Insert into Database
     // Note: Mapping frontend names (e.g., 'lokasi') to DB columns (e.g., 'location')
