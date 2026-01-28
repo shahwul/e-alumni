@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,47 +10,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar"; 
+import { Calendar as CalendarIcon} from "lucide-react";
+import { id, is } from "date-fns/locale";
+import { format } from "date-fns";
 
-// Untuk memanggil API input-data
-async function onSubmit(values) {
-  try {
-    // Panggil API yang sudah kita buat tadi
-    const response = await fetch("/api/input-data", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values), // 'values' berisi semua inputan form sesuai Zod
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("Sukses: " + result.message); // Munculkan pesan sukses
-      form.reset();         // Kosongkan form setelah berhasil
-    } else {
-        alert("Error: " + result.error);
-    }
-  } catch (error) {
-    console.error("Gagal menyambung ke server:", error);
-    alert("Koneksi gagal!");
-  }
-}
 
 //Valid atau nggaknya isi forom diatur di sini
 const formSchema = z.object({
   title: z.string().min(5, "Judul minimal 5 karakter"), //nggak ada optional -> wajib diisi 
   description: z.string().optional(), //karena ditambahin optional -> ga dicek diisi atau nggaknya
-  kode_judul: z.string().min(1, "Wajib diisi"),
+  // kode_judul: z.string().min(1, "Wajib diisi"),
   start_date: z.string(),
   end_date: z.string(),
   jenis_perekrutan: z.string(),
-  kategori: z.string(),
-  moda: z.string(),
-  jenjang: z.string(),
-  rumpun: z.string(),
-  sub_rumpun: z.string(),
-  sasaran: z.string(),
+  kategori: z.coerce.number(),
+  moda: z.coerce.number(),
+  jenjang: z.coerce.number(),
+  jenis_kegiatan: z.string(),
+  jenis_program: z.string(),
+  rumpun: z.coerce.number(),
+  sub_rumpun: z.coerce.number(),
+  jabatan: z.coerce.number(),
   total_peserta: z.coerce.number(),
   total_jp: z.coerce.number(),
   lokasi: z.string(),
@@ -57,18 +41,64 @@ const formSchema = z.object({
 
 export function AddDiklatForm() {
   //menghunbungkan zod tadi ke dalam useForm pake zodResolver
+  const [isMounted, setIsMounted] = useState(false);
+  const [options, setOptions] = useState({
+    topik: [], subTopik: [], jenjang: [], moda: [], jabatan: [], kategori: []
+  });
+
+  // Mencegah Hydration Mismatch
+  useEffect(() => {
+    setIsMounted(true);
+    async function fetchRefs() {
+      const res = await fetch("/api/input-data");
+      const data = await res.json();
+      if (res.ok) setOptions(data);
+    }
+    fetchRefs();
+  }, []);
+
   const form = useForm({
-    resolver: zodResolver(formSchema), //ngecek input vs ketentuan di formSchema
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      total_peserta: 0,
-      total_jp: 0,
+      description: "",
+      kode_judul: "",
+      start_date: "",
+      end_date: "",
+      jenis_perekrutan: "",
+      total_peserta:" " ,
+      total_jp: " ",
+      lokasi: "",
     },
   });
 
-  async function onSubmit(values) {
-    console.log(values);
-  }
+  const onSubmit = async (values) => {
+    try {
+      const response = await fetch("/api/input-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("Sukses: " + result.message);
+        // form.reset();
+      } else {
+        alert("Error: " + result.error);
+      }
+    } catch (error) {
+      console.log("Koneksi Gagal:", error);
+      alert("Koneksi gagal!");
+    }
+  };
+
+  const onReset = () => {
+    form.reset();
+  };
+
+  // Jangan render apapun sebelum mounted untuk menghindari mismatch pada date/calendar
+  if (!isMounted) return null;
 
   return (
     <Form {...form}>
@@ -112,40 +142,50 @@ export function AddDiklatForm() {
             />
 
             {/* ROW 3: 2 Field (50-50) */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+            <div className="grid grid-cols-1 gap-4 pt-4 border-t">
               <FormItem>
                 <FormLabel>Kode Pelatihan</FormLabel>
                 <FormControl><Input disabled placeholder="Auto-generated" className="bg-slate-100" /></FormControl>
               </FormItem>
-              <FormField
-                control={form.control}
-                name="kode_judul"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kode Judul</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* ROW 4: 4 Field (Tanggal) */}
             <div className="grid grid-cols-2 gap-4">
-              {["start_date", "end_date"].map((name, i) => (
-                <FormField
-                  key={name}
-                  control={form.control}
-                  name={name}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">{["Tgl Mulai", "Tgl Selesai"][i]}</FormLabel>
-                      <FormControl><Input type="date" {...field} /></FormControl>
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
+            {["start_date", "end_date"].map((name) => (
+              <FormField
+                key={name}
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>{name === "start_date" ? "Tanggal Mulai" : "Tanggal Selesai"}</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(new Date(field.value), "dd MMM yyyy", { locale: id }) : <span>Pilih Tanggal</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          disabled={(date) => name === "end_date" && form.watch("start_date") ? date < new Date(form.watch("start_date")) : false}
+                          initialFocus
+                          locale={id}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
 
             {/* ROW 5: 1 Field (Full Width) */}
             <FormField
@@ -169,29 +209,31 @@ export function AddDiklatForm() {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
               <FormField
                 control={form.control}
-                name="kategori"
+                name="jenis_kegiatan"
                 render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Kategori Pelatihan</FormLabel>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Jenis Kegiatan</FormLabel>
                     <Select onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Kategori" /></SelectTrigger></FormControl>
-                      <SelectContent><SelectItem value="fungsional">Fungsional</SelectItem></SelectContent>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Jenis Program" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="Non Pelatihan">Non Pelatihan</SelectItem>
+                        <SelectItem value="Pelatihan">Pelatihan</SelectItem>
+                      </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="moda"
+                name="jenis_program"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Moda Pelatihan</FormLabel>
+                    <FormLabel>Jenis Program</FormLabel>
                     <Select onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Moda" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Jenis Program" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="Daring">Daring</SelectItem>
-                        <SelectItem value="Luring">Luring</SelectItem>
-                        <SelectItem value="Hybrid">Hybrid</SelectItem>
+                        <SelectItem value="Nasional">Nasional</SelectItem>
+                        <SelectItem value="BBGTK DIY">BBGTK DIY</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -199,23 +241,72 @@ export function AddDiklatForm() {
               />
             </div>
 
-            {/* ROW 7: 1 Field (Full Width) */}
-            <FormField
+            {/* ROW 6: 2 Field (50-50) */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+              <FormField
+                control={form.control}
+                name="kategori"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kategori Pelatihan</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Kategori" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {options.kategori.map((item) => (
+                          <SelectItem key={item.id} value={item.id.toString()}>{item.category_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
               control={form.control}
-              name="jenjang"
+              name="moda"
               render={({ field }) => (
                 <FormItem className="w-full">
-                  <FormLabel>Jenjang Sekolah</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Jenjang" /></SelectTrigger></FormControl>
+                  <FormLabel>Moda Pelatihan</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Moda" /></SelectTrigger>
+                    </FormControl>
                     <SelectContent>
-                      <SelectItem value="SD">SD</SelectItem>
-                      <SelectItem value="SMP">SMP</SelectItem>
+                      {options.moda.map((item) => (
+                        <SelectItem key={item.id} value={item.id.toString()}>
+                          {item.mode_name || item.mode_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+            </div>
+
+            {/* ROW 7: 1 Field (Full Width) */}
+            <FormField
+                control={form.control}
+                name="jenjang"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sasaran Jenjang</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Sasaran Jenjang" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {options.jenjang.map((item) => (
+                          <SelectItem key={item.id} value={item.id.toString()}>{item.level_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
 
             {/* ROW 8: 2 Field (50-50) */}
             <div className="grid grid-cols-2 gap-4">
@@ -224,23 +315,38 @@ export function AddDiklatForm() {
                 name="rumpun"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rumpun</FormLabel>
-                    <Select onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Rumpun" /></SelectTrigger></FormControl>
-                      <SelectContent><SelectItem value="teknis">Teknis</SelectItem></SelectContent>
+                    <FormLabel>Rumpun (Topik)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Rumpun" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {options.topik.map((item) => (
+                          <SelectItem key={item.id} value={item.id.toString()}>{item.topic_name}</SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="sub_rumpun"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sub-Rumpun</FormLabel>
-                    <Select onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Sub-Rumpun" /></SelectTrigger></FormControl>
-                      <SelectContent><SelectItem value="it">IT</SelectItem></SelectContent>
+                    <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Sub-Rumpun" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {options.subTopik
+                          .filter((st) => st.topic_id === Number(form.watch("rumpun")))
+                          .map((item) => (
+                            <SelectItem key={item.id} value={item.id.toString()}>{item.sub_topic_name}</SelectItem>
+                          ))}
+                      </SelectContent>
                     </Select>
                   </FormItem>
                 )}
@@ -249,18 +355,26 @@ export function AddDiklatForm() {
 
             {/* ROW 9: 1 Field (Full Width) */}
             <FormField
-              control={form.control}
-              name="sasaran"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Sasaran Jabatan</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Jabatan" /></SelectTrigger></FormControl>
-                    <SelectContent><SelectItem value="guru">Guru</SelectItem></SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+                control={form.control}
+                name="jabatan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sasaran Jabatan</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="w-full"><SelectValue placeholder="Pilih Sasaran Jabatan" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {options.jabatan.map((item) => (
+                          <SelectItem key={item.id} value={item.id.toString()}>{item.occupation_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+            
 
             {/* ROW 10: 2 Field (50-50) */}
             <div className="grid grid-cols-2 gap-4">
@@ -301,8 +415,8 @@ export function AddDiklatForm() {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button variant="outline" type="button">Batal</Button>
-          <Button type="submit">Simpan Data Pelatihan</Button>
+          <Button variant="outline" onClick={onReset} type="button">Batal</Button>
+          <Button type="submit">Simpan Data Pelatihan </Button>
         </div>
       </form>
     </Form>
