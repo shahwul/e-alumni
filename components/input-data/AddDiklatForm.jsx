@@ -39,7 +39,7 @@ const formSchema = z.object({
   lokasi: z.string(),
 });
 
-export function AddDiklatForm() {
+export default function AddDiklatForm({onBack, onSuccess}) {
   //menghunbungkan zod tadi ke dalam useForm pake zodResolver
   const [isMounted, setIsMounted] = useState(false);
   const [options, setOptions] = useState({
@@ -83,6 +83,8 @@ export function AddDiklatForm() {
       const result = await response.json();
       if (response.ok) {
         alert("Sukses: " + result.message);
+        // Send onSuccess
+        onSuccess();
         // form.reset();
       } else {
         alert("Error: " + result.error);

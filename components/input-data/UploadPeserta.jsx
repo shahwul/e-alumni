@@ -8,6 +8,7 @@ import { Download, Upload, Save, Loader2, CheckCircle, XCircle, AlertTriangle, R
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -109,19 +110,31 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
     setParsedData(newData);
   };
 
+  
+
   // 5. Sync Data (Nama, Jabatan, Golongan dari DB)
   const handleSyncData = (index) => {
     const newData = [...parsedData];
     const row = newData[index];
+    
+    console.log("Syncing row:", row);
+
     if (row.db_data) {
+        // 1. Sync Nama
         row.Nama = row.db_data.nama;
-        // Kita juga tarik jabatan/golongan terkini dari DB sebagai default
+        // 2. Sync Jabatan & Golongan
         row.Jabatan = row.db_data.jabatan; 
         row.Golongan = row.db_data.golongan;
+        // 3. Sync Sekolah (via NPSN)
+        row.NPSN = row.db_data.npsn;
+        // row.sekolah_auto akan otomatis update saat NPSN berubah/divalidasi ulang, 
+        // tapi kita bisa set manual kalau data DB sudah ada nama sekolahnya
+        row.sekolah_auto = row.db_data.sekolah; 
+
+        row.isLocked = true; // Kunci baris ini
+        delete row.diff_flags; // Hapus flag perbedaan
         
-        row.isLocked = true; // Kunci Nama & Sekolah
-        delete row.nama_db; // Hapus flag suggest
-        toast.success("Data disinkronkan dengan Database.");
+        toast.success("Data peserta disinkronkan dengan Database.");
     }
     setParsedData(newData);
   };
@@ -219,114 +232,152 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                 <Table>
                     <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-sm">
                         <TableRow>
-                            <TableHead className="w-[40px]">#</TableHead>
+                            <TableHead className="w-[40px] text-center">#</TableHead>
                             <TableHead className="w-[80px]">Status</TableHead>
-                            <TableHead className="w-[120px]">NIK</TableHead>
-                            <TableHead className="w-[180px]">Nama Peserta</TableHead>
+                            <TableHead className="w-[130px]">NIK</TableHead>
+                            <TableHead className="w-[200px]">Identitas Peserta</TableHead>
                             <TableHead className="w-[140px]">Jabatan & Gol</TableHead>
-                            <TableHead className="w-[80px]">NPSN & Sekolah (Auto)</TableHead>
-                            <TableHead className="w-[40px]"></TableHead>
+                            <TableHead className="w-[180px]">Unit Kerja</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {parsedData.map((row, idx) => (
-                            // Di dalam render TableBody:
-                        <TableRow key={idx} className={!row.isValid ? "bg-red-50/50" : ""}>
-                            <TableCell className="text-xs text-slate-500 text-center">{idx + 1}</TableCell>
-                            
-                            {/* STATUS BADGE */}
-                            <TableCell className="align-top pt-3">
-                                {row.isValid ? <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 whitespace-nowrap">Valid</Badge> 
-                                : <Badge variant="destructive" className="whitespace-nowrap">Invalid</Badge>}
-                            </TableCell>
-                            
-                            {/* NIK (Fixed Width) */}
-                            <TableCell className="align-top pt-3">
-                                <Input 
-                                    value={row.NIK || ''} 
-                                    onChange={(e) => handleCellChange(idx, 'NIK', e.target.value)} 
-                                    className="h-9 text-xs w-[140px]" // Lebar fix
-                                    placeholder="NIK Peserta"
-                                />
-                            </TableCell>
+                        {parsedData.map((row, idx) => {
+                            // LOGIC CEK PERBEDAAN (Untuk Highlight UI)
+                            const db = row.db_data || {};
+                            const isNamaBeda = db.nama && row.Nama !== db.nama;
+                            const isJabatanBeda = (db.jabatan && row.Jabatan !== db.jabatan) || (db.golongan && row.Golongan !== db.golongan);
+                            const isSekolahBeda = db.npsn && row.NPSN !== db.npsn;
+                            const hasDiff = isNamaBeda || isJabatanBeda || isSekolahBeda;
 
-                            {/* NAMA (Minimum Width) */}
-                            <TableCell className="align-top pt-3">
-                                <div className="flex flex-col gap-1 min-w-[200px]"> {/* Min Width biar lega */}
-                                    <div className="flex items-center gap-1">
+                            return (
+                                <TableRow key={idx} className={!row.isValid ? "bg-red-50/50" : ""}>
+                                    <TableCell className="text-xs text-slate-500 text-center align-top pt-3">{idx + 1}</TableCell>
+                                    
+                                    {/* STATUS */}
+                                    <TableCell className="align-top pt-3">
+                                        {row.isValid ? 
+                                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 whitespace-nowrap">Valid</Badge> 
+                                            : <Badge variant="destructive" className="whitespace-nowrap">Invalid</Badge>
+                                        }
+                                    </TableCell>
+                                    
+                                    {/* NIK */}
+                                    <TableCell className="align-top pt-3">
                                         <Input 
-                                            value={row.Nama || ''} 
-                                            onChange={(e) => handleCellChange(idx, 'Nama', e.target.value)} 
-                                            disabled={row.isLocked}
-                                            className={cn("h-9 text-xs", row.nama_db ? "border-blue-300 bg-blue-50" : "", row.isLocked && "bg-slate-100 text-slate-500")} 
-                                            placeholder="Nama Lengkap"
+                                            value={row.NIK || ''} 
+                                            onChange={(e) => handleCellChange(idx, 'NIK', e.target.value)} 
+                                            className="h-9 text-xs font-mono"
+                                            placeholder="NIK"
                                         />
-                                        {row.nama_db && !row.isLocked && (
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 shrink-0" onClick={() => handleSyncData(idx)}>
-                                                            <ArrowRightLeft className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>Sync DB: {row.db_data?.nama}</p></TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        )}
-                                    </div>
-                                    {/* Feedback Error di bawah input Nama */}
-                                    {row.status_msg && row.status_msg.includes("Mutasi") && (
-                                        <span className="text-[10px] text-orange-600 italic px-1">{row.status_msg}</span>
-                                    )}
-                                </div>
-                            </TableCell>
+                                    </TableCell>
 
-                            {/* JABATAN & GOLONGAN (Stacked Vertikal) */}
-                            <TableCell className="align-top pt-3">
-                                <div className="flex flex-col gap-2 w-[140px]"> {/* Stack vertikal */}
-                                    <Input 
-                                        value={row.Jabatan || ''} 
-                                        placeholder="Jabatan"
-                                        onChange={(e) => handleCellChange(idx, 'Jabatan', e.target.value)} 
-                                        className="h-8 text-[10px]" 
-                                    />
-                                    <Input 
-                                        value={row.Golongan || ''} 
-                                        placeholder="Golongan"
-                                        onChange={(e) => handleCellChange(idx, 'Golongan', e.target.value)} 
-                                        className="h-8 text-[10px]" 
-                                    />
-                                </div>
-                            </TableCell>
+                                    {/* NAMA + SYNC BUTTON */}
+                                    <TableCell className="align-top pt-3">
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 space-y-1">
+                                                <Input 
+                                                    value={row.Nama || ''} 
+                                                    onChange={(e) => handleCellChange(idx, 'Nama', e.target.value)} 
+                                                    disabled={row.isLocked}
+                                                    // Highlight kuning jika nama beda dengan DB
+                                                    className={cn("h-9 text-xs transition-colors", 
+                                                        isNamaBeda && !row.isLocked ? "border-orange-300 bg-orange-50 text-orange-900" : "",
+                                                        row.isLocked && "bg-slate-100 text-slate-500"
+                                                    )} 
+                                                    placeholder="Nama Lengkap"
+                                                />
+                                                {/* Pesan kecil jika beda */}
+                                                {isNamaBeda && !row.isLocked && (
+                                                    <div className="text-[10px] text-orange-600 flex items-center gap-1">
+                                                        <AlertCircle className="w-3 h-3"/> DB: {db.nama}
+                                                    </div>
+                                                )}
+                                            </div>
 
-                            {/* NPSN & SEKOLAH (Stacked Vertikal) */}
-                            <TableCell className="align-top pt-3">
-                                <div className="flex flex-col gap-2 min-w-[180px]">
-                                    <Input 
-                                        value={row.NPSN || ''} 
-                                        onChange={(e) => handleCellChange(idx, 'NPSN', e.target.value)} 
-                                        className="h-9 text-xs w-full" 
-                                        placeholder="NPSN"
-                                    />
-                                    {/* Sekolah jadi Teks/Badge di bawahnya, bukan input sebelah kanan */}
-                                    <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 min-h-[30px] flex items-center">
-                                        <span className="text-[10px] font-medium text-slate-600 truncate" title={row.sekolah_auto}>
-                                            {row.sekolah_auto || "-"}
-                                        </span>
-                                    </div>
-                                    {row.status_msg && row.status_msg?.includes("Mutasi") && (
-                                        <span className="text-[10px] text-red-500 italic leading-tight">{row.status_msg}</span>
-                                    )}
-                                </div>
-                            </TableCell>
+                                            {/* TOMBOL SYNC MASTER (Muncul jika ada perbedaan data apapun) */}
+                                            {hasDiff && !row.isLocked && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="icon" 
+                                                                className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 shrink-0" 
+                                                                onClick={() => handleSyncData(idx)}
+                                                            >
+                                                                <RefreshCw className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[200px] text-xs">
+                                                            <p className="font-bold border-b pb-1 mb-1">Samakan dengan Database:</p>
+                                                            <ul className="list-disc pl-3 space-y-0.5">
+                                                                {isNamaBeda && <li>Nama: {db.nama}</li>}
+                                                                {isJabatanBeda && <li>Jab/Gol: {db.jabatan} ({db.golongan})</li>}
+                                                                {isSekolahBeda && <li>Sekolah: {db.sekolah}</li>}
+                                                            </ul>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
+                                    </TableCell>
 
-                            <TableCell className="align-top pt-3 text-right">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600" onClick={() => handleDeleteRow(idx)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                        ))}
+                                    {/* JABATAN & GOL (Stacked) */}
+                                    <TableCell className="align-top pt-3">
+                                        <div className="flex flex-col gap-2">
+                                            <Input 
+                                                value={row.Jabatan || ''} 
+                                                placeholder="Jabatan"
+                                                onChange={(e) => handleCellChange(idx, 'Jabatan', e.target.value)} 
+                                                className={cn("h-8 text-[10px]", 
+                                                    isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50"
+                                                )}
+                                            />
+                                            <Input 
+                                                value={row.Golongan || ''} 
+                                                placeholder="Gol"
+                                                onChange={(e) => handleCellChange(idx, 'Golongan', e.target.value)} 
+                                                className={cn("h-8 text-[10px] w-20", 
+                                                    isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50"
+                                                )}
+                                            />
+                                        </div>
+                                    </TableCell>
+
+                                    {/* NPSN & SEKOLAH (Stacked) */}
+                                    <TableCell className="align-top pt-3">
+                                        <div className="flex flex-col gap-2">
+                                            <Input 
+                                                value={row.NPSN || ''} 
+                                                onChange={(e) => handleCellChange(idx, 'NPSN', e.target.value)} 
+                                                className={cn("h-9 text-xs w-[120px]", 
+                                                    isSekolahBeda && !row.isLocked && "border-orange-300 bg-orange-50"
+                                                )}
+                                                placeholder="NPSN"
+                                            />
+                                            <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 min-h-[30px] flex items-center">
+                                                <span className="text-[10px] font-medium text-slate-600 truncate max-w-[160px]" title={row.sekolah_auto}>
+                                                    {row.sekolah_auto || "-"}
+                                                </span>
+                                            </div>
+                                            {/* Error Message Sekolah */}
+                                            {row.status_msg && row.status_msg !== "Valid" && (
+                                                <span className="text-[10px] text-red-500 italic leading-tight">
+                                                    {row.status_msg}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+
+                                    <TableCell className="align-top pt-3 text-right">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600" onClick={() => handleDeleteRow(idx)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>

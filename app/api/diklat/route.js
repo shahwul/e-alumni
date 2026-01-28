@@ -37,6 +37,7 @@ export async function GET(request) {
         md.end_date,
         md.total_jp,
         md.course_code,
+        md.participant_limit,
         md.jenis_kegiatan, -- Kolom baru
         md.jenis_program,     -- Kolom baru
         rt.topic_name as rumpun,
@@ -125,7 +126,7 @@ export async function GET(request) {
 
     // Group By & Paginasi
     baseQuery += ` 
-      GROUP BY md.id, md.title, md.start_date, md.end_date, md.total_jp, md.course_code, md.jenis_kegiatan, md.jenis_program, rt.topic_name, rst.sub_topic_name, rm.mode_name
+      GROUP BY md.id, md.title, md.start_date, md.end_date, md.total_jp, md.participant_limit, md.course_code, md.jenis_kegiatan, md.jenis_program, rt.topic_name, rst.sub_topic_name, rm.mode_name
       ORDER BY md.start_date DESC
       LIMIT $${counter} OFFSET $${counter + 1}
     `;

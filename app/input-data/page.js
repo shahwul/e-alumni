@@ -201,9 +201,9 @@ function DiklatCard({ data, onRefresh }) {
                                             <div className="space-y-1.5">
                                                 <Label className="text-xs text-slate-500 uppercase font-bold tracking-wider">Kuota</Label>
                                                 {isEditing ? (
-                                                    <Input type="number" value={editData.kuota_peserta || 0} onChange={(e) => setEditData({...editData, kuota_peserta: e.target.value})} />
+                                                    <Input type="number" value={editData.participant_limit || 0} onChange={(e) => setEditData({...editData, participant_limit: e.target.value})} />
                                                 ) : (
-                                                    <div className="flex items-center gap-2 text-sm"><Users className="w-4 h-4 text-slate-400"/> {data.kuota_peserta || 0} Orang</div>
+                                                    <div className="flex items-center gap-2 text-sm"><Users className="w-4 h-4 text-slate-400"/> {data.participant_limit || 0} Orang</div>
                                                 )}
                                             </div>
                                         </div>

@@ -22,8 +22,8 @@ export async function POST(request) {
     try {
         // 1. Ambil Data PTK berdasarkan NIK
         const queryPTK = `
-            SELECT nik, nama_ptk, npsn_sekolah
-            FROM mv_dashboard_analitik 
+            SELECT nik, nama_ptk, npsn, jabatan_ptk, pangkat_golongan
+            FROM data_ptk 
             WHERE nik = ANY($1)
         `;
         const resPTK = await client.query(queryPTK, [nikList]);
@@ -68,7 +68,7 @@ export async function POST(request) {
 
                 // Cek apakah PTK ini mutasi? (NPSN excel beda dengan NPSN dia di DB)
                 if (matchPTK.npsn_sekolah !== excelNpsn) {
-                    status_msg = `Info: Mutasi (DB: ${matchPTK.npsn_sekolah})`;
+                    status_msg = `Info: Mutasi (DB: ${matchPTK.npsn})`;
                     // Tetap valid, karena mungkin dia baru pindah dan belum update dapodik
                 }
                 
@@ -85,7 +85,7 @@ export async function POST(request) {
                 status_msg,
                 ...suggestions,
                 sekolah_auto: nama_sekolah_display, // Ini hasil lookup otomatis
-                db_data: matchPTK ? { nama: matchPTK.nama_ptk } : null
+                db_data: matchPTK ? { nama: matchPTK.nama_ptk, jabatan: matchPTK.jabatan_ptk, golongan: matchPTK.pangkat_golongan, npsn: matchPTK.npsn } : null
             };
         });
 

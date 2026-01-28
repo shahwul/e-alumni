@@ -59,7 +59,7 @@ export async function POST(request) {
         title, short_title, start_date, end_date, 
         location, category_id, mode_id, education_level_id, 
         occupation_id, course_code, description, participant_limit, 
-        jenis_diklat, jenis_program, topic_id, sub_topic_id,
+        jenis_kegiatan, jenis_program, topic_id, sub_topic_id,
         chain_code, total_jp
 
       ) 
