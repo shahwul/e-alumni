@@ -1,7 +1,7 @@
 export default function ChartCard({
   title,
   children,
-  height = 400,
+  height = 250,
   className = "",
 }) {
   return (

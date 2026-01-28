@@ -163,10 +163,10 @@ export default function DataSection({
 
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChartCard title="Status Kepegawaian">
+          <ChartCard title="Status Kepegawaian" height={300}>
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart >
                   <Pie
                     data={injectTotal(statusData)}
                     cx="50%"
@@ -192,7 +192,7 @@ export default function DataSection({
             )}
           </ChartCard>
 
-          <ChartCard title="PTK vs Alumni">
+          <ChartCard title="PTK vs Alumni" height={300}>
             {ptkAlumniData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -227,7 +227,7 @@ export default function DataSection({
                   <BarChart
                     data={jabatanData}
                     layout="vertical"
-                    margin={{ left: 40, right: 20 }}
+                    margin={{ left: 20, right: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
