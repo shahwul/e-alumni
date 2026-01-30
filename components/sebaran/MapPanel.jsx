@@ -1,0 +1,139 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { KAB_COLORS, CODE_TO_NAME, YOGYA_BOUNDS } from "./helpers/constants";
+import "leaflet/dist/leaflet.css";
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false },
+);
+const GeoJSON = dynamic(
+  () => import("react-leaflet").then((mod) => mod.GeoJSON),
+  { ssr: false },
+);
+
+export default function MapPanel({
+  geoJsonData,
+  selectedKab,
+  selectedKec,
+  wilayahData,
+  onSelect,
+}) {
+  const mapStyle = (feature) => {
+    const kabCode = feature.properties.code.substring(0, 5);
+    const kecName = feature.properties.name;
+
+    const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
+    const isSameKab = kabCode === selectedKab;
+    const isSameKec =
+      selectedKec && kecName.toUpperCase() === selectedKec.toUpperCase();
+
+    // Selected kecamatan (strong highlight)
+    if (isSameKab && isSameKec) {
+      return {
+        fillColor: "#4f46e5",
+        fillOpacity: 1,
+        weight: 3,
+        color: "#fff",
+      };
+    }
+
+    // Selected kabupaten
+    if (isSameKab) {
+      return {
+        fillColor: baseColor,
+        fillOpacity: 0.8,
+        weight: 1,
+        color: "#fff",
+      };
+    }
+
+    // Other kabupaten when one is selected
+    if (selectedKab) {
+      return {
+        fillColor: "#94a3b8",
+        fillOpacity: 0.2,
+        weight: 0.5,
+        color: "#fff",
+      };
+    }
+
+    // Default
+    return {
+      fillColor: baseColor,
+      fillOpacity: 0.6,
+      weight: 1,
+      color: "#fff",
+    };
+  };
+
+  const onEachFeature = (feature, layer) => {
+  const kabCode = feature.properties.code.substring(0, 5);
+
+  layer.bindTooltip(
+    `${feature.properties.name}, ${CODE_TO_NAME[kabCode]}`,
+    { sticky: true }
+  );
+
+  layer.on({
+    click: () => {
+      const kecNameGeo = feature.properties.name;
+      const targetKabName = CODE_TO_NAME[kabCode];
+      const kabData = wilayahData.find(
+        (w) => w.kabupaten === targetKabName
+      );
+
+      let finalKecName = kecNameGeo;
+      if (kabData?.kecamatan) {
+        const match = kabData.kecamatan.find(
+          (k) => k.toUpperCase() === kecNameGeo.toUpperCase()
+        );
+        if (match) finalKecName = match;
+      }
+
+      onSelect(kabCode, finalKecName);
+    },
+
+    mouseover: (e) => {
+      e.target.setStyle({
+        weight: 3,
+        color: "#fff",
+        fillOpacity: 0.95,
+      });
+      e.target.bringToFront();
+    },
+
+    mouseout: (e) => {
+      // Always restore from canonical style function
+      e.target.setStyle(mapStyle(e.target.feature));
+    },
+  });
+};
+
+  return (
+    <div className="flex-1 bg-slate-100 rounded-xl border relative">
+      {geoJsonData ? (
+        <MapContainer
+          center={[-7.88, 110.45]}
+          zoom={10}
+          minZoom={9}
+          maxZoom={13}
+          maxBounds={YOGYA_BOUNDS}
+          maxBoundsViscosity={1.0}
+          className="h-full"
+        >
+          <GeoJSON
+            key={selectedKab + selectedKec + wilayahData.length}
+            data={geoJsonData}
+            style={mapStyle}
+            onEachFeature={onEachFeature}
+          />
+        </MapContainer>
+      ) : (
+        <div className="h-full flex items-center justify-center text-slate-400">
+          Memuat peta…
+        </div>
+      )}
+    </div>
+  );
+}
