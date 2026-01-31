@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { KAB_COLORS, CODE_TO_NAME, YOGYA_BOUNDS } from "./helpers/constants";
+import { KAB_COLORS, CODE_TO_NAME, YOGYA_BOUNDS } from "../../lib/constants";
 import "leaflet/dist/leaflet.css";
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -68,47 +68,44 @@ export default function MapPanel({
   };
 
   const onEachFeature = (feature, layer) => {
-  const kabCode = feature.properties.code.substring(0, 5);
+    const kabCode = feature.properties.code.substring(0, 5);
 
-  layer.bindTooltip(
-    `${feature.properties.name}, ${CODE_TO_NAME[kabCode]}`,
-    { sticky: true }
-  );
+    layer.bindTooltip(`${feature.properties.name}, ${CODE_TO_NAME[kabCode]}`, {
+      sticky: true,
+    });
 
-  layer.on({
-    click: () => {
-      const kecNameGeo = feature.properties.name;
-      const targetKabName = CODE_TO_NAME[kabCode];
-      const kabData = wilayahData.find(
-        (w) => w.kabupaten === targetKabName
-      );
+    layer.on({
+      click: () => {
+        const kecNameGeo = feature.properties.name;
+        const targetKabName = CODE_TO_NAME[kabCode];
+        const kabData = wilayahData.find((w) => w.kabupaten === targetKabName);
 
-      let finalKecName = kecNameGeo;
-      if (kabData?.kecamatan) {
-        const match = kabData.kecamatan.find(
-          (k) => k.toUpperCase() === kecNameGeo.toUpperCase()
-        );
-        if (match) finalKecName = match;
-      }
+        let finalKecName = kecNameGeo;
+        if (kabData?.kecamatan) {
+          const match = kabData.kecamatan.find(
+            (k) => k.toUpperCase() === kecNameGeo.toUpperCase(),
+          );
+          if (match) finalKecName = match;
+        }
 
-      onSelect(kabCode, finalKecName);
-    },
+        onSelect(kabCode, finalKecName);
+      },
 
-    mouseover: (e) => {
-      e.target.setStyle({
-        weight: 3,
-        color: "#fff",
-        fillOpacity: 0.95,
-      });
-      e.target.bringToFront();
-    },
+      mouseover: (e) => {
+        e.target.setStyle({
+          weight: 3,
+          color: "#fff",
+          fillOpacity: 0.95,
+        });
+        e.target.bringToFront();
+      },
 
-    mouseout: (e) => {
-      // Always restore from canonical style function
-      e.target.setStyle(mapStyle(e.target.feature));
-    },
-  });
-};
+      mouseout: (e) => {
+        // Always restore from canonical style function
+        e.target.setStyle(mapStyle(e.target.feature));
+      },
+    });
+  };
 
   return (
     <div className="flex-1 bg-slate-100 rounded-xl border relative">

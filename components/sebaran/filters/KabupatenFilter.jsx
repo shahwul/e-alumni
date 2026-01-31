@@ -1,6 +1,6 @@
 "use client";
 
-import { NAME_TO_CODE } from "../helpers/constants";
+import { NAME_TO_CODE } from "../../../lib/constants";
 
 export default function KabupatenFilter({
   wilayahData,
@@ -25,10 +25,7 @@ export default function KabupatenFilter({
         {wilayahData.map((item) => {
           const code = NAME_TO_CODE[item.kabupaten];
           return (
-            <option
-              key={item.kabupaten}
-              value={code || item.kabupaten}
-            >
+            <option key={item.kabupaten} value={code || item.kabupaten}>
               {item.kabupaten}
             </option>
           );

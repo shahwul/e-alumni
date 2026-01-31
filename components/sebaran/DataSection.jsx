@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 
-import { CODE_TO_NAME} from "./helpers/constants";
+import { CODE_TO_NAME } from "../../lib/constants";
 import { processData, injectTotal } from "./helpers/utils";
 import ChartCard from "./ChartCard";
 import { CustomTooltip } from "./CustomTooltip";
@@ -56,7 +56,11 @@ export default function DataSection({
     }
 
     fetchData();
-    console.log("Fetching data with params:", { selectedKab, selectedKec, selectedYear });
+    console.log("Fetching data with params:", {
+      selectedKab,
+      selectedKec,
+      selectedYear,
+    });
     console.log("Data fetched:", data);
     return () => controller.abort();
   }, [selectedKab, selectedKec, selectedYear]);
@@ -85,7 +89,6 @@ export default function DataSection({
       data?.trenTahunan?.map((d) => ({ ...d, alumni: Number(d.alumni) })) || [],
     [data],
   );
-
 
   if (loading)
     return (
@@ -118,7 +121,6 @@ export default function DataSection({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* RANK */}
         <div className="lg:col-span-1 bg-white p-4 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          
           <h4 className="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">
             {data.ranking?.title || "Ranking"}
           </h4>
@@ -166,7 +168,7 @@ export default function DataSection({
           <ChartCard title="Status Kepegawaian" height={300}>
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart >
+                <PieChart>
                   <Pie
                     data={injectTotal(statusData)}
                     cx="50%"
