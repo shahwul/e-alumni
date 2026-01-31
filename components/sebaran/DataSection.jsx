@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 
-import { CODE_TO_NAME } from "../../lib/constants";
+import { KAB_CODE_TO_NAME } from "../../lib/constants";
 import { processData, injectTotal } from "./helpers/utils";
 import ChartCard from "./ChartCard";
 import { CustomTooltip } from "./CustomTooltip";
@@ -109,7 +109,7 @@ export default function DataSection({
           {selectedKec
             ? `Infografis: Kec. ${selectedKec}`
             : selectedKab
-              ? `Infografis: ${CODE_TO_NAME[selectedKab]}`
+              ? `Infografis: ${KAB_CODE_TO_NAME[selectedKab]}`
               : "Infografis: Provinsi D.I. Yogyakarta"}
         </h3>
         <p className="text-sm text-slate-500">

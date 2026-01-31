@@ -1,7 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { KAB_COLORS, CODE_TO_NAME, YOGYA_BOUNDS } from "../../lib/constants";
+import {
+  KAB_COLORS,
+  KAB_CODE_TO_NAME,
+  YOGYA_BOUNDS,
+} from "../../lib/constants";
 import "leaflet/dist/leaflet.css";
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -70,14 +74,17 @@ export default function MapPanel({
   const onEachFeature = (feature, layer) => {
     const kabCode = feature.properties.code.substring(0, 5);
 
-    layer.bindTooltip(`${feature.properties.name}, ${CODE_TO_NAME[kabCode]}`, {
-      sticky: true,
-    });
+    layer.bindTooltip(
+      `${feature.properties.name}, ${KAB_CODE_TO_NAME[kabCode]}`,
+      {
+        sticky: true,
+      },
+    );
 
     layer.on({
       click: () => {
         const kecNameGeo = feature.properties.name;
-        const targetKabName = CODE_TO_NAME[kabCode];
+        const targetKabName = KAB_CODE_TO_NAME[kabCode];
         const kabData = wilayahData.find((w) => w.kabupaten === targetKabName);
 
         let finalKecName = kecNameGeo;

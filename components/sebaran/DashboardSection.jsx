@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import MapPanel from "./MapPanel";
 import FilterPanel from "./filters/FilterPanel";
 import DataSection from "./DataSection";
-import { CODE_TO_NAME, YEAR_LIST } from "../../lib/constants";
+import { KAB_CODE_TO_NAME, YEAR_LIST } from "../../lib/constants";
 
 export default function DashboardClient() {
   const [geoJsonData, setGeoJsonData] = useState(null);
@@ -33,7 +33,7 @@ export default function DashboardClient() {
 
   const listKecamatan = useMemo(() => {
     if (!selectedKab) return [];
-    const kabName = CODE_TO_NAME[selectedKab];
+    const kabName = KAB_CODE_TO_NAME[selectedKab];
     return wilayahData.find((w) => w.kabupaten === kabName)?.kecamatan || [];
   }, [wilayahData, selectedKab]);
 
