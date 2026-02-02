@@ -1,6 +1,6 @@
 import { KAB_CODE_TO_NAME } from "@/lib/constants";
 
-KAB_CODE_TO_NAME
+KAB_CODE_TO_NAME;
 export const METRIC = {
   PTK: "ptk",
   ALUMNI: "alumni",
@@ -17,6 +17,7 @@ export const TIME_GRAIN = {
 export const GROUP_BY = {
   KABUPATEN: "kabupaten",
   KECAMATAN: "kecamatan",
+  STATUS_KEPEGAWAIAN: "status_kepegawaian",
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
 };
@@ -107,7 +108,12 @@ export function buildQuery({
       throw new Error("Unsupported groupBy");
     }
 
-    selectParts.unshift(`${groupBy} AS name`);
+    const groupExpr =
+      groupBy === GROUP_BY.STATUS_KEPEGAWAIAN
+        ? `COALESCE(${groupBy}, 'Lainnya')`
+        : groupBy;
+
+    selectParts.unshift(`${groupExpr} AS name`);
     groupParts.push("name");
   }
 
@@ -133,13 +139,13 @@ export function buildQuery({
   // }
 
   return {
-  sql: `
+    sql: `
     SELECT
       ${selectParts.join(",\n        ")}
     FROM mv_dashboard_analitik
     ${where}
     ${groupParts.length ? `GROUP BY ${groupParts.join(", ")}` : ""}
   `,
-  values
-};
+    values,
+  };
 }
