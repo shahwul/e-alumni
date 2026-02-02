@@ -18,9 +18,12 @@ import {
 } from "recharts";
 
 import { KAB_CODE_TO_NAME } from "../../lib/constants";
-import { processData, injectTotal } from "./helpers/utils";
-import ChartCard from "./ChartCard";
-import { CustomTooltip } from "./CustomTooltip";
+import {
+  processData,
+  injectTotal,
+} from "../../components/sebaran/helpers/utils";
+import ChartCard from "../../components/sebaran/ChartCard";
+import { CustomTooltip } from "../../components/sebaran/CustomTooltip";
 
 export default function DataSection({
   selectedKab,

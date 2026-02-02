@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import MapPanel from "./MapPanel";
-import FilterPanel from "./filters/FilterPanel";
+import MapPanel from "@/components/sebaran/MapPanel";
+import FilterPanel from "@/components/sebaran/filters/FilterPanel";
 import DataSection from "./DataSection";
-import { KAB_CODE_TO_NAME, YEAR_LIST } from "../../lib/constants";
+import { KAB_CODE_TO_NAME, YEAR_LIST } from "@/lib/constants";
 
 export default function DashboardClient() {
   const [geoJsonData, setGeoJsonData] = useState(null);
