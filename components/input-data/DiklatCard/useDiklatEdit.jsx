@@ -14,6 +14,8 @@ export default function useDiklatEdit(data, onRefresh) {
       const {
         topic_name,
         sub_topic_name,
+        sasaran_jenjang,
+        sasaran_jabatan,
         moda,
         total_peserta,
         rumpun,
