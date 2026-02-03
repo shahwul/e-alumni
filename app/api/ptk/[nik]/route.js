@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
     const profilSql = `
       SELECT 
         dp.nik,
-        dp.nama_ptk as nama, 
+        dp.nama_ptk, 
         dp.status_kepegawaian,
         dp.npsn,
         sp.nama,

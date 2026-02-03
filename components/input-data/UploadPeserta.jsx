@@ -30,6 +30,32 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
         { "NIK": "1234567890", "Nama": "Nama Lengkap", "NPSN": "12345678", "Jabatan": "Guru Kelas", "Golongan": "III/a" }
     ];
     const ws = XLSX.utils.json_to_sheet(header);
+    const range = XLSX.utils.decode_range(ws['!ref']); // Ambil area data (A1:E2)
+
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+        
+        // Skip kalau sel kosong
+        if (!ws[cellRef]) continue;
+
+        // Paksa tipe data jadi String ('s')
+        ws[cellRef].t = 's';
+        
+        // Paksa format sel jadi Text ('@')
+        // Efeknya: Ada segitiga hijau kecil di pojok kiri atas sel Excel (Number stored as text)
+        ws[cellRef].z = '@'; 
+      }
+    }
+    
+    // 4. Atur Lebar Kolom (Biar NIK gak sempit-sempitan)
+    ws['!cols'] = [
+        { wch: 25 }, // Lebar Kolom NIK
+        { wch: 30 }, // Lebar Kolom Nama
+        { wch: 15 }, // Lebar Kolom NPSN
+        { wch: 20 }, // Lebar Kolom Jabatan
+        { wch: 10 }, // Lebar Kolom Golongan
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
     XLSX.writeFile(wb, "Template_Peserta_Diklat.xlsx");

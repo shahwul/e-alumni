@@ -48,7 +48,7 @@ export function DetailPTKDialog({ open, onOpenChange, nik }) {
         {/* Tambahkan DialogTitle dengan class 'sr-only' (hidden visual) */}
         {/* Ini memenuhi syarat aksesibilitas tanpa merusak desain */}
         <DialogTitle className="sr-only">
-            Detail Profil PTK - {data?.profil?.nama || "Memuat..."}
+            Detail Profil PTK - {data?.profil?.nama_ptk || "Memuat..."}
         </DialogTitle>
 
         {/* HEADER WARNA (Custom Design Kamu) */}
@@ -56,7 +56,7 @@ export function DetailPTKDialog({ open, onOpenChange, nik }) {
            <Avatar className="h-16 w-16 border-2 border-white/20">
               <AvatarImage src="" /> 
               <AvatarFallback className="bg-blue-600 text-white font-bold text-xl">
-                 {loading ? "..." : getInitials(data?.profil?.nama)}
+                 {loading ? "..." : getInitials(data?.profil?.nama_ptk)}
               </AvatarFallback>
            </Avatar>
            <div className="flex-1 text-center sm:text-left space-y-1">
@@ -64,7 +64,7 @@ export function DetailPTKDialog({ open, onOpenChange, nik }) {
                 <div className="h-6 w-32 bg-slate-800 animate-pulse rounded mx-auto sm:mx-0"></div>
               ) : (
                 <>
-                  <h3 className="text-lg font-bold leading-tight">{data?.profil?.nama}</h3>
+                  <h3 className="text-lg font-bold leading-tight">{data?.profil?.nama_ptk}</h3>
                   <div className="flex items-center justify-center sm:justify-start gap-2 text-slate-300 text-sm">
                      <span className="font-mono bg-slate-800 px-1.5 rounded text-xs">{data?.profil?.nik}</span>
                      <span>•</span>
