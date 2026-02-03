@@ -20,7 +20,7 @@ export default function KabupatenFilter({
         onChange={(e) => onChange(e.target.value)}
         disabled={loadingWilayah}
       >
-        <option value="">-- Semua Kabupaten --</option>
+        <option value="">Semua Kabupaten</option>
 
         {wilayahData.map((item) => {
           const code = KAB_NAME_TO_CODE[item.kabupaten];
