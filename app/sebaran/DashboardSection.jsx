@@ -11,9 +11,7 @@ export default function DashboardClient() {
   const [wilayahData, setWilayahData] = useState([]);
   const [selectedKab, setSelectedKab] = useState("");
   const [selectedKec, setSelectedKec] = useState("");
-  const [selectedYear, setSelectedYear] = useState(
-    new Date().getFullYear().toString(),
-  );
+  const [selectedYear, setSelectedYear] = useState("");
   const [loadingWilayah, setLoadingWilayah] = useState(true);
 
   useEffect(() => {
