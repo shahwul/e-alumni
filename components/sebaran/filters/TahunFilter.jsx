@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarRange } from "lucide-react";
-import { YEAR_LIST } from "../../../lib/constants";
+import { YEAR_LIST } from "@/lib/constants";
 
 export default function TahunFilter({ selectedYear, onChange }) {
   return (
@@ -17,6 +17,7 @@ export default function TahunFilter({ selectedYear, onChange }) {
         value={selectedYear}
         onChange={(e) => onChange(e.target.value)}
       >
+        <option value="">Semua Tahun</option>
         {YEAR_LIST.map((year) => (
           <option key={year} value={year}>
             {year}
