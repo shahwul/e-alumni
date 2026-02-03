@@ -1,6 +1,5 @@
 import { KAB_CODE_TO_NAME } from "@/lib/constants";
 
-KAB_CODE_TO_NAME;
 export const METRIC = {
   PTK: "ptk",
   ALUMNI: "alumni",
@@ -20,6 +19,7 @@ export const GROUP_BY = {
   STATUS_KEPEGAWAIAN: "status_kepegawaian",
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
+  JENJANG: "bentuk_pendidikan",
 };
 
 export function timeSelect(grain) {
@@ -78,17 +78,17 @@ export function buildQuery({
 
   switch (metric) {
     case METRIC.PTK:
-      selectParts.push(`COUNT(*) AS value`);
+      selectParts.push(`COUNT(DISTINCT nik) AS value`);
       break;
     case METRIC.ALUMNI:
       where += where ? " AND " : "WHERE ";
       where += "is_sudah_pelatihan = true";
-      selectParts.push(`COUNT(*) AS value`);
+      selectParts.push(`COUNT(DISTINCT nik) AS value`);
       break;
     case METRIC.UNTRAINED:
       where += where ? " AND " : "WHERE ";
       where += "(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)";
-      selectParts.push(`COUNT(*) AS value`);
+      selectParts.push(`COUNT(DISTINCT nik) AS value`);
       break;
     default:
       throw new Error("Invalid metric");
