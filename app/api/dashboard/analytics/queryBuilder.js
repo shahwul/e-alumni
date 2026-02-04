@@ -35,7 +35,7 @@ export function timeSelect(grain) {
   }
 }
 
-export function buildContext({ kab, kec, year }) {
+export function buildContext({ kab, kec, year, jenjang }) {
   const where = [];
   const values = [];
   let i = 1;
@@ -53,6 +53,11 @@ export function buildContext({ kab, kec, year }) {
   if (year) {
     where.push(`EXTRACT(YEAR FROM end_date) = $${i++}`);
     values.push(Number(year));
+  }
+
+  if (jenjang && jenjang !== "Semua Jenjang") {
+    where.push(`UPPER(bentuk_pendidikan) LIKE $${i++}`);
+    values.push(`%${jenjang.toUpperCase()}%`);
   }
 
   return {

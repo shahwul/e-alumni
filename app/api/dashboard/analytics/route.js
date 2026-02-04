@@ -11,7 +11,8 @@ export async function GET(req) {
     filters: {
       kab: searchParams.get("kab"),
       kec: searchParams.get("kec"),
-      year: searchParams.get("year")
+      year: searchParams.get("year"),
+      jenjang: searchParams.get("jenjang"),
     }
   });
 
