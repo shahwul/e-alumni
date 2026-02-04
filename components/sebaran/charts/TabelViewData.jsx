@@ -13,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const JENJANG_OPTIONS = [
@@ -31,15 +31,13 @@ export default function TabelViewData({kab, kec, year}) {
 
   useEffect(() => {
     if (!kab) {
-      setGroupBy("kabupaten");
+      setGroupBy("Kabupaten");
     } else if (kab && !kec) {
-      setGroupBy("kecamatan");
+      setGroupBy("Kecamatan");
     } else {
-      setGroupBy("nama_sekolah"); 
+      setGroupBy("Sekolah"); 
     }
   }, [kab, kec]);
-
-  console.log("Query Params:", { kab, kec, year, jenjang, groupBy });
 
   const { data, loading, error } = useAnalytics({
     metric: "alumni",
@@ -50,41 +48,25 @@ export default function TabelViewData({kab, kec, year}) {
     jenjang
   });
 
-  return (
-    <div className="space-y-2">
-      <select
-        value={jenjang}
-        onChange={(e) => setJenjang(e.target.value)}
-        className="border rounded p-1 text-sm"
-      >
-        <option value="">Semua Jenjang</option>
-        {JENJANG_OPTIONS.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+ return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="font-semibold text-sm text-left">{groupBy}</TableHead>
+          <TableHead className="font-semibold text-sm text-right">Jumlah Alumni</TableHead>
+        </TableRow>
+      </TableHeader>
 
-      <ResponsiveContainer width="100%" height={300}>
-        {loading ? (
-          <div className="flex h-full items-center justify-center text-slate-400">
-            Loading…
-          </div>
-        ) : error ? (
-          <div className="flex h-full items-center justify-center text-red-500">
-            Error loading data
-          </div>
-        ) : data.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-slate-400">
-            Data Kosong
-          </div>
-        ) : (
-          /* table or chart goes here */
-          <pre className="text-xs overflow-auto">
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        )}
-      </ResponsiveContainer>
-    </div>
+      <TableBody>
+        {data.map(row => (
+          <TableRow key={row.name}>
+            <TableCell className="max-w-[100px] whitespace-normal wrap-break-words text-sm text-left" title={row.name}>{row.name}</TableCell>
+            <TableCell className="text-sm text-right">
+              {row.value.toLocaleString()}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
