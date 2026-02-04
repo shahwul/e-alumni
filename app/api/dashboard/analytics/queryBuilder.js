@@ -109,14 +109,14 @@ export function buildQuery({
   }
 
   if (groupBy) {
-    if (!Object.values(GROUP_BY).includes(groupBy)) {
+    if (!Object.values(GROUP_BY).includes(GROUP_BY[groupBy.toUpperCase()])) {
       throw new Error("Unsupported groupBy");
     }
 
     const groupExpr =
       groupBy === GROUP_BY.STATUS_KEPEGAWAIAN
         ? `COALESCE(${groupBy}, 'Lainnya')`
-        : groupBy;
+        : GROUP_BY[groupBy.toUpperCase()];
 
     selectParts.unshift(`${groupExpr} AS name`);
     groupParts.push("name");
