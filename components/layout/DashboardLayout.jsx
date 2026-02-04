@@ -60,7 +60,6 @@ export default function DashboardLayout({ children }) {
 
         {/* Menu Items */}
         <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-700">
-          <SidebarItem icon={<LayoutDashboard size={18} />} label="Beranda" active={pathname === '/beranda'} onClick={() => router.push('/beranda')} />
           <SidebarItem icon={<Map size={18} />} label="Sebaran & Infografis" active={pathname === '/sebaran'} onClick={() => router.push('/sebaran')} />
           <SidebarItem icon={<FileInput size={18} />} label="Input Data" active={pathname === '/input-data'} onClick={() => router.push('/input-data')} />
 

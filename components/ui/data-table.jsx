@@ -26,14 +26,23 @@ export function DataTable({
   })
 
   return (
-    <div className="w-full">
+    // 1. CONTAINER: Hapus 'max-h-[...]' dan 'overflow-auto'.
+    // Biarkan tabel memanjang secara natural agar scroll browser yang bekerja.
+    <div className="w-full rounded-md border bg-white shadow-sm">
       <Table>
-        <TableHeader className="bg-slate-50">
+        <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id} className="font-semibold text-slate-700">
+                  // 2. HEADER STICKY:
+                  // - sticky top-0: Nempel di atas layar.
+                  // - z-20: Supaya selalu di atas konten tabel.
+                  // - bg-slate-50: Supaya tulisan tidak tembus pandang (background solid).
+                  <TableHead 
+                    key={header.id} 
+                    className="sticky top-0 z-20 bg-slate-50 font-bold text-slate-700 shadow-sm border-b"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(

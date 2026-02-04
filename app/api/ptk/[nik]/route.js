@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { NextResponse } from "next/server";
+import pool from "@/lib/db";
 
 export async function GET(request, { params }) {
   try {
@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
     const { nik } = await params;
 
     if (!nik) {
-      return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
+      return NextResponse.json({ error: "NIK wajib diisi" }, { status: 400 });
     }
 
     // ==========================================
@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
     const profilSql = `
       SELECT 
         dp.nik,
-        dp.nama_ptk as nama, 
+        dp.nama_ptk, 
         dp.status_kepegawaian,
         dp.npsn,
         sp.nama,
@@ -32,7 +32,10 @@ export async function GET(request, { params }) {
     const profilRes = await pool.query(profilSql, [nik]);
 
     if (profilRes.rows.length === 0) {
-      return NextResponse.json({ error: 'PTK tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { error: "PTK tidak ditemukan" },
+        { status: 404 },
+      );
     }
 
     // ==========================================
@@ -66,11 +69,10 @@ export async function GET(request, { params }) {
     // ==========================================
     return NextResponse.json({
       profil: profilRes.rows[0],
-      history: historyRes.rows
+      history: historyRes.rows,
     });
-
   } catch (error) {
     console.error("Error Detail PTK:", error);
-    return NextResponse.json({ error: 'Server Error' }, { status: 500 });
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
