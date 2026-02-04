@@ -20,7 +20,7 @@ export default function KecamatanFilter({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
       >
-        <option value="">-- Semua Kecamatan --</option>
+        <option value="">Semua Kecamatan</option>
 
         {listKecamatan.map((kec) => (
           <option key={kec} value={kec}>

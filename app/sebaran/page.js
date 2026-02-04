@@ -1,4 +1,4 @@
-import DashboardClient from "@/components/sebaran/DashboardSection";
+import DashboardClient from "@/app/sebaran/DashboardSection";
 
 export default function DashboardPage() {
   return <DashboardClient />;

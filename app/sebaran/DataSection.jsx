@@ -17,10 +17,16 @@ import {
   Legend,
 } from "recharts";
 
-import { CODE_TO_NAME} from "./helpers/constants";
-import { processData, injectTotal } from "./helpers/utils";
-import ChartCard from "./ChartCard";
-import { CustomTooltip } from "./CustomTooltip";
+import { KAB_CODE_TO_NAME } from "../../lib/constants";
+import {
+  processData,
+  injectTotal,
+} from "../../components/sebaran/helpers/utils";
+import { CustomTooltip } from "../../components/sebaran/CustomTooltip";
+import ChartCard from "../../components/sebaran/ChartCard";
+import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
+import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
+import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 
 export default function DataSection({
   selectedKab,
@@ -56,7 +62,11 @@ export default function DataSection({
     }
 
     fetchData();
-    console.log("Fetching data with params:", { selectedKab, selectedKec, selectedYear });
+    console.log("Fetching data with params:", {
+      selectedKab,
+      selectedKec,
+      selectedYear,
+    });
     console.log("Data fetched:", data);
     return () => controller.abort();
   }, [selectedKab, selectedKec, selectedYear]);
@@ -86,7 +96,6 @@ export default function DataSection({
     [data],
   );
 
-
   if (loading)
     return (
       <div className="flex-1 p-8 flex justify-center items-center text-slate-400">
@@ -106,7 +115,7 @@ export default function DataSection({
           {selectedKec
             ? `Infografis: Kec. ${selectedKec}`
             : selectedKab
-              ? `Infografis: ${CODE_TO_NAME[selectedKab]}`
+              ? `Infografis: ${KAB_CODE_TO_NAME[selectedKab]}`
               : "Infografis: Provinsi D.I. Yogyakarta"}
         </h3>
         <p className="text-sm text-slate-500">
@@ -116,108 +125,34 @@ export default function DataSection({
 
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
-        {/* RANK */}
+        {/* Tabel View */}
         <div className="lg:col-span-1 bg-white p-4 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          
           <h4 className="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">
-            {data.ranking?.title || "Ranking"}
+            Dataview
           </h4>
-          <div className="space-y-4 overflow-y-auto flex-1 pr-1 max-h-[500px]">
-            {data.ranking?.items?.length > 0 ? (
-              data.ranking.items.map((item, index) => {
-                const val = Number(item.value);
-                const maxVal = Number(data.ranking.items[0]?.value) || 1;
-                return (
-                  <div key={index} className="flex items-center gap-3">
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shrink-0 ${index < 3 ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}
-                    >
-                      #{index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-slate-700 truncate pr-2">
-                          {item.name}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500">
-                          {new Intl.NumberFormat("id-ID").format(val)}
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5">
-                        <div
-                          className="bg-blue-600 h-1.5 rounded-full"
-                          style={{ width: `${(val / maxVal) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center text-slate-400 text-sm mt-10">
-                Belum ada data ranking
-              </div>
-            )}
-          </div>
+          <TabelViewData
+            kab={selectedKab}
+            kec={selectedKec}
+            year={selectedYear}
+          />
         </div>
 
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
           <ChartCard title="Status Kepegawaian" height={300}>
-            {statusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart >
-                  <Pie
-                    data={injectTotal(statusData)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                  ></Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Data Kosong
-              </div>
-            )}
+            <StatusKepegawaianChart
+              kab={selectedKab}
+              kec={selectedKec}
+              year={selectedYear}
+            />
           </ChartCard>
 
           <ChartCard title="PTK vs Alumni" height={300}>
-            {ptkAlumniData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={injectTotal(ptkAlumniData)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={0}
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                  ></Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Data Kosong
-              </div>
-            )}
+            <PtkVsAlumniChart
+              kab={selectedKab}
+              kec={selectedKec}
+              year={selectedYear}
+            />
           </ChartCard>
 
           <div className="md:col-span-2">
