@@ -55,7 +55,7 @@ export function buildContext({ kab, kec, year, jenjang }) {
     values.push(Number(year));
   }
 
-  if (jenjang && jenjang !== "Semua Jenjang") {
+  if (jenjang) {
     where.push(`UPPER(bentuk_pendidikan) LIKE $${i++}`);
     values.push(`%${jenjang.toUpperCase()}%`);
   }
