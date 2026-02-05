@@ -27,17 +27,17 @@ const formSchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   jenis_perekrutan: z.string(),
-  kategori: z.coerce.number(),
-  moda: z.coerce.number(),
+  category_id: z.coerce.number(),
+  mode_id: z.coerce.number(),
   jenjang: z.coerce.number(),
   jenis_kegiatan: z.string(),
   jenis_program: z.string(),
-  rumpun: z.coerce.number(),
-  sub_rumpun: z.coerce.number(),
-  jabatan: z.coerce.number(),
-  total_peserta: z.coerce.number(),
+  topic_id: z.coerce.number(),
+  sub_topic_id: z.coerce.number(),
+  occupation_id: z.coerce.number(),
+  participant_limit: z.coerce.number(),
   total_jp: z.coerce.number(),
-  lokasi: z.string(),
+  location: z.string(),
 });
 
 export default function AddDiklatForm({onBack, onSuccess}) {
@@ -200,8 +200,8 @@ export default function AddDiklatForm({onBack, onSuccess}) {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Pilih Jenis" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="terbuka">Terbuka</SelectItem>
-                      <SelectItem value="undangan">Undangan</SelectItem>
+                      <SelectItem value="Terbuka">Terbuka</SelectItem>
+                      <SelectItem value="Undangan">Undangan</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

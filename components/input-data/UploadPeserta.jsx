@@ -109,6 +109,7 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
           method: "POST",
           body: JSON.stringify({ peserta: dataToValidate })
       });
+      console.log("Peserta:", dataToValidate);
       const json = await res.json();
       if (json.data) {
           setParsedData(json.data);

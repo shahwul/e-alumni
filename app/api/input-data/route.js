@@ -39,9 +39,11 @@ export async function POST(request) {
     const data = await request.json();
 
     const [resTopik, resSubTopik] = await Promise.all([
-      pool.query("SELECT topic_name FROM ref_topik WHERE id = $1", [data.rumpun]),
-      pool.query("SELECT sub_topic_name FROM ref_sub_topik WHERE id = $1", [data.sub_rumpun])
+      pool.query("SELECT topic_name FROM ref_topik WHERE id = $1", [data.topic_id]),
+      pool.query("SELECT sub_topic_name FROM ref_sub_topik WHERE id = $1", [data.sub_topic_id])
     ]);
+
+    console.log("Fetched Topik and Sub Topik:", resTopik.rows, resSubTopik.rows);
 
     const rumpunName = resTopik.rows[0]?.topic_name || "XX";
     const subRumpunName = resSubTopik.rows[0]?.sub_topic_name || "XX";
@@ -51,7 +53,7 @@ export async function POST(request) {
     const year = new Date().getFullYear();
     const semester = (new Date(data.start_date).getMonth() < 6) ? "2" : "1";
     const generatedShortTitle = `${course_code}-${rumpunName.substring(0, 3).toUpperCase()}-${subRumpunName.substring(0, 3).toUpperCase()}-${year}-${semester}`;
-    const generatedChainCode = `0${data.jenjang}0${data.rumpun}${data.sub_rumpun}`;
+    const generatedChainCode = `0${data.education_level_id}0${data.topic_id}${data.sub_topic_id}`;
     // 2. Insert into Database
     // Note: Mapping frontend names (e.g., 'lokasi') to DB columns (e.g., 'location')
     const query = `
@@ -60,10 +62,10 @@ export async function POST(request) {
         location, category_id, mode_id, education_level_id, 
         occupation_id, course_code, description, participant_limit, 
         jenis_kegiatan, jenis_program, topic_id, sub_topic_id,
-        chain_code, total_jp
+        chain_code, total_jp, jenis_perekrutan
 
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *;
     `;
 
@@ -72,21 +74,24 @@ export async function POST(request) {
       generatedShortTitle,                    // $2
       new Date(data.start_date),              // $3
       new Date(data.end_date),                // $4
-      data.lokasi,                            // $5 (mapped from lokasi)                   // $8 (mode_id                 // $10 (occupation_id)
-      data.kategori || null,
-      data.moda || null,
-      data.jenjang || null,                   // $9 (education_level_id)
-      data.jabatan || null,            
+      data.location,                            // $5 (mapped from location)                   // $8 (mode_id                 // $10 (occupation_id)
+      data.category_id || null,
+      data.mode_id || null,
+      data.education_level_id || null,                   // $9 (education_level_id)
+      data.occupation_id || null,            
       course_code,                             // $12
       data.description,
-      parseInt(data.total_peserta) || 0,      // $5
+      parseInt(data.participant_limit) || 0,      // $5
       data.jenis_kegiatan,                  
       data.jenis_program,
-      data.rumpun,
-      data.sub_rumpun,
+      data.topic_id,
+      data.sub_topic_id,
       generatedChainCode,
       parseInt(data.total_jp) || 0,
+      data.jenis_perekrutan
     ];
+
+    console.log("Inserting Diklat with values:", values);
 
     const result = await pool.query(query, values);
     
