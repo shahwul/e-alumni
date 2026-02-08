@@ -8,6 +8,7 @@ export async function GET(req) {
   const query = buildQuery({
     metric: searchParams.get("metric"),
     groupBy: searchParams.get("groupBy"),
+    timeGrain: searchParams.get("timeGrain"),
     filters: {
       kab: searchParams.get("kab"),
       kec: searchParams.get("kec"),
@@ -15,6 +16,8 @@ export async function GET(req) {
       jenjang: searchParams.get("jenjang"),
     }
   });
+
+  console.log("Executing query:", query.sql, "with values:", query.values);
 
   const result = await pool.query(query.sql, query.values);
 

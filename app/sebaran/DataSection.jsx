@@ -27,6 +27,7 @@ import ChartCard from "../../components/sebaran/ChartCard";
 import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
+import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
 
 export default function DataSection({
   selectedKab,
@@ -234,28 +235,7 @@ export default function DataSection({
           </ChartCard>
 
           <ChartCard title="Tren Alumni (5 Tahun Terakhir)">
-            {tahunanData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={tahunanData}
-                  margin={{ top: 10, right: 10, bottom: 0, left: -10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    formatter={(val) =>
-                      new Intl.NumberFormat("id-ID").format(val)
-                    }
-                  />
-                  <Bar dataKey="alumni" fill="#0088FE" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Data Kosong
-              </div>
-            )}
+            <TimeGraphChart kab={selectedKab} kec={selectedKec} timeGrain="year" year={selectedYear} />
           </ChartCard>
         </div>
       </div>
