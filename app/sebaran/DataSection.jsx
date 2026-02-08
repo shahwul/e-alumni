@@ -164,7 +164,7 @@ export default function DataSection({
             />
           </ChartCard>
 
-          <div className="md:col-span-2">
+          {/* <div className="md:col-span-2">
             <ChartCard title="Persebaran Jabatan (Top 5)">
               {jabatanData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -209,7 +209,7 @@ export default function DataSection({
                 </div>
               )}
             </ChartCard>
-          </div>
+          </div> */}
 
           <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
             {triwulanData.some((d) => d.alumni > 0) ? (
@@ -242,7 +242,7 @@ export default function DataSection({
             )}
           </ChartCard>
 
-          <ChartCard title="Tren Alumni (5 Tahun Terakhir)">
+          <ChartCard title="Tren Alumni (5 Tahun Terakhir)" height={300}>
             <TimeGraphChart
               kab={selectedKab}
               kec={selectedKec}
