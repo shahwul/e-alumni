@@ -28,6 +28,7 @@ import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaia
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
+import JenjangAlumniChart from "@/components/sebaran/charts/JenjangAlumniChart";
 
 export default function DataSection({
   selectedKab,
@@ -120,7 +121,14 @@ export default function DataSection({
               : "Infografis: Provinsi D.I. Yogyakarta"}
         </h3>
         <p className="text-sm text-slate-500">
-          Statistik kepegawaian & diklat Tahun <strong>{selectedYear}</strong>.
+          Statistik PTK dan alumni{" "}
+          {selectedYear ? (
+            <>
+              tahun <strong>{selectedYear}</strong>
+            </>
+          ) : (
+            ""
+          )}
         </p>
       </div>
 
@@ -128,7 +136,7 @@ export default function DataSection({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* Tabel View */}
         <div className="lg:col-span-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm  uppercase tracking-wide border-b pl-2 pb-2 ">
+          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm tracking-wide border-b pl-2 pb-2 ">
             Data Tersedia
           </h4>
           <TabelViewData
@@ -140,8 +148,8 @@ export default function DataSection({
 
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChartCard title="Status Kepegawaian" height={300}>
-            <StatusKepegawaianChart
+          <ChartCard title="Jenjang Pendidikan" height={300}>
+            <JenjangAlumniChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
@@ -235,7 +243,12 @@ export default function DataSection({
           </ChartCard>
 
           <ChartCard title="Tren Alumni (5 Tahun Terakhir)">
-            <TimeGraphChart kab={selectedKab} kec={selectedKec} timeGrain="year" year={selectedYear} />
+            <TimeGraphChart
+              kab={selectedKab}
+              kec={selectedKec}
+              timeGrain="year"
+              year={selectedYear}
+            />
           </ChartCard>
         </div>
       </div>
