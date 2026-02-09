@@ -20,13 +20,13 @@ export const GROUP_BY = {
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
   JENJANG: "bentuk_pendidikan",
-};
+}; 
 
 export function timeSelect(grain) {
   switch (grain) {
     case "year":
-      return `EXTRACT(YEAR FROM end_date)::text`;
-    case "quarter":
+      return `EXTRACT(YEAR FROM end_date)`;
+    case "quarter": 
       return `'Q' || EXTRACT(QUARTER FROM end_date)`;
     case "month":
       return `TO_CHAR(end_date, 'YYYY-MM')`;
@@ -105,7 +105,7 @@ export function buildQuery({
     groupParts.push("time");
 
     where += where ? " AND " : "WHERE ";
-    where += "end_date IS NOT NULL";
+    where += "is_sudah_pelatihan = true";
   }
 
   if (groupBy) {

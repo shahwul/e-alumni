@@ -27,6 +27,8 @@ import ChartCard from "../../components/sebaran/ChartCard";
 import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
+import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
+import JenjangAlumniChart from "@/components/sebaran/charts/JenjangAlumniChart";
 
 export default function DataSection({
   selectedKab,
@@ -119,7 +121,14 @@ export default function DataSection({
               : "Infografis: Provinsi D.I. Yogyakarta"}
         </h3>
         <p className="text-sm text-slate-500">
-          Statistik kepegawaian & diklat Tahun <strong>{selectedYear}</strong>.
+          Statistik PTK dan alumni{" "}
+          {selectedYear ? (
+            <>
+              tahun <strong>{selectedYear}</strong>
+            </>
+          ) : (
+            ""
+          )}
         </p>
       </div>
 
@@ -127,7 +136,7 @@ export default function DataSection({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* Tabel View */}
         <div className="lg:col-span-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm  uppercase tracking-wide border-b pl-2 pb-2 ">
+          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm tracking-wide border-b pl-2 pb-2 ">
             Data Tersedia
           </h4>
           <TabelViewData
@@ -139,8 +148,8 @@ export default function DataSection({
 
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChartCard title="Status Kepegawaian" height={300}>
-            <StatusKepegawaianChart
+          <ChartCard title="Jenjang Pendidikan" height={300}>
+            <JenjangAlumniChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
@@ -155,7 +164,7 @@ export default function DataSection({
             />
           </ChartCard>
 
-          <div className="md:col-span-2">
+          {/* <div className="md:col-span-2">
             <ChartCard title="Persebaran Jabatan (Top 5)">
               {jabatanData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -200,7 +209,7 @@ export default function DataSection({
                 </div>
               )}
             </ChartCard>
-          </div>
+          </div> */}
 
           <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
             {triwulanData.some((d) => d.alumni > 0) ? (
@@ -233,29 +242,13 @@ export default function DataSection({
             )}
           </ChartCard>
 
-          <ChartCard title="Tren Alumni (5 Tahun Terakhir)">
-            {tahunanData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={tahunanData}
-                  margin={{ top: 10, right: 10, bottom: 0, left: -10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    formatter={(val) =>
-                      new Intl.NumberFormat("id-ID").format(val)
-                    }
-                  />
-                  <Bar dataKey="alumni" fill="#0088FE" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Data Kosong
-              </div>
-            )}
+          <ChartCard title="Tren Alumni (5 Tahun Terakhir)" height={300}>
+            <TimeGraphChart
+              kab={selectedKab}
+              kec={selectedKec}
+              timeGrain="year"
+              year={selectedYear}
+            />
           </ChartCard>
         </div>
       </div>
