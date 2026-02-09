@@ -1,7 +1,9 @@
+"use client";
+
+import { useEffect } from "react"; // 1. IMPORT USEEFFECT
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -24,8 +26,17 @@ import { DateRangeFilter } from "./section/DateRange";
 import { ModeSwitcher } from "./section/ModeSwitcher";
 import { KategoriJenisProgramFilter } from "./section/KategoriJenisProgramFilter";
 
-function FilterDialogContent({ onApplyFilter }) {
-  const { filters, resetFilters } = useFilterContext();
+// --- 2. TERIMA PROPS activeFilters DI SINI ---
+function FilterDialogContent({ onApplyFilter, activeFilters }) {
+  const { filters, setFilters, resetFilters } = useFilterContext();
+
+  // --- 3. LOGIKA SINKRONISASI ---
+  // Setiap kali activeFilters (dari Toolbar/Parent) berubah, update state internal Context
+  useEffect(() => {
+    if (activeFilters) {
+      setFilters(activeFilters);
+    }
+  }, [activeFilters, setFilters]);
 
   return (
     <>
@@ -44,26 +55,6 @@ function FilterDialogContent({ onApplyFilter }) {
         <DiklatFilter />
         <DateRangeFilter />
         <RumpunFilter />
-        {/* <div
-          class="tenor-gif-embed"
-          data-postid="15890113508719617554"
-          data-share-method="host"
-          data-aspect-ratio="1.00403"
-          data-width="100%"
-        >
-          <a href="https://tenor.com/view/alhamdulillah-gif-15890113508719617554">
-            Alhamdulillah Meme
-          </a>
-          from{" "}
-          <a href="https://tenor.com/search/alhamdulillah-memes">
-            Alhamdulillah Memes
-          </a>
-        </div>{" "}
-        <script
-          type="text/javascript"
-          async
-          src="https://tenor.com/embed.js"
-        ></script> */}
       </div>
 
       <DialogFooter className="flex justify-between border-t sticky bottom-0 bg-white py-4">
@@ -99,7 +90,7 @@ function FilterDialogTrigger() {
         {activeCount > 0 && (
           <span
             className="flex items-center justify-center h-5 w-5 rounded-full
-                     bg-blue-100 text-blue-700 text-[10px] font-bold"
+                      bg-blue-100 text-blue-700 text-[10px] font-bold"
           >
             {activeCount}
           </span>
@@ -109,14 +100,19 @@ function FilterDialogTrigger() {
   );
 }
 
-export function FilterDialog({ onApplyFilter }) {
+// --- 4. TERIMA PROPS activeFilters DARI PARENT ---
+export function FilterDialog({ onApplyFilter, activeFilters }) {
   return (
     <FilterProvider>
       <Dialog>
         <FilterDialogTrigger />
 
         <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto pb-0">
-          <FilterDialogContent onApplyFilter={onApplyFilter} />
+          {/* Teruskan activeFilters ke Content */}
+          <FilterDialogContent 
+            onApplyFilter={onApplyFilter} 
+            activeFilters={activeFilters} 
+          />
         </DialogContent>
       </Dialog>
     </FilterProvider>

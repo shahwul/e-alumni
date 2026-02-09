@@ -8,9 +8,7 @@ export default function useDiklatEdit(data, onRefresh) {
   useEffect(() => {
     setEditData({ ...data });
   }, [data]);
-
-  console.log("Initial editData:", editData);
-
+  
   const handleSaveEdit = async () => {
     try {
       const {

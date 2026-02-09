@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useRef } from "react";
-import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Upload, Save, Loader2, CheckCircle, XCircle, AlertTriangle, RefreshCw, Trash2, ArrowRightLeft, CloudUpload, FileSpreadsheet, Lock } from "lucide-react";
+import { Download, Save, Loader2, CheckCircle, AlertCircle, Trash2, CloudUpload, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-export default function UploadPeserta({ diklatId, onSuccess }) {
+// --- IMPORT UTILS BARU ---
+import { downloadTemplatePeserta, parseExcelPeserta } from "./utils/excel-processor";
+
+// Tambahkan prop diklatTitle
+export default function UploadPeserta({ diklatId, diklatTitle, onSuccess }) {
   const [parsedData, setParsedData] = useState([]);
   const [isValidating, setIsValidating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -24,73 +26,49 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
 
   const hasData = parsedData.length > 0;
 
-  // 1. Download Template (Lengkap dengan Jabatan/Golongan)
+  // 1. Handle Download Template (Logic dipindah ke utils)
   const handleDownloadTemplate = () => {
-    const header = [
-        { "NIK": "1234567890", "Nama": "Nama Lengkap", "NPSN": "12345678", "Jabatan": "Guru Kelas", "Golongan": "III/a" }
-    ];
-    const ws = XLSX.utils.json_to_sheet(header);
-    const range = XLSX.utils.decode_range(ws['!ref']); // Ambil area data (A1:E2)
-
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-        
-        // Skip kalau sel kosong
-        if (!ws[cellRef]) continue;
-
-        // Paksa tipe data jadi String ('s')
-        ws[cellRef].t = 's';
-        
-        // Paksa format sel jadi Text ('@')
-        // Efeknya: Ada segitiga hijau kecil di pojok kiri atas sel Excel (Number stored as text)
-        ws[cellRef].z = '@'; 
-      }
-    }
-    
-    // 4. Atur Lebar Kolom (Biar NIK gak sempit-sempitan)
-    ws['!cols'] = [
-        { wch: 25 }, // Lebar Kolom NIK
-        { wch: 30 }, // Lebar Kolom Nama
-        { wch: 15 }, // Lebar Kolom NPSN
-        { wch: 20 }, // Lebar Kolom Jabatan
-        { wch: 10 }, // Lebar Kolom Golongan
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, "Template_Peserta_Diklat.xlsx");
+    downloadTemplatePeserta(diklatTitle);
+    toast.success("Template berhasil diunduh");
   };
 
-  // 2. Logic Proses File
-  const processFile = (file) => {
+  // 2. Logic Proses File (Logic parsing dipindah ke utils)
+  const processFile = async (file) => {
     if (!file) return;
+    
+    // Validasi Ekstensi Sederhana
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
         toast.error("Format file harus Excel (.xlsx / .xls)");
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const arrayBuffer = evt.target.result;
-        const wb = XLSX.read(arrayBuffer, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rawData = XLSX.utils.sheet_to_json(ws);
+    try {
+        // Panggil fungsi berat dari utils
+        const rawData = await parseExcelPeserta(file);
 
-        if (rawData.length === 0) { toast.error("File Excel kosong"); return; }
+        if (rawData.length === 0) { 
+            toast.error("File Excel kosong"); 
+            return; 
+        }
 
+        // Tambah ID sementara untuk React Key
         const dataWithId = rawData.map((d, i) => ({ ...d, _tempId: i }));
+        
         setParsedData(dataWithId);
         setValidationDone(false);
         setNeedsRevalidation(false);
+        
+        // Lanjut Validasi Server
         validateData(dataWithId);
-      } catch (err) { console.error(err); toast.error("Gagal membaca file Excel"); }
-    };
-    reader.readAsArrayBuffer(file);
+
+    } catch (err) {
+        console.error(err);
+        toast.error("Gagal membaca file Excel");
+    }
   };
 
-  // Event Handlers Drag & Drop
+  // Event Handlers Drag & Drop (UI Logic)
   const handleFileChange = (e) => processFile(e.target.files[0]);
   const handleDragOver = (e) => { e.preventDefault(); if (!hasData) setIsDragging(true); };
   const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
@@ -109,7 +87,6 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
           method: "POST",
           body: JSON.stringify({ peserta: dataToValidate })
       });
-      console.log("Peserta:", dataToValidate);
       const json = await res.json();
       if (json.data) {
           setParsedData(json.data);
@@ -121,12 +98,11 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
     finally { setIsValidating(false); }
   };
 
-  // 4. Handle Edit Cell
+  // 4. Handle Edit Cell (UI Logic)
   const handleCellChange = (index, field, value) => {
     const newData = [...parsedData];
     newData[index][field] = value;
     
-    // Jika NIK/NPSN berubah, reset validasi & buka kunci
     if (field === 'NIK' || field === 'NPSN') {
         newData[index].isValid = undefined; 
         newData[index].status_msg = "Data berubah, cek ulang";
@@ -137,31 +113,21 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
     setParsedData(newData);
   };
 
-  
-
-  // 5. Sync Data (Nama, Jabatan, Golongan dari DB)
+  // 5. Sync Data (UI Logic)
   const handleSyncData = (index) => {
     const newData = [...parsedData];
     const row = newData[index];
     
-    console.log("Syncing row:", row);
-
     if (row.db_data) {
-        // 1. Sync Nama
         row.Nama = row.db_data.nama;
-        // 2. Sync Jabatan & Golongan
         row.Jabatan = row.db_data.jabatan; 
         row.Golongan = row.db_data.golongan;
-        // 3. Sync Sekolah (via NPSN)
         row.NPSN = row.db_data.npsn;
-        // row.sekolah_auto akan otomatis update saat NPSN berubah/divalidasi ulang, 
-        // tapi kita bisa set manual kalau data DB sudah ada nama sekolahnya
         row.sekolah_auto = row.db_data.sekolah; 
 
-        row.isLocked = true; // Kunci baris ini
-        delete row.diff_flags; // Hapus flag perbedaan
-        
-        toast.success("Data peserta disinkronkan dengan Database.");
+        row.isLocked = true;
+        delete row.diff_flags;
+        toast.success("Data disinkronkan.");
     }
     setParsedData(newData);
   };
@@ -198,7 +164,7 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
   return (
     <div className="space-y-6">
       
-      {/* AREA UPLOAD (DRAG & DROP) */}
+      {/* AREA UPLOAD */}
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-center">
              <h3 className="text-sm font-semibold text-slate-800">Upload Data Peserta</h3>
@@ -238,7 +204,7 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
         </div>
       </div>
 
-      {/* TABLE PREVIEW */}
+      {/* TABLE PREVIEW (Logic Rendering Sama Saja) */}
       {(hasData) && (
         <>
             <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
@@ -270,7 +236,6 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                     </TableHeader>
                     <TableBody>
                         {parsedData.map((row, idx) => {
-                            // LOGIC CEK PERBEDAAN (Untuk Highlight UI)
                             const db = row.db_data || {};
                             const isNamaBeda = db.nama && row.Nama !== db.nama;
                             const isJabatanBeda = (db.jabatan && row.Jabatan !== db.jabatan) || (db.golongan && row.Golongan !== db.golongan);
@@ -307,14 +272,12 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                                                     value={row.Nama || ''} 
                                                     onChange={(e) => handleCellChange(idx, 'Nama', e.target.value)} 
                                                     disabled={row.isLocked}
-                                                    // Highlight kuning jika nama beda dengan DB
                                                     className={cn("h-9 text-xs transition-colors", 
                                                         isNamaBeda && !row.isLocked ? "border-orange-300 bg-orange-50 text-orange-900" : "",
                                                         row.isLocked && "bg-slate-100 text-slate-500"
                                                     )} 
                                                     placeholder="Nama Lengkap"
                                                 />
-                                                {/* Pesan kecil jika beda */}
                                                 {isNamaBeda && !row.isLocked && (
                                                     <div className="text-[10px] text-orange-600 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3"/> DB: {db.nama}
@@ -322,27 +285,16 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                                                 )}
                                             </div>
 
-                                            {/* TOMBOL SYNC MASTER (Muncul jika ada perbedaan data apapun) */}
                                             {hasDiff && !row.isLocked && (
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="icon" 
-                                                                className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 shrink-0" 
-                                                                onClick={() => handleSyncData(idx)}
-                                                            >
+                                                            <Button variant="outline" size="icon" className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 shrink-0" onClick={() => handleSyncData(idx)}>
                                                                 <RefreshCw className="h-4 w-4" />
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent className="max-w-[200px] text-xs">
-                                                            <p className="font-bold border-b pb-1 mb-1">Samakan dengan Database:</p>
-                                                            <ul className="list-disc pl-3 space-y-0.5">
-                                                                {isNamaBeda && <li>Nama: {db.nama}</li>}
-                                                                {isJabatanBeda && <li>Jab/Gol: {db.jabatan} ({db.golongan})</li>}
-                                                                {isSekolahBeda && <li>Sekolah: {db.sekolah}</li>}
-                                                            </ul>
+                                                            <p>Samakan dengan Database</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
@@ -350,37 +302,31 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                                         </div>
                                     </TableCell>
 
-                                    {/* JABATAN & GOL (Stacked) */}
+                                    {/* JABATAN & GOL */}
                                     <TableCell className="align-top pt-3">
                                         <div className="flex flex-col gap-2">
                                             <Input 
                                                 value={row.Jabatan || ''} 
                                                 placeholder="Jabatan"
                                                 onChange={(e) => handleCellChange(idx, 'Jabatan', e.target.value)} 
-                                                className={cn("h-8 text-[10px]", 
-                                                    isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50"
-                                                )}
+                                                className={cn("h-8 text-[10px]", isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50")}
                                             />
                                             <Input 
                                                 value={row.Golongan || ''} 
                                                 placeholder="Gol"
                                                 onChange={(e) => handleCellChange(idx, 'Golongan', e.target.value)} 
-                                                className={cn("h-8 text-[10px] w-20", 
-                                                    isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50"
-                                                )}
+                                                className={cn("h-8 text-[10px] w-20", isJabatanBeda && !row.isLocked && "border-orange-300 bg-orange-50")}
                                             />
                                         </div>
                                     </TableCell>
 
-                                    {/* NPSN & SEKOLAH (Stacked) */}
+                                    {/* NPSN & SEKOLAH */}
                                     <TableCell className="align-top pt-3">
                                         <div className="flex flex-col gap-2">
                                             <Input 
                                                 value={row.NPSN || ''} 
                                                 onChange={(e) => handleCellChange(idx, 'NPSN', e.target.value)} 
-                                                className={cn("h-9 text-xs w-[120px]", 
-                                                    isSekolahBeda && !row.isLocked && "border-orange-300 bg-orange-50"
-                                                )}
+                                                className={cn("h-9 text-xs w-[120px]", isSekolahBeda && !row.isLocked && "border-orange-300 bg-orange-50")}
                                                 placeholder="NPSN"
                                             />
                                             <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 min-h-[30px] flex items-center">
@@ -388,11 +334,8 @@ export default function UploadPeserta({ diklatId, onSuccess }) {
                                                     {row.sekolah_auto || "-"}
                                                 </span>
                                             </div>
-                                            {/* Error Message Sekolah */}
                                             {row.status_msg && row.status_msg !== "Valid" && (
-                                                <span className="text-[10px] text-red-500 italic leading-tight">
-                                                    {row.status_msg}
-                                                </span>
+                                                <span className="text-[10px] text-red-500 italic leading-tight">{row.status_msg}</span>
                                             )}
                                         </div>
                                     </TableCell>

@@ -28,7 +28,7 @@ const formSchema = z.object({
   jenis_perekrutan: z.string(),
   category_id: z.coerce.number(),
   mode_id: z.coerce.number(),
-  jenjang: z.coerce.number(),
+  education_level_id: z.coerce.number(),
   jenis_kegiatan: z.string(),
   jenis_program: z.string(),
   topic_id: z.coerce.number(),
@@ -250,7 +250,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
               <FormField
                 control={form.control}
-                name="kategori"
+                name="category_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Kategori Pelatihan</FormLabel>
@@ -270,7 +270,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
 
               <FormField
               control={form.control}
-              name="moda"
+              name="mode_id"
               render={({ field }) => (
                 <FormItem className="w-full">
                   <FormLabel>Moda Pelatihan</FormLabel>
@@ -295,7 +295,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             {/* ROW 7: 1 Field (Full Width) */}
             <FormField
                 control={form.control}
-                name="jenjang"
+                name="education_level_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sasaran Jenjang</FormLabel>
@@ -317,7 +317,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="rumpun"
+                name="topic_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rumpun (Topik)</FormLabel>
@@ -337,7 +337,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
 
               <FormField
                 control={form.control}
-                name="sub_rumpun"
+                name="sub_topic_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sub-Rumpun</FormLabel>
@@ -347,7 +347,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
                       </FormControl>
                       <SelectContent>
                         {options.subTopik
-                          .filter((st) => st.topic_id === Number(form.watch("rumpun")))
+                          .filter((st) => st.topic_id === Number(form.watch("topic_id")))
                           .map((item) => (
                             <SelectItem key={item.id} value={item.id.toString()}>{item.sub_topic_name}</SelectItem>
                           ))}
@@ -361,7 +361,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             {/* ROW 9: 1 Field (Full Width) */}
             <FormField
                 control={form.control}
-                name="jabatan"
+                name="occupation_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sasaran Jabatan</FormLabel>
@@ -385,7 +385,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="total_peserta"
+                name="participant_limit"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jumlah Peserta</FormLabel>
@@ -408,7 +408,7 @@ export default function AddDiklatForm({onBack, onSuccess}) {
             {/* ROW 11: 1 Field (Full Width) */}
             <FormField
               control={form.control}
-              name="lokasi"
+              name="location"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Lokasi Kegiatan</FormLabel>

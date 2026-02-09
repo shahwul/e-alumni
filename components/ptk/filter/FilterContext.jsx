@@ -6,15 +6,19 @@ const DEFAULT_FILTERS = {
   kabupaten: [],
   kecamatan: [],
   jenjang: "",
+  mapel: "",
+  usia_min: "",
+  usia_max: "",
   status: "",
   sekolah: [],
   judul_diklat: [],
   kategori: "",
   jenis: "",
   program: "",
-  mode_filter: "history",
+  mode_filter: "eligible",
   rumpun: "",
   sub_rumpun: "",
+
   dateRange: { from: undefined, to: undefined },
 };
 

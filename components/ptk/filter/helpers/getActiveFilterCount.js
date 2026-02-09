@@ -7,6 +7,7 @@ export function getActiveFilterCount(filters) {
   count += filters.sekolah?.length || 0;
 
   if (filters.jenjang) count += 1;
+  if (filters.mapel) count += 1;
   if (filters.status) count += 1;
   if (filters.kategori) count += 1;
   if (filters.jenis) count += 1;

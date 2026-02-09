@@ -1,8 +1,10 @@
+// components/ui/data-table.jsx
 "use client"
 
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 
@@ -18,31 +20,41 @@ import {
 export function DataTable({
   columns,
   data,
+  rowSelection = {}, 
+  setRowSelection, 
+  sorting = [],        // Default array kosong
+  onSortingChange,     // Handler dari parent
 }) {
   const table = useReactTable({
-    data,
+    data, 
     columns,
     getCoreRowModel: getCoreRowModel(),
+
+    // --- SETUP SORTING SERVER-SIDE ---
+    manualSorting: true,          // Wajib true agar tabel tidak sort lokal
+    onSortingChange: onSortingChange, 
+    
+    // --- SETUP SELEKSI ---
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    getRowId: (row) => row.nik || row.id, // ID Unik Row
+
+    // --- STATE ---
+    state: {
+      rowSelection,
+      sorting, // Masukkan state sorting ke sini
+    },
   })
 
   return (
-    // 1. CONTAINER: Hapus 'max-h-[...]' dan 'overflow-auto'.
-    // Biarkan tabel memanjang secara natural agar scroll browser yang bekerja.
-    <div className="w-full rounded-md border bg-white shadow-sm">
+    <div className="w-full bg-white">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => {
                 return (
-                  // 2. HEADER STICKY:
-                  // - sticky top-0: Nempel di atas layar.
-                  // - z-20: Supaya selalu di atas konten tabel.
-                  // - bg-slate-50: Supaya tulisan tidak tembus pandang (background solid).
-                  <TableHead 
-                    key={header.id} 
-                    className="sticky top-0 z-20 bg-slate-50 font-bold text-slate-700 shadow-sm border-b"
-                  >
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -61,7 +73,6 @@ export function DataTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                className="hover:bg-slate-50"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

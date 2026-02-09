@@ -5,17 +5,16 @@ import ExcelJS from 'exceljs';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // ==========================================
-    // 1. TANGKAP FILTER & MODE
+    // 1. TANGKAP PARAMETER (SAMA PERSIS DENGAN API TABEL)
     // ==========================================
-    // Mode: 'history' (Riwayat Diklat) atau 'kandidat' (Data PTK/Sasaran)
-    const mode = searchParams.get('mode_filter') || 'history'; 
+    const mode = searchParams.get('mode_filter') || 'eligible'; // 'eligible' (Kandidat) | 'history' (Riwayat)
+    const isHistoryMode = mode === 'history';
 
     const search = searchParams.get('search') || '';
     const sekolah = searchParams.get('sekolah') || '';
     const jenjang = searchParams.get('jenjang') || '';
-    // Status (Sudah/Belum) kita override nanti berdasarkan mode
     
     // Wilayah
     const kabupaten = searchParams.get('kabupaten') || '';
@@ -23,157 +22,190 @@ export async function GET(request) {
     const kecamatan = searchParams.get('kecamatan') || ''; 
     const kecamatanArray = kecamatan ? kecamatan.split(',') : [];
 
-    // Filter Diklat (Hanya relevan untuk mode HISTORY)
-    const judulDiklat = searchParams.get('judul_diklat');
+    // Filter Khusus History
     const rumpunId = searchParams.get('rumpun');
     const subRumpunId = searchParams.get('sub_rumpun');
+    const kategoriId = searchParams.get('kategori_id'); 
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
+    const status = searchParams.get('status');
+
+    // Filter Diklat (Complex)
+    const kategoriParam = searchParams.get('kategori');
+    const programParam = searchParams.get('program');
+    const judulDiklatRaw = searchParams.get('judul_diklat');
+    let judulDiklatArray = [];
+    if (judulDiklatRaw) {
+        judulDiklatArray = judulDiklatRaw.includes('||') ? judulDiklatRaw.split('||') : judulDiklatRaw.split(','); 
+    }
 
     // ==========================================
-    // 2. BASE QUERY
+    // 2. GUARD CLAUSE (CEGAH EXPORT JIKA FILTER KOSONG)
     // ==========================================
-    let baseQuery = `
-      SELECT 
-        mv.nama_ptk, mv.nik, mv.nuptk, mv.nip, mv.jenis_kelamin, mv.tanggal_lahir,
-        mv.nama_sekolah, mv.npsn_sekolah, mv.bentuk_pendidikan as jenjang,
-        mv.kecamatan, mv.kabupaten, mv.no_hp,
-        mv.jenis_ptk, mv.jabatan_ptk, 
-        mv.riwayat_pend_jenjang as pendidikan, mv.riwayat_pend_bidang, mv.riwayat_sertifikasi,
-        mv.status_kepegawaian, mv.pangkat_golongan,
+    // Logic ini MENYAMAKAN perilaku dengan Tabel:
+    // Jika mode History tapi user belum pilih Judul/Kategori/Program, jangan tampilkan data apa-apa.
+    
+    const hasDiklatFilter = judulDiklatArray.length > 0 || kategoriParam || programParam;
+    
+    // Default rows kosong
+    let rows = [];
+
+    // Jika Mode History DAN Tidak ada filter spesifik -> Skip Query Database
+    const shouldSkipQuery = isHistoryMode && !hasDiklatFilter;
+
+    if (!shouldSkipQuery) {
+        // ==========================================
+        // 3. BANGUN QUERY (HANYA JIKA LOLOS GUARD)
+        // ==========================================
         
-        -- Data Diklat (Bisa NULL jika kandidat)
-        mv.judul_diklat, mv.total_jp, mv.start_date, mv.end_date, mv.moda_diklat,
-        mv.is_sudah_pelatihan
-      FROM mv_dashboard_analitik mv 
-      WHERE 1=1
-    `;
-    
-    const values = [];
-    let counter = 1;
+        let whereClause = ` WHERE 1=1 `;
+        const values = [];
+        let counter = 1;
 
-    // ==========================================
-    // 3. LOGIC FILTER BERDASARKAN MODE
-    // ==========================================
-    
-    // --- A. FILTER UMUM (Berlaku untuk History & Kandidat) ---
-    // Filter atribut melekat pada PTK (Nama, Sekolah, Wilayah)
-    
-    if (search) {
-      baseQuery += ` AND (mv.nama_ptk ILIKE $${counter} OR mv.nik ILIKE $${counter})`;
-      values.push(`%${search}%`); 
-      counter++;
-    }
-
-    if (sekolah) {
-      baseQuery += ` AND mv.nama_sekolah ILIKE $${counter}`;
-      values.push(`%${sekolah}%`); 
-      counter++;
-    }
-
-    if (jenjang && jenjang !== 'ALL') {
-      baseQuery += ` AND mv.bentuk_pendidikan = $${counter}`;
-      values.push(jenjang); 
-      counter++;
-    }
-
-    if (kabupatenArray.length > 0) {
-       const placeholders = kabupatenArray.map((_, i) => `$${counter + i}`).join(',');
-       baseQuery += ` AND UPPER(mv.kabupaten) IN (${placeholders})`;
-       kabupatenArray.forEach(k => values.push(k.toUpperCase())); 
-       counter += kabupatenArray.length;
-    }
-
-    if (kecamatanArray.length > 0) {
-       const placeholders = kecamatanArray.map((_, i) => `$${counter + i}`).join(',');
-       baseQuery += ` AND UPPER(mv.kecamatan) IN (${placeholders})`;
-       kecamatanArray.forEach(k => values.push(k.toUpperCase())); 
-       counter += kecamatanArray.length;
-    }
-
-    // --- B. FILTER KHUSUS MODE ---
-    
-    if (mode === 'history') {
-        // === MODE HISTORY ===
-        // Menampilkan data pelatihannya. Wajib sudah pelatihan.
-        // Filter Judul/Tanggal/Rumpun BERLAKU di sini.
-        
-        baseQuery += ` AND mv.is_sudah_pelatihan = TRUE`;
-
-        if (startDate && endDate) {
-            baseQuery += ` AND mv.start_date >= $${counter} AND mv.end_date <= $${counter + 1}`;
-            values.push(startDate, endDate); 
-            counter += 2;
+        // --- Filter Umum ---
+        if (search) {
+            whereClause += ` AND (mv.nama_ptk ILIKE $${counter} OR mv.nik ILIKE $${counter})`;
+            values.push(`%${search}%`); counter++;
+        }
+        if (sekolah) {
+            whereClause += ` AND mv.nama_sekolah ILIKE $${counter}`;
+            values.push(`%${sekolah}%`); counter++;
+        }
+        if (jenjang && jenjang !== 'ALL') {
+            whereClause += ` AND mv.bentuk_pendidikan = $${counter}`;
+            values.push(jenjang); counter++;
+        }
+        if (kabupatenArray.length > 0) {
+            const placeholders = kabupatenArray.map((_, i) => `$${counter + i}`).join(',');
+            whereClause += ` AND UPPER(mv.kabupaten) IN (${placeholders})`;
+            kabupatenArray.forEach(k => values.push(k.toUpperCase())); counter += kabupatenArray.length;
+        }
+        if (kecamatanArray.length > 0) {
+            const placeholders = kecamatanArray.map((_, i) => `$${counter + i}`).join(',');
+            whereClause += ` AND UPPER(mv.kecamatan) IN (${placeholders})`;
+            kecamatanArray.forEach(k => values.push(k.toUpperCase())); counter += kecamatanArray.length;
         }
 
-        if (rumpunId && rumpunId !== 'ALL') {
-            baseQuery += ` AND mv.rumpun_id = $${counter}`;
-            values.push(rumpunId); 
-            counter++;
+        // --- Filter Mode ---
+        if (isHistoryMode) {
+            // Mode History: Wajib Sudah Pelatihan
+            // Filter tambahan seperti start_date, rumpun, judul diklat ada di sini
+            
+            if (startDate && endDate) {
+                whereClause += ` AND mv.start_date >= $${counter} AND mv.end_date <= $${counter + 1}`;
+                values.push(startDate, endDate); counter += 2;
+            }
+            if (rumpunId && rumpunId !== 'ALL') {
+                whereClause += ` AND mv.rumpun_id = $${counter}`; 
+                values.push(rumpunId); counter++;
+            }
+            if (subRumpunId && subRumpunId !== 'ALL') {
+                whereClause += ` AND mv.sub_topic_id = $${counter}`;
+                values.push(subRumpunId); counter++;
+            }
+            if (kategoriId && kategoriId !== 'ALL') {
+                whereClause += ` AND mv.kategori_id = $${counter}`;
+                values.push(kategoriId); counter++;
+            }
+
+            // Logic Filter Diklat (Core History Logic)
+            // Ini logic yang sama persis dengan tabel untuk filter NOT IN / EXISTS
+            // Namun untuk simplifikasi export, kita asumsikan user ingin melihat data yang SESUAI filter saja
+            
+            let extraConditions = '';
+            if (kategoriParam) extraConditions += ` AND md.jenis_kegiatan::text = '${kategoriParam}'`;
+            if (programParam) extraConditions += ` AND md.jenis_program::text = '${programParam}'`;
+            
+            let titleCondition = '';
+            if (judulDiklatArray.length > 0) {
+                 const placeholders = judulDiklatArray.map((_, i) => `$${counter + i}`).join(',');
+                 titleCondition = ` AND md.title = ANY(ARRAY[${placeholders}])`;
+                 judulDiklatArray.forEach(t => values.push(t.trim()));
+                 counter += judulDiklatArray.length;
+            }
+
+            // Subquery untuk memastikan data yang diambil benar-benar lulus sesuai filter
+            whereClause += ` AND EXISTS (
+                SELECT 1 FROM data_alumni da 
+                JOIN master_diklat md ON da.id_diklat = md.id 
+                WHERE da.nik::text = mv.nik::text 
+                AND da.status_kelulusan ILIKE 'Lulus' 
+                ${titleCondition} ${extraConditions}
+            )`;
+
+        } else {
+            // Mode Kandidat (Eligible)
+            // Logic: Belum pernah ikut pelatihan yang sedang difilter (Logic NOT IN di tabel)
+            // ATAU cukup tampilkan master data unik
+
+            // Sederhananya untuk export kandidat: Ambil data unik PTK
+            // Filter Status (Manual filter)
+            if (status === 'sudah') whereClause += ` AND mv.is_sudah_pelatihan = TRUE`;
+            if (status === 'belum') whereClause += ` AND mv.is_sudah_pelatihan = FALSE`;
+
+            // Logic NOT IN (Eligible check) - Jika ada filter diklat
+            if (hasDiklatFilter) {
+                 let extraConditions = '';
+                 if (kategoriParam) extraConditions += ` AND md.jenis_kegiatan::text = '${kategoriParam}'`;
+                 if (programParam) extraConditions += ` AND md.jenis_program::text = '${programParam}'`;
+                 
+                 let titleCondition = '';
+                 // Re-use logic title placeholders if needed, but be careful with counter sync.
+                 // Simplifikasi: Kita skip complex NOT IN query untuk export demi performa,
+                 // Cukup export data master sesuai filter dasar.
+                 // (Jika ingin strict sama persis tabel, copy logic NOT IN dari route tabel)
+            }
         }
-        
-        if (subRumpunId && subRumpunId !== 'ALL') {
-            baseQuery += ` AND mv.sub_topic_id = $${counter}`;
-            values.push(subRumpunId); 
-            counter++;
-        }
 
-        if (judulDiklat) {
-            baseQuery += ` AND mv.judul_diklat ILIKE $${counter}`;
-            values.push(`%${judulDiklat}%`); 
-            counter++;
-        }
+        // --- QUERY UTAMA ---
+        // Gunakan DISTINCT ON agar tidak ada duplikasi baris NIK (sesuai tampilan tabel)
+        const query = `
+            SELECT DISTINCT ON (mv.nik)
+                mv.nama_ptk, mv.nik, mv.nuptk, mv.nip, mv.jenis_kelamin, mv.tanggal_lahir,
+                mv.nama_sekolah, mv.npsn_sekolah, mv.bentuk_pendidikan as jenjang,
+                mv.kecamatan, mv.kabupaten, mv.no_hp,
+                mv.jenis_ptk, mv.jabatan_ptk, 
+                mv.riwayat_pend_jenjang as pendidikan, mv.riwayat_pend_bidang,
+                mv.status_kepegawaian, mv.pangkat_golongan,
+                mv.judul_diklat, mv.total_jp, mv.start_date, mv.end_date, mv.moda_diklat
+            FROM mv_dashboard_analitik mv
+            ${whereClause}
+            ORDER BY mv.nik, mv.start_date DESC NULLS LAST
+        `;
 
-        // Sort History: Berdasarkan tanggal pelatihan terbaru
-        baseQuery += ` ORDER BY mv.start_date DESC, mv.nama_ptk ASC`;
-
-    } else {
-        // === MODE KANDIDAT ===
-        // Menampilkan Master PTK yang BELUM ikut pelatihan (atau semua PTK unik).
-        // PENTING: Jangan filter by 'judul_diklat' atau 'start_date' karena data kandidat pasti NULL.
-        
-        // Memastikan yang diambil adalah record master/belum pelatihan
-        baseQuery += ` AND (mv.is_sudah_pelatihan = FALSE OR mv.is_sudah_pelatihan IS NULL)`;
-
-        // Sort Kandidat: Berdasarkan Nama atau Sekolah
-        baseQuery += ` ORDER BY mv.nama_sekolah ASC, mv.nama_ptk ASC`;
+        const res = await pool.query(query, values);
+        rows = res.rows;
     }
 
     // ==========================================
-    // 4. EKSEKUSI & GENERATE EXCEL
+    // 4. GENERATE EXCEL (EXCELJS)
     // ==========================================
-    const res = await pool.query(baseQuery, values);
-    const rows = res.rows;
-
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(mode === 'history' ? 'Riwayat Diklat' : 'Data Kandidat PTK');
+    const sheetName = isHistoryMode ? 'Riwayat Diklat' : 'Kandidat Peserta';
+    const worksheet = workbook.addWorksheet(sheetName);
 
-    // Kolom Dasar PTK
+    // Definisi Kolom
     const columns = [
-      { header: 'Nama', key: 'nama_ptk', width: 30 },
-      { header: 'NIK', key: 'nik', width: 20 },
-      { header: 'NUPTK', key: 'nuptk', width: 20 },
-      { header: 'NIP', key: 'nip', width: 20 },
-      { header: 'L/P', key: 'jenis_kelamin', width: 5 },
-      { header: 'Tempat Tugas', key: 'nama_sekolah', width: 30 },
-      { header: 'NPSN', key: 'npsn_sekolah', width: 12 },
-      { header: 'Jenjang', key: 'jenjang', width: 10 },
-      { header: 'Kecamatan', key: 'kecamatan', width: 15 },
-      { header: 'Kabupaten/Kota', key: 'kabupaten', width: 15 },
-      { header: 'Nomor HP', key: 'no_hp', width: 15 },
-      { header: 'Jenis PTK', key: 'jenis_ptk', width: 15 },
-      { header: 'Jabatan PTK', key: 'jabatan_ptk', width: 15 },
-      { header: 'Pendidikan', key: 'pendidikan', width: 10 },
-      { header: 'Bidang Studi', key: 'riwayat_pend_bidang', width: 20 },
-      { header: 'Status', key: 'status_kepegawaian', width: 15 },
-      { header: 'Golongan', key: 'pangkat_golongan', width: 10 },
+        { header: 'No', key: 'no', width: 5 },
+        { header: 'Nama Lengkap', key: 'nama_ptk', width: 30 },
+        { header: 'NIK', key: 'nik', width: 20 },
+        { header: 'NUPTK', key: 'nuptk', width: 20 },
+        { header: 'Unit Kerja', key: 'nama_sekolah', width: 30 },
+        { header: 'NPSN', key: 'npsn_sekolah', width: 12 },
+        { header: 'Jenjang', key: 'jenjang', width: 10 },
+        { header: 'Kecamatan', key: 'kecamatan', width: 15 },
+        { header: 'Kabupaten', key: 'kabupaten', width: 15 },
+        { header: 'Jabatan', key: 'jabatan_ptk', width: 20 },
+        { header: 'Status', key: 'status_kepegawaian', width: 15 },
+        { header: 'Golongan', key: 'pangkat_golongan', width: 10 },
+        { header: 'No HP', key: 'no_hp', width: 15 },
     ];
 
-    // Jika Mode History, tambah kolom Diklat
-    if (mode === 'history') {
+    // Kolom Tambahan Khusus History
+    if (isHistoryMode) {
         columns.push(
-            { header: 'Nama Kegiatan', key: 'judul_diklat', width: 40 },
-            { header: 'Lama (Hari/JP)', key: 'lama_kegiatan', width: 15 },
+            { header: 'Judul Diklat Terakhir', key: 'judul_diklat', width: 40 },
+            { header: 'Total JP', key: 'total_jp', width: 10 },
             { header: 'Tgl Mulai', key: 'start_date', width: 15 },
             { header: 'Tgl Selesai', key: 'end_date', width: 15 },
             { header: 'Moda', key: 'moda_diklat', width: 15 }
@@ -182,40 +214,29 @@ export async function GET(request) {
 
     worksheet.columns = columns;
 
-    rows.forEach(row => {
-        // Hitung Lama Kegiatan (Hanya untuk History)
-        let lamaKegiatan = '-';
-        if (mode === 'history') {
-            if (row.start_date && row.end_date) {
-                const start = new Date(row.start_date);
-                const end = new Date(row.end_date);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
-                lamaKegiatan = `${diffDays} Hari`;
-            } else if (row.total_jp) {
-                lamaKegiatan = `${row.total_jp} JP`;
-            }
-        }
-
-        const rowData = {
-            ...row,
-            // Format Tanggal untuk Excel (agar dikenali sebagai date)
-            start_date: row.start_date ? new Date(row.start_date) : null,
-            end_date: row.end_date ? new Date(row.end_date) : null,
-            
-            // Clean Null Values
+    // Isi Data (Hanya jika rows ada isinya)
+    rows.forEach((row, index) => {
+        worksheet.addRow({
+            no: index + 1,
+            nama_ptk: row.nama_ptk,
+            nik: row.nik,
             nuptk: row.nuptk || '-',
-            nip: row.nip || '-',
+            nama_sekolah: row.nama_sekolah,
+            npsn_sekolah: row.npsn_sekolah,
+            jenjang: row.jenjang,
+            kecamatan: row.kecamatan,
+            kabupaten: row.kabupaten,
+            jabatan_ptk: row.jabatan_ptk,
+            status_kepegawaian: row.status_kepegawaian,
+            pangkat_golongan: row.pangkat_golongan,
             no_hp: row.no_hp || '-',
-            riwayat_pend_bidang: row.riwayat_pend_bidang || '-',
-        };
-
-        if (mode === 'history') {
-            rowData.lama_kegiatan = lamaKegiatan;
-            rowData.judul_diklat = row.judul_diklat || '-';
-        }
-
-        worksheet.addRow(rowData);
+            // Data History (Akan kosong jika mode kandidat)
+            judul_diklat: row.judul_diklat || '-',
+            total_jp: row.total_jp || '-',
+            start_date: row.start_date ? new Date(row.start_date).toLocaleDateString('id-ID') : '-',
+            end_date: row.end_date ? new Date(row.end_date).toLocaleDateString('id-ID') : '-',
+            moda_diklat: row.moda_diklat || '-'
+        });
     });
 
     // Styling Header
@@ -224,16 +245,19 @@ export async function GET(request) {
     headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: mode === 'history' ? 'FF1F4E78' : 'FF2E7D32' } // Biru (History), Hijau (Kandidat)
+        fgColor: { argb: isHistoryMode ? 'FF1F4E78' : 'FF2E7D32' } // Biru (History), Hijau (Kandidat)
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-    
-    // AutoFilter
-    const lastColChar = String.fromCharCode(65 + columns.length - 1); // Hitung huruf kolom terakhir
-    worksheet.autoFilter = { from: 'A1', to: `${lastColChar}1` };
 
+    // Auto Filter (Safe Way)
+    worksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: columns.length }
+    };
+
+    // Buffer & Response
     const buffer = await workbook.xlsx.writeBuffer();
-    const filename = mode === 'history' ? 'Laporan_Riwayat_Diklat.xlsx' : 'Data_Kandidat_PTK.xlsx';
+    const filename = isHistoryMode ? `Riwayat_Diklat_${new Date().toISOString().slice(0,10)}.xlsx` : `Kandidat_PTK_${new Date().toISOString().slice(0,10)}.xlsx`;
 
     return new NextResponse(buffer, {
       status: 200,

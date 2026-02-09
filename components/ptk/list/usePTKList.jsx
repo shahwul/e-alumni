@@ -12,19 +12,22 @@ export function usePTKList() {
   const [totalData, setTotalData] = useState(0);
 
   const [search, setSearch] = useState("");
-  const [sorting, setSorting] = useState("nama_asc");
+  const [sorting, setSorting] = useState([{ id: "nama", desc: false }]);
 
   const [activeFilters, setActiveFilters] = useState({
     kabupaten: [],
     kecamatan: [],
     jenjang: "",
+    mapel: "",
+    usia_min: "",
+    usia_max: "",
     status: "",
     sekolah: [],
     judul_diklat: [],
     kategori: "",
     jenis: "",
     program: "",
-    mode_filter: "history",
+    mode_filter: "eligible",
     rumpun: "",
     sub_rumpun: "",
     dateRange: { from: undefined, to: undefined },

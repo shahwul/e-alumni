@@ -2,54 +2,154 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"; // Icon Lengkap
+import { cn } from "@/lib/utils";
+
+// Import Cell Custom
 import { ActionCell } from "./cells/ActionCell";
 import { CopyButton } from "./cells/Copybutton";
 
+// --- HELPER: SMART SORTABLE HEADER ---
+const sortableHeader = (column, title) => {
+  // 1. Cek Status Sorting
+  const isSorted = column.getIsSorted(); // "asc" | "desc" | false
+  const sortIndex = column.getSortIndex(); // Urutan sort (0, 1, 2...) jika multi-sort
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(
+        "-ml-3 h-8 font-semibold transition-all duration-200",
+        // 2. STYLING JIKA AKTIF (Warna Biru)
+        isSorted
+          ? "text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-100"
+          : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+      )}
+      onClick={(e) => {
+        // 3. LOGIC CLICK HANDLER (DENGAN SHIFT KEY)
+        // column.toggleSorting(desc?, multi?)
+        // desc?  : true jika ingin DESC, false jika ASC. Kita toggle logicnya: isSorted === "asc" (jika asc, jadi desc)
+        // multi? : true jika user menahan tombol Shift
+        column.toggleSorting(isSorted === "asc", !!e.shiftKey);
+      }}
+    >
+      <span>{title}</span>
+
+      {/* 4. LOGIKA IKON DINAMIS */}
+      {isSorted === "asc" ? (
+        <ArrowUp className="ml-2 h-4 w-4 text-blue-600" />
+      ) : isSorted === "desc" ? (
+        <ArrowDown className="ml-2 h-4 w-4 text-blue-600" />
+      ) : (
+        <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100" />
+      )}
+
+      {/* 5. BADGE URUTAN (Hanya muncul jika Multi-Sort aktif / sort lebih dari 1 kolom) */}
+      {isSorted && sortIndex > -1 && (
+        <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">
+          {sortIndex + 1}
+        </span>
+      )}
+    </Button>
+  );
+};
+
 // --- DEFINISI KOLOM ---
 export const columns = [
+  // 1. SELECT (CHECKBOX)
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+
+  // 2. NAMA PTK (SORTABLE)
   {
     accessorKey: "nama_ptk",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nama PTK
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => sortableHeader(column, "Nama PTK"),
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <div className="font-bold text-slate-900">
+      <div className="flex flex-col gap-0.5">
+        <span className="font-bold text-slate-900 text-sm">
           {row.getValue("nama_ptk")}
-        </div>
-        <div className=" flex items-center text-xs text-slate-500 ">
-          <p>{row.original.nik}</p>
+        </span>
+        <div className="flex items-center text-[10px] text-slate-500 gap-1">
+          <span className="font-mono bg-slate-100 px-1 rounded">
+            {row.original.nik}
+          </span>
           <CopyButton row={row} />
         </div>
       </div>
     ),
   },
+
+  // 3. UNIT KERJA (SORTABLE)
   {
     accessorKey: "nama_sekolah",
-    header: "Unit Kerja",
+    header: ({ column }) => sortableHeader(column, "Unit Kerja"),
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="text-sm">{row.getValue("nama_sekolah")}</span>
-        <span className="text-xs text-slate-500">{row.original.kabupaten}</span>
+        <span className="text-sm font-medium text-slate-700">
+          {row.getValue("nama_sekolah")}
+        </span>
+        <span className="text-[11px] text-slate-500">
+          {row.original.kabupaten}
+        </span>
       </div>
     ),
   },
+
+  // 4. MATA PELAJARAN (SORTABLE)
   {
-    accessorKey: "status_kepegawaian",
-    header: "Status",
+    accessorKey: "mapel",
+    header: ({ column }) => sortableHeader(column, "Mata Pelajaran"),
+    cell: ({ row }) => (
+      <div
+        className="text-xs text-slate-600 max-w-[150px] truncate"
+        title={row.getValue("mapel")}
+      >
+        {row.getValue("mapel") || "-"}
+      </div>
+    ),
   },
+
+  // 5. USIA (SORTABLE)
+  {
+    accessorKey: "usia_tahun",
+    header: ({ column }) => sortableHeader(column, "Usia"),
+    cell: ({ row }) => (
+      <div className="text-xs font-medium text-slate-600 pl-2">
+        {row.getValue("usia_tahun")
+          ? `${row.getValue("usia_tahun")} Thn`
+          : "-"}
+      </div>
+    ),
+  },
+
+  // 6. PELATIHAN (SORTABLE)
   {
     accessorKey: "is_sudah_pelatihan",
-    header: "Pelatihan",
+    header: ({ column }) => sortableHeader(column, "Status Pelatihan"),
     cell: ({ row }) => {
       const isSudah = row.getValue("is_sudah_pelatihan");
       return (
@@ -57,8 +157,8 @@ export const columns = [
           variant={isSudah ? "default" : "secondary"}
           className={
             isSudah
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+              ? "bg-green-600 hover:bg-green-700 font-normal"
+              : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 font-normal"
           }
         >
           {isSudah ? "Sudah Dilatih" : "Belum"}
@@ -66,6 +166,8 @@ export const columns = [
       );
     },
   },
+
+  // 7. ACTIONS (MENU)
   {
     id: "actions",
     cell: ({ row }) => <ActionCell row={row} />,

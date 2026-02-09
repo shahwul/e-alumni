@@ -34,6 +34,11 @@ export function buildPTKParams({
 
   // === STRING FILTERS ===
   if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
+  if (activeFilters.mapel) params.append("mapel", activeFilters.mapel);
+  if (activeFilters.usia_min && activeFilters.usia_max) {
+  params.append("usia_min", activeFilters.usia_min);
+  params.append("usia_max", activeFilters.usia_max);
+  }
   if (activeFilters.status) params.append("status", activeFilters.status);
   if (activeFilters.kategori) params.append("kategori", activeFilters.kategori);
   if (activeFilters.jenis) params.append("jenis", activeFilters.jenis);
@@ -60,14 +65,25 @@ export function buildPTKParams({
     params.append("end_date", end);
   }
 
-  // === Sorting ===
-  if (sorting) {
-    const [sortBy, sortOrder] = sorting.includes("_")
-      ? sorting.split("_")
-      : ["nama", "asc"];
+  if (sorting && sorting.length > 0) {
+    // Kita kirim string gabungan, misal: "nama:asc,usia:desc"
+    // Backend harus dipersiapkan untuk split string ini.
+    
+    const sortMapping = {
+      "nama_ptk": "nama",
+      "nama_sekolah": "sekolah",
+      "usia_tahun": "usia",
+      "status_kepegawaian": "status"
+    };
 
-    params.append("sort_by", sortBy);
-    params.append("sort_order", sortOrder);
+    const sortString = sorting.map(s => {
+       const key = sortMapping[s.id] || s.id;
+       const dir = s.desc ? 'desc' : 'asc';
+       return `${key}:${dir}`;
+    }).join(',');
+
+    params.append("sort", sortString); 
+    // Hapus params 'sort_by' & 'sort_order' yang lama biar ga bingung
   }
 
   return params;

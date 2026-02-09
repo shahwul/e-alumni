@@ -7,89 +7,77 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
 export function ModeSwitcher() {
-  const { filters, setFilters } = useFilterContext();
+  const { filters } = useFilterContext();
+
+  // Cek mode saat ini (default 'eligible' jika undefined)
+  const isCandidateMode = (filters.mode_filter || 'eligible') === 'eligible';
+  
+  // Helper untuk format tanggal aman
+  const formatDate = (date) => date ? format(date, "dd MMM yyyy", { locale: id }) : "...";
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
-          <span className="h-4 w-1 bg-purple-500 rounded-full"></span> Filter
-          Diklat
+          <span className="h-4 w-1 bg-purple-500 rounded-full"></span> 
+          Filter Diklat
         </h4>
-
-        {/* SWITCH MODE FILTER */}
-        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          <button
-            onClick={() => setFilters({ ...filters, mode_filter: "history" })}
-            className={cn(
-              "text-[10px] px-3 py-1.5 rounded-md transition-all font-medium",
-              filters.mode_filter === "history"
-                ? "bg-white shadow text-blue-700"
-                : "text-slate-500 hover:text-slate-700",
-            )}
-          >
-            Riwayat
-          </button>
-          <button
-            onClick={() => setFilters({ ...filters, mode_filter: "eligible" })}
-            className={cn(
-              "text-[10px] px-3 py-1.5 rounded-md transition-all font-medium",
-              filters.mode_filter === "eligible"
-                ? "bg-white shadow text-green-700"
-                : "text-slate-500 hover:text-slate-700",
-            )}
-          >
-            Kandidat
-          </button>
-        </div>
       </div>
 
-      {/* Info Box */}
+      {/* Info Box - Sinkron dengan Date Range */}
       <div
         className={cn(
-          "p-3 rounded-md text-xs border flex items-start gap-2",
-          filters.mode_filter === "eligible"
-            ? "bg-green-50 border-green-200 text-green-800"
-            : "bg-blue-50 border-blue-200 text-blue-800",
+          "p-3 rounded-md text-xs border flex items-start gap-2 transition-colors duration-300",
+          isCandidateMode
+            ? "bg-green-50 border-green-200 text-green-800" // Warna Kandidat
+            : "bg-blue-50 border-blue-200 text-blue-800" // Warna Riwayat
         )}
       >
         <Info size={16} className="shrink-0 mt-0.5" />
-        {filters.mode_filter === "eligible" ? (
+        
+        {/* LOGIC TAMPILAN TEXT */}
+        {isCandidateMode ? (
           <div>
-            <p className="font-semibold mb-1">Mode Kandidat (Eligible)</p>
+            <p className="font-bold mb-1 uppercase tracking-wide">Mode Kandidat (Eligible)</p>
+            
+            {/* Jika Ada Tanggal Dipilih */}
             {filters.dateRange?.from ? (
-              <p>
-                Mencari guru yang <b>BELUM LULUS</b> diklat terpilih dalam
-                periode{" "}
-                <b>
-                  {format(filters.dateRange.from, "dd MMM y", { locale: id })}
-                </b>{" "}
-                s/d{" "}
-                <b>
-                  {filters.dateRange.to
-                    ? format(filters.dateRange.to, "dd MMM y", { locale: id })
-                    : "..."}
-                </b>
-                .
-                <br />
-                <span className="italic opacity-80">
-                  (Guru yang lulus DILUAR tanggal ini akan tetap muncul /
-                  dianggap perlu refresh).
-                </span>
-              </p>
+              <>
+                <p>
+                  Mencari guru yang <b>BELUM LULUS</b> diklat pada periode: <br/>
+                  <span className="font-mono font-semibold bg-white/50 px-1 rounded">
+                    {formatDate(filters.dateRange.from)} - {formatDate(filters.dateRange.to)}
+                  </span>
+                </p>
+                <p className="mt-1.5 italic opacity-80 border-l-2 border-green-300 pl-2">
+                  Catatan: Guru yang pernah lulus <b>di luar</b> tanggal ini akan tetap dianggap kandidat (Eligible).
+                </p>
+              </>
             ) : (
+              /* Jika Tidak Ada Tanggal */
               <p>
-                Mencari guru yang <b>BELUM PERNAH</b> lulus diklat terpilih
-                (Seumur Hidup).
+                Mencari guru yang <b>BELUM PERNAH</b> lulus diklat terpilih (Seumur Hidup / Belum ada riwayat sama sekali).
               </p>
             )}
           </div>
         ) : (
           <div>
-            <p className="font-semibold mb-1">Mode Riwayat</p>
-            <p>
-              Mencari guru yang <b>SUDAH LULUS</b> diklat terpilih.
-            </p>
+            <p className="font-bold mb-1 uppercase tracking-wide">Mode Riwayat</p>
+            
+            {/* Jika Ada Tanggal Dipilih */}
+            {filters.dateRange?.from ? (
+              <p>
+                Mencari guru yang <b>SUDAH LULUS</b> diklat pada periode: <br/>
+                <span className="font-mono font-semibold bg-white/50 px-1 rounded">
+                   {formatDate(filters.dateRange.from)} - {formatDate(filters.dateRange.to)}
+                </span>
+              </p>
+            ) : (
+              /* Jika Tidak Ada Tanggal */
+              <p>
+                Mencari guru yang <b>SUDAH LULUS</b> diklat terpilih (Semua Waktu).
+              </p>
+            )}
           </div>
         )}
       </div>

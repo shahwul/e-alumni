@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import DiklatCardHeader from "./DiklatCardHeader";
 import DiklatCardTabs from "./DiklatCardTabs";
 import useDiklatEdit from "./useDiklatEdit";
+import ListKandidat from "@/components/input-data/ListKandidat";
 
 export default function DiklatCard({ data, onRefresh }) {
   const [expanded, setExpanded] = useState(false);

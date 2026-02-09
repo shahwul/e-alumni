@@ -5,19 +5,25 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // PAGINATION PARAMS
+    // --- 1. TANGKAP SEMUA PARAMETER ---
+
+    // Pagination
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 25; 
     const offset = (page - 1) * limit;
 
-    // SORTING PARAMS
-    const sortBy = searchParams.get('sort_by') || 'nama';
-    const sortOrder = searchParams.get('sort_order') || 'asc';
+    // Sorting (Prioritas: 'sort' > 'sort_by')
+    const sortParam = searchParams.get('sort'); // Format: "nama:asc,usia:desc"
+    const sortByLegacy = searchParams.get('sort_by') || 'nama';
+    const sortOrderLegacy = searchParams.get('sort_order') || 'asc';
 
-    // FILTER PARAMS (Sama seperti sebelumnya)
+    // Filter Params
     const search = searchParams.get('search') || '';         
     const sekolah = searchParams.get('sekolah') || '';       
-    const jenjang = searchParams.get('jenjang') || '';       
+    const jenjang = searchParams.get('jenjang') || '';
+    const mapel = searchParams.get('mapel') || '';
+    const usiaMin = searchParams.get('usia_min');
+    const usiaMax = searchParams.get('usia_max');       
     const status = searchParams.get('status') || '';         
     const kabupaten = searchParams.get('kabupaten') || '';
     const kecamatan = searchParams.get('kecamatan') || '';
@@ -33,19 +39,17 @@ export async function GET(request) {
     if (judulDiklatRaw) {
         judulDiklatArray = judulDiklatRaw.includes('||') ? judulDiklatRaw.split('||') : judulDiklatRaw.split(','); 
     } 
-    const modeFilter = searchParams.get('mode_filter') || 'history'; 
+    const modeFilter = searchParams.get('mode_filter') || 'eligible'; 
     const startDate = searchParams.get('start_date'); 
     const endDate = searchParams.get('end_date');     
 
-    // ==========================================
-    // 1. BANGUN WHERE CLAUSE (FILTER)
-    // ==========================================
-    // Kita pisahkan logika WHERE agar bisa dipakai di Query Data & Query Total
+    // --- 2. BANGUN WHERE CLAUSE ---
     
     let whereClause = ` WHERE 1=1 `;
     const values = [];
     let counter = 1;
 
+    // ... (Logika Filter Search, Sekolah, Jenjang, dll TETAP SAMA) ...
     if (search) {
       whereClause += ` AND (mv.nama_ptk ILIKE $${counter} OR mv.nik ILIKE $${counter})`;
       values.push(`%${search}%`); counter++;
@@ -57,6 +61,14 @@ export async function GET(request) {
     if (jenjang && jenjang !== 'ALL') {
       whereClause += ` AND mv.bentuk_pendidikan = $${counter}`;
       values.push(jenjang); counter++;
+    }
+    if (mapel) {
+      whereClause += ` AND mv.riwayat_sertifikasi ILIKE $${counter}`;
+      values.push(`%${mapel}%`); counter++;
+    }
+    if (usiaMin && usiaMax) {
+      whereClause += ` AND mv.usia_tahun >= $${counter} AND mv.usia_tahun <= $${counter + 1}`;
+      values.push(usiaMin); values.push(usiaMax); counter += 2;
     }
     if (kabupatenArray.length > 0) {
        const placeholders = kabupatenArray.map((_, i) => `$${counter + i}`).join(',');
@@ -93,8 +105,12 @@ export async function GET(request) {
       values.push(kategoriId); counter++;
     }
 
-    // Logic Master Diklat Filter
+    // Logic Master Diklat (Tetap sama)
     const hasDiklatFilter = judulDiklatArray.length > 0 || kategoriParam || programParam;
+    if (!hasDiklatFilter && modeFilter === 'history') {
+        return NextResponse.json({ meta: { page, limit, totalData: 0, totalPage: 0 }, data: [] });
+    }
+
     if (hasDiklatFilter) {
         let clause = '';
         let extraConditions = '';
@@ -119,35 +135,57 @@ export async function GET(request) {
         whereClause += clause;
     }
 
-    // ==========================================
-    // 2. QUERY TOTAL DATA (Untuk Pagination)
-    // ==========================================
+    // --- 3. QUERY TOTAL DATA ---
     const countQuery = `SELECT COUNT(DISTINCT mv.nik) as total FROM mv_dashboard_analitik mv ${whereClause}`;
     const countRes = await pool.query(countQuery, values);
     const totalData = parseInt(countRes.rows[0].total);
     const totalPage = Math.ceil(totalData / limit);
 
     // ==========================================
-    // 3. QUERY DATA UTAMA (FIX DISTINCT ERROR)
+    // 4. QUERY DATA UTAMA (FIX LOGIC SORTING DI SINI)
     // ==========================================
-    // Strategi: 
-    // 1. Inner Query: Ambil DISTINCT ON (nik) dengan ORDER BY nik (Wajib match).
-    // 2. Outer Query: Ambil hasil inner, lalu ORDER BY sesuai request user (nama, sekolah, dll).
     
-    // Tentukan sorting user
-    let outerOrderBy = `ORDER BY sub.nama_ptk ASC`; // Default
-    const dir = sortOrder === 'desc' ? 'DESC' : 'ASC';
+    let outerOrderBy = '';
 
-    if (sortBy === 'nama') {
-        outerOrderBy = `ORDER BY sub.nama_ptk ${dir}`;
-    } else if (sortBy === 'sekolah') {
-        outerOrderBy = `ORDER BY sub.nama_sekolah ${dir}`;
-    } else if (sortBy === 'status') {
-        outerOrderBy = `ORDER BY sub.status_kepegawaian ${dir}`;
-    } else if (sortBy === 'pelatihan') {
-        // 'sudah' (true) vs 'belum' (false)
-        const boolDir = sortOrder === 'sudah' ? 'DESC' : 'ASC'; 
-        outerOrderBy = `ORDER BY sub.is_sudah_pelatihan ${boolDir}, sub.nama_ptk ASC`;
+    if (sortParam) {
+        // === LOGIC COMBO SORT (NEW) ===
+        // Menerima: "nama:asc,usia:desc"
+        const sortParts = sortParam.split(',').map(part => {
+            const [field, direction] = part.split(':');
+            const dir = direction === 'desc' ? 'DESC' : 'ASC';
+
+            // Mapping dari Frontend Key -> Backend Column
+            switch(field) {
+                case 'nama': return `sub.nama_ptk ${dir}`;
+                case 'nama_ptk': return `sub.nama_ptk ${dir}`; // Handle legacy
+                case 'sekolah': return `sub.nama_sekolah ${dir}`;
+                case 'nama_sekolah': return `sub.nama_sekolah ${dir}`;
+                case 'usia': return `sub.usia_tahun ${dir}`;
+                case 'usia_tahun': return `sub.usia_tahun ${dir}`;
+                case 'status': return `sub.status_kepegawaian ${dir}`;
+                case 'mapel': return `sub.mapel ${dir}`; 
+                case 'is_sudah_pelatihan': return `sub.is_sudah_pelatihan ${dir}`;
+                default: return null; 
+            }
+        }).filter(Boolean);
+
+        if (sortParts.length > 0) {
+            outerOrderBy = `ORDER BY ${sortParts.join(', ')}`;
+        } else {
+            outerOrderBy = `ORDER BY sub.nama_ptk ASC`;
+        }
+
+    } else {
+        // === LOGIC SINGLE SORT (LEGACY FALLBACK) ===
+        // Dipakai jika frontend belum kirim param 'sort'
+        const dir = sortOrderLegacy === 'desc' ? 'DESC' : 'ASC';
+        switch (sortByLegacy) {
+            case 'nama': outerOrderBy = `ORDER BY sub.nama_ptk ${dir}`; break;
+            case 'sekolah': outerOrderBy = `ORDER BY sub.nama_sekolah ${dir}`; break;
+            case 'status': outerOrderBy = `ORDER BY sub.status_kepegawaian ${dir}`; break;
+            case 'usia': outerOrderBy = `ORDER BY sub.usia_tahun ${dir}`; break;
+            default: outerOrderBy = `ORDER BY sub.nama_ptk ASC`;
+        }
     }
 
     // Bangun Query Utama
@@ -155,13 +193,13 @@ export async function GET(request) {
       SELECT * FROM (
           SELECT DISTINCT ON (mv.nik)
             mv.nik, mv.nama_ptk, mv.nama_sekolah, mv.bentuk_pendidikan as jenjang,
-            mv.kabupaten, mv.kecamatan, mv.status_kepegawaian, mv.pangkat_golongan,
+            mv.kabupaten, mv.kecamatan, mv.status_kepegawaian, mv.riwayat_sertifikasi as mapel, mv.pangkat_golongan,
             mv.usia_tahun, mv.is_sudah_pelatihan, mv.judul_diklat, mv.start_date
           FROM mv_dashboard_analitik mv 
           ${whereClause}
-          ORDER BY mv.nik, mv.start_date DESC NULLS LAST -- Wajib urut nik dulu untuk DISTINCT ON
+          ORDER BY mv.nik, mv.start_date DESC NULLS LAST -- Sorting Wajib untuk DISTINCT
       ) as sub
-      ${outerOrderBy}
+      ${outerOrderBy} -- Sorting Dinamis dari User
       LIMIT $${counter} OFFSET $${counter + 1}
     `;
     
