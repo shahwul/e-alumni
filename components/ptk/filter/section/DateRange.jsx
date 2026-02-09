@@ -90,6 +90,9 @@ export function DateRangeFilter() {
             <Calendar
               initialFocus
               mode="range"
+              captionLayout="dropdown"
+              fromYear={2025}
+              toYear={2035}
               defaultMonth={filters.dateRange?.from}
               selected={filters.dateRange}
               onSelect={(range) =>

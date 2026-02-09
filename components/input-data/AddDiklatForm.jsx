@@ -174,6 +174,9 @@ export default function AddDiklatForm({onBack, onSuccess}) {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
+                          captionLayout="dropdown"
+                          fromYear={2025}
+                          toYear={2035}
                           selected={field.value ? new Date(field.value) : undefined}
                           onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                           disabled={(date) => name === "end_date" && form.watch("start_date") ? date < new Date(form.watch("start_date")) : false}
