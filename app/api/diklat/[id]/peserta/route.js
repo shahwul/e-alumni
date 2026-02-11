@@ -7,17 +7,21 @@ export async function GET(request, { params }) {
 
   try {
     const query = `
-      SELECT 
-        dp.nama_ptk,
-        dp.nik,
-        sp.nama AS nama_sekolah,
+      SELECT DISTINCT ON (da.nik)
+        da.nik,
+        mv.nama_ptk,
+        mv.nama_sekolah,
+        mv.kabupaten,
+        da.nilai_akhir,
         da.status_kelulusan,
-        da.nilai_akhir
+        md.title as judul_diklat,
+        md.start_date,
+        md.end_date
       FROM data_alumni da
-      JOIN data_ptk dp ON da.nik = dp.nik
-      LEFT JOIN satuan_pendidikan sp ON dp.npsn = sp.npsn
+      JOIN mv_dashboard_analitik mv ON da.nik = mv.nik
+      JOIN master_diklat md ON da.id_diklat = md.id
       WHERE da.id_diklat = $1
-      ORDER BY dp.nama_ptk ASC
+      ORDER BY da.nik, mv.nama_ptk ASC
     `;
     
     const res = await pool.query(query, [id]);

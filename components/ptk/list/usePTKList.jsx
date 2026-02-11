@@ -21,6 +21,7 @@ export function usePTKList() {
     mapel: "",
     usia_min: "",
     usia_max: "",
+    
     status: "",
     sekolah: [],
     judul_diklat: [],

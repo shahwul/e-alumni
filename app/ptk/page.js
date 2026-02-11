@@ -37,7 +37,7 @@ export default function DataPTKPage() {
   // 2. State Baru untuk Seleksi (Checklist)
   const [rowSelection, setRowSelection] = useState({});
   const [isAddToDiklatOpen, setIsAddToDiklatOpen] = useState(false);
-  const isCandidateMode = activeFilters.mode_filter === "eligible"; // Cek mode kandidat untuk menyesuaikan tampilan jika diperlukan
+  const isCandidateMode = activeFilters.mode_filter === "eligible";
 
   useEffect(() => {
     setRowSelection({});
@@ -71,6 +71,7 @@ export default function DataPTKPage() {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection} 
             isCandidateMode={isCandidateMode} // Kirim info mode kandidat
+            enableRowClick={isCandidateMode} // Hanya aktifkan klik baris di mode kandidat
             sorting={sorting} 
             setSorting={setSorting}
         />

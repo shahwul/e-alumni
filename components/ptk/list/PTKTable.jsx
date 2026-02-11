@@ -2,7 +2,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import { useMemo } from "react";
 
-export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting, setSorting, isCandidateMode }) {
+export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting, setSorting, isCandidateMode, enableRowClick }) {
   const filteredColumns = useMemo(() => {
     if (isCandidateMode) {
         return columns; // Tampilkan semua (termasuk checkbox)
@@ -28,7 +28,7 @@ export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting
           ))}
         </div>
       ) : (
-        <DataTable columns={filteredColumns} data={data} rowSelection={rowSelection} setRowSelection={setRowSelection} sorting={sorting} onSortingChange={setSorting} />
+        <DataTable columns={filteredColumns} data={data} rowSelection={rowSelection} setRowSelection={setRowSelection} sorting={sorting} onSortingChange={setSorting} enableRowClick={enableRowClick} />
       )}
     </div>
   );

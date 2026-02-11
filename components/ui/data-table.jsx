@@ -4,7 +4,6 @@
 import {
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 
@@ -24,6 +23,7 @@ export function DataTable({
   setRowSelection, 
   sorting = [],        // Default array kosong
   onSortingChange,     // Handler dari parent
+  enableRowClick = true,
 }) {
   const table = useReactTable({
     data, 
@@ -53,8 +53,14 @@ export function DataTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => {
+
+                const customWidth = header.column.columnDef.meta?.className || "";
+
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead 
+                    key={header.id} 
+                    className={`sticky top-0 z-20 bg-slate-50 shadow-sm font-bold text-slate-700 ${customWidth}`}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -73,12 +79,38 @@ export function DataTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                
+                // 1. TAMBAHKAN CLASS INTERAKTIF
+                className={`hover:bg-slate-50 transition-colors ${enableRowClick ? 'cursor-pointer' : ''}`}
+
+                // 2. LOGIC KLIK BARIS (CLICK-TO-SELECT)
+                onClick={(e) => {
+                  if (!enableRowClick) return;
+                  const target = e.target;
+                  
+                  // PENGAMAN: Jangan select row jika yang diklik adalah elemen interaktif lain
+                  if (
+                    target.closest("button") ||           // Tombol (Action/Copy)
+                    target.closest("[role='checkbox']") || // Checkbox bawaan
+                    target.closest("a") ||                // Link (jika ada)
+                    target.closest("input")               // Input field (jika ada)
+                  ) {
+                    return;
+                  }
+
+                  // Toggle seleksi baris ini
+                  row.toggleSelected(!row.getIsSelected());
+                }}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const customWidth = cell.column.columnDef.meta?.className || "";
+                  
+                  return (
+                    <TableCell key={cell.id} className={customWidth}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  )
+                })}
               </TableRow>
             ))
           ) : (
