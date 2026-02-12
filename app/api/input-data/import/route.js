@@ -16,14 +16,13 @@ export async function POST(request) {
       for (const p of peserta) {
         await client.query(`
           INSERT INTO data_alumni (
-            id_diklat, nama_peserta, nik, snapshot_nama_sekolah, npsn, 
+            id_diklat, nama_peserta, nik, npsn, 
             snapshot_jabatan, snapshot_pangkat, status_kelulusan
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'Lulus') 
+          ) VALUES ($1, $2, $3, $4, $5, $6, 'Lulus') 
         `, [
             id_diklat, 
             p.Nama, 
             p.NIK, 
-            p.sekolah_auto, 
             p.NPSN,
             p.Jabatan,  // Masuk ke snapshot_jabatan
             p.Golongan  // Masuk ke snapshot_pangkat

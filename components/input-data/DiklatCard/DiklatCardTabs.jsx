@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import UploadPeserta from "@/components/input-data/UploadPeserta";
-import ListPeserta from "@/components/input-data/ListPeserta";
+import UploadPeserta from "@/components/input-data/UploadPeserta/UploadPeserta";
+import ListPeserta from "@/components/input-data/ListPeserta/ListPeserta";
 import DiklatDetailForm from "./DiklatDetailForm";
 import ListKandidat from "@/components/input-data/ListKandidat";
 

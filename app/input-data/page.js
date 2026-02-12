@@ -25,7 +25,7 @@ export default function InputDataPage() {
     return (
       <AddDiklatForm
         onBack={() => setIsAdding(false)}
-        onSuccess={fetchData}
+        onSuccess={() => { setIsAdding(false); fetchData(); }}
       />
     );
   }

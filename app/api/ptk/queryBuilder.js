@@ -137,7 +137,7 @@ export function buildPTKQueryParts(searchParams) {
 
   // ID Filters
   if (params.rumpunId && params.rumpunId !== 'ALL') {
-    whereClause += ` AND mv.rumpun_id = $${counter}`;
+    whereClause += ` AND mv.topic_id = $${counter}`;
     values.push(params.rumpunId); counter++;
   }
   if (params.subRumpunId && params.subRumpunId !== 'ALL') {
