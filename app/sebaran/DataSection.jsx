@@ -29,6 +29,7 @@ import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
 import JenjangAlumniChart from "@/components/sebaran/charts/JenjangAlumniChart";
+import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
 
 export default function DataSection({
   selectedKab,
@@ -164,52 +165,14 @@ export default function DataSection({
             />
           </ChartCard>
 
-          {/* <div className="md:col-span-2">
-            <ChartCard title="Persebaran Jabatan (Top 5)">
-              {jabatanData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={jabatanData}
-                    layout="vertical"
-                    margin={{ left: 20, right: 20 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={true}
-                      vertical={false}
-                    />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={120}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <Tooltip
-                      formatter={(val) =>
-                        new Intl.NumberFormat("id-ID").format(val)
-                      }
-                    />
-                    <Bar
-                      dataKey="value"
-                      fill="#3b82f6"
-                      radius={[0, 4, 4, 0]}
-                      barSize={20}
-                      label={{
-                        position: "right",
-                        fill: "#666",
-                        fontSize: 11,
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-slate-400">
-                  Data Kosong
-                </div>
-              )}
-            </ChartCard>
-          </div> */}
+        <div className="md:col-span-2">
+              <BarComparisonChart
+                kab={selectedKab}
+                kec={selectedKec}
+                year={selectedYear}
+                height={400}
+              />
+          </div> 
 
           <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
             {triwulanData.some((d) => d.alumni > 0) ? (
