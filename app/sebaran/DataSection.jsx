@@ -149,21 +149,18 @@ export default function DataSection({
 
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChartCard title="Jenjang Pendidikan" height={300}>
+
             <JenjangAlumniChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
             />
-          </ChartCard>
 
-          <ChartCard title="PTK vs Alumni" height={300}>
             <PtkVsAlumniChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
             />
-          </ChartCard>
 
         <div className="md:col-span-2">
               <BarComparisonChart
@@ -205,14 +202,13 @@ export default function DataSection({
             )}
           </ChartCard>
 
-          <ChartCard title="Tren Alumni (5 Tahun Terakhir)" height={300}>
             <TimeGraphChart
               kab={selectedKab}
               kec={selectedKec}
               timeGrain="year"
               year={selectedYear}
             />
-          </ChartCard>
+            
         </div>
       </div>
     </div>
