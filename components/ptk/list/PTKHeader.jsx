@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export function PTKHeader({ onExport }) {
   return (
@@ -14,9 +20,23 @@ export function PTKHeader({ onExport }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" className="gap-2" onClick={onExport}>
-          <Download size={16} /> Export
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download size={16} /> Export
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onExport("eligible")}>
+              Export Kandidat
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => onExport("history")}>
+              Export Arsip
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
