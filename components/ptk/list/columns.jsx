@@ -61,6 +61,9 @@ export const columns = [
   // 1. SELECT (CHECKBOX)
   {
     id: "select",
+    meta: {
+      className: "w-[50px] text-center", // Fixed 50px & Tengah
+    },
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -87,6 +90,9 @@ export const columns = [
   // 2. NAMA PTK (SORTABLE)
   {
     accessorKey: "nama_ptk",
+    meta: {
+      className: "min-w-[280px] sm:w-[350px]", 
+    },
     header: ({ column }) => sortableHeader(column, "Nama PTK"),
     cell: ({ row }) => (
       <div className="flex flex-col gap-0.5">
@@ -106,6 +112,9 @@ export const columns = [
   // 3. UNIT KERJA (SORTABLE)
   {
     accessorKey: "nama_sekolah",
+    meta: {
+      className: "min-w-[200px]",
+    },
     header: ({ column }) => sortableHeader(column, "Unit Kerja"),
     cell: ({ row }) => (
       <div className="flex flex-col">
@@ -122,6 +131,9 @@ export const columns = [
   // 4. MATA PELAJARAN (SORTABLE)
   {
     accessorKey: "mapel",
+    meta: {
+      className: "w-[150px]",
+    },
     header: ({ column }) => sortableHeader(column, "Mata Pelajaran"),
     cell: ({ row }) => (
       <div
@@ -149,7 +161,7 @@ export const columns = [
   // 6. PELATIHAN (SORTABLE)
   {
     accessorKey: "is_sudah_pelatihan",
-    header: ({ column }) => sortableHeader(column, "Status Pelatihan"),
+    header: ({ column }) => sortableHeader(column, "Status"),
     cell: ({ row }) => {
       const isSudah = row.getValue("is_sudah_pelatihan");
       return (
@@ -170,6 +182,9 @@ export const columns = [
   // 7. ACTIONS (MENU)
   {
     id: "actions",
+    meta: {
+        className: "w-[60px] text-center",
+    },
     cell: ({ row }) => <ActionCell row={row} />,
   },
 ];

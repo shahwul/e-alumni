@@ -3,24 +3,25 @@ import pool from '@/lib/db';
 
 export async function POST(request) {
   try {
-    const { peserta } = await request.json(); 
+    // 1. Terima parameter peserta DAN diklatId (untuk cek duplikat)
+    const { peserta, diklatId } = await request.json(); 
     
     if (!peserta || peserta.length === 0) {
       return NextResponse.json({ data: [] });
     }
 
-    // Ambil list NIK dan NPSN dari Excel untuk query
+    // Ambil list NIK dan NPSN dari Excel untuk query bulk
     const nikList = peserta.map(p => String(p.NIK)).filter(n => n);
     const npsnList = peserta.map(p => String(p.NPSN)).filter(n => n);
     
     if (nikList.length === 0) {
-       return NextResponse.json({ error: "Tidak ada NIK ditemukan" }, { status: 400 });
+       return NextResponse.json({ error: "Tidak ada NIK ditemukan dalam file" }, { status: 400 });
     }
 
     const client = await pool.connect();
     
     try {
-        // 1. Ambil Data PTK berdasarkan NIK
+        // A. Ambil Data PTK berdasarkan NIK
         const queryPTK = `
             SELECT nik, nama_ptk, npsn, jabatan_ptk, pangkat_golongan
             FROM data_ptk 
@@ -29,9 +30,7 @@ export async function POST(request) {
         const resPTK = await client.query(queryPTK, [nikList]);
         const foundPTK = resPTK.rows;
 
-        // 2. Ambil Data Sekolah (Nama) berdasarkan NPSN yang diupload
-        // (Asumsi ada tabel referensi sekolah, atau kita ambil distinct dari mv_dashboard)
-        // Kita pakai mv_dashboard_analitik saja biar simpel, ambil nama sekolah dari npsn itu
+        // B. Ambil Data Sekolah (Nama) berdasarkan NPSN yang diupload
         const querySekolah = `
             SELECT DISTINCT npsn, nama
             FROM satuan_pendidikan 
@@ -40,14 +39,24 @@ export async function POST(request) {
         const resSekolah = await client.query(querySekolah, [npsnList]);
         const foundSekolah = resSekolah.rows;
 
+        // C. (PENTING) Cek Apakah Sudah Terdaftar di Diklat Ini?
+        let registeredNiks = new Set();
+        if (diklatId) {
+            const enrolledQuery = `
+                SELECT nik FROM data_alumni 
+                WHERE id_diklat = $1 AND nik = ANY($2)
+            `;
+            const enrolledRes = await client.query(enrolledQuery, [diklatId, nikList]);
+            enrolledRes.rows.forEach(row => registeredNiks.add(row.nik));
+        }
+
+        // D. Proses Validasi Per Baris
         const validatedData = peserta.map(p => {
             const excelNpsn = String(p.NPSN || "").trim();
             const excelNik = String(p.NIK || "").trim();
             
-            // Cek NIK di DB
+            // Cari data di hasil query DB
             const matchPTK = foundPTK.find(db => db.nik === excelNik);
-            
-            // Cek Nama Sekolah dari NPSN yang diupload
             const matchSekolah = foundSekolah.find(s => s.npsn === excelNpsn);
 
             let isValid = true;
@@ -55,25 +64,33 @@ export async function POST(request) {
             let suggestions = {};
             let nama_sekolah_display = matchSekolah ? matchSekolah.nama : "NPSN Tidak Ditemukan";
 
-            console.log("Match:", matchPTK);
+            // LOGIC VALIDASI BERLAPIS
 
-            if (!matchPTK) {
+            // 1. Cek Duplikasi (Prioritas Utama)
+            if (registeredNiks.has(excelNik)) {
                 isValid = false;
-                status_msg = "NIK Tidak Terdaftar";
-            } else {
-                // Cek Nama Orang
-                if (p.Nama && matchPTK.nama_ptk.trim().toLowerCase() !== p.Nama.trim().toLowerCase()) {
+                status_msg = "Sudah Terdaftar di Diklat ini";
+            }
+            // 2. Cek Apakah NIK Ada di Master PTK
+            else if (!matchPTK) {
+                isValid = false;
+                status_msg = "NIK Tidak Terdaftar di Database";
+            } 
+            else {
+                // 3. Cek Kesesuaian Nama (Hanya warning/suggestion)
+                if (p.Nama && matchPTK.nama_ptk && matchPTK.nama_ptk.trim().toLowerCase() !== p.Nama.trim().toLowerCase()) {
                     suggestions.nama_db = matchPTK.nama_ptk;
                 }
 
-                // Cek apakah PTK ini mutasi? (NPSN excel beda dengan NPSN dia di DB)
-                if (matchPTK.npsn_sekolah !== excelNpsn) {
-                    status_msg = `Info: Mutasi (DB: ${matchPTK.npsn})`;
-                    // Tetap valid, karena mungkin dia baru pindah dan belum update dapodik
+                // 4. Cek Mutasi Sekolah (Info saja, tidak invalid)
+                // Jika NPSN di excel beda dengan NPSN di data PTK, mungkin dia baru pindah
+                if (matchPTK.npsn !== excelNpsn) {
+                    status_msg = `Info: Mutasi (DB: ${matchPTK.npsn || '-'})`;
                 }
                 
+                // 5. Cek Validitas NPSN Sekolah Tujuan
                 if (!matchSekolah) {
-                    isValid = false; // NPSN ngawur/typo
+                    isValid = false; 
                     status_msg = "NPSN Tidak Valid";
                     nama_sekolah_display = "-";
                 }
@@ -84,8 +101,14 @@ export async function POST(request) {
                 isValid,
                 status_msg,
                 ...suggestions,
-                sekolah_auto: nama_sekolah_display, // Ini hasil lookup otomatis
-                db_data: matchPTK ? { nama: matchPTK.nama_ptk, jabatan: matchPTK.jabatan_ptk, golongan: matchPTK.pangkat_golongan, npsn: matchPTK.npsn } : null
+                sekolah_auto: nama_sekolah_display, // Nama sekolah otomatis dari DB
+                db_data: matchPTK ? { 
+                    nama: matchPTK.nama_ptk, 
+                    jabatan: matchPTK.jabatan_ptk, 
+                    golongan: matchPTK.pangkat_golongan, 
+                    npsn: matchPTK.npsn, 
+                    sekolah: matchSekolah ? matchSekolah.nama : null 
+                } : null
             };
         });
 

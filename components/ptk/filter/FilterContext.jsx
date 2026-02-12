@@ -5,6 +5,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 const DEFAULT_FILTERS = {
   kabupaten: [],
   kecamatan: [],
+  jenis_kelamin: "",
   jenjang: "",
   mapel: "",
   usia_min: "",

@@ -21,6 +21,7 @@ export function usePTKList() {
     mapel: "",
     usia_min: "",
     usia_max: "",
+
     status: "",
     sekolah: [],
     judul_diklat: [],
@@ -66,11 +67,14 @@ export function usePTKList() {
     return () => clearTimeout(t);
   }, [search, sorting, activeFilters, page, limit]);
 
-  const handleExport = () => {
+  const handleExport = (mode) => {
     const params = buildPTKParams({
       search,
       sorting,
-      activeFilters,
+      activeFilters: {
+        ...activeFilters,
+        mode_filter: mode ?? activeFilters.mode_filter,
+      },
       withPagination: false,
     });
 

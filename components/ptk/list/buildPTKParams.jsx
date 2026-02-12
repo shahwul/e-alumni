@@ -32,14 +32,33 @@ export function buildPTKParams({
   if (activeFilters.judul_diklat?.length)
     params.append("judul_diklat", activeFilters.judul_diklat.join(","));
 
-  // === STRING FILTERS ===
+  // === STRING FILTERS (KRITERIA PTK) ===
+  if (activeFilters.jenis_kelamin) params.append("jenis_kelamin", activeFilters.jenis_kelamin);
   if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
   if (activeFilters.mapel) params.append("mapel", activeFilters.mapel);
-  if (activeFilters.usia_min && activeFilters.usia_max) {
-  params.append("usia_min", activeFilters.usia_min);
-  params.append("usia_max", activeFilters.usia_max);
+  
+  // --- TAMBAHAN FILTER BARU DI SINI ---
+  if (activeFilters.status_kepegawaian) params.append("status_kepegawaian", activeFilters.status_kepegawaian);
+  if (activeFilters.jenis_ptk) params.append("jenis_ptk", activeFilters.jenis_ptk);
+  if (activeFilters.pendidikan_terakhir) params.append("pendidikan_terakhir", activeFilters.pendidikan_terakhir);
+  if (activeFilters.pendidikan_bidang) params.append("pendidikan_bidang", activeFilters.pendidikan_bidang);
+  if (activeFilters.pangkat_golongan) params.append("pangkat_golongan", activeFilters.pangkat_golongan);
+  
+  // Khusus Kepala Sekolah (Boolean/String)
+  if (activeFilters.kepala_sekolah && activeFilters.kepala_sekolah !== "ALL") {
+      params.append("kepala_sekolah", activeFilters.kepala_sekolah);
   }
+
+  // --- FILTER LAMA ---
+  if (activeFilters.usia_min && activeFilters.usia_max) {
+    params.append("usia_min", activeFilters.usia_min);
+    params.append("usia_max", activeFilters.usia_max);
+  }
+  
+  // Filter Status Pelatihan (Sudah/Belum)
   if (activeFilters.status) params.append("status", activeFilters.status);
+
+  // Filter Master Diklat
   if (activeFilters.kategori) params.append("kategori", activeFilters.kategori);
   if (activeFilters.jenis) params.append("jenis", activeFilters.jenis);
   if (activeFilters.program) params.append("program", activeFilters.program);
@@ -65,15 +84,14 @@ export function buildPTKParams({
     params.append("end_date", end);
   }
 
+  // === SORTING ===
   if (sorting && sorting.length > 0) {
-    // Kita kirim string gabungan, misal: "nama:asc,usia:desc"
-    // Backend harus dipersiapkan untuk split string ini.
-    
     const sortMapping = {
       "nama_ptk": "nama",
       "nama_sekolah": "sekolah",
       "usia_tahun": "usia",
-      "status_kepegawaian": "status"
+      "status_kepegawaian": "status", // Mapping ID tabel ke Key API
+      "is_sudah_pelatihan": "is_sudah_pelatihan"
     };
 
     const sortString = sorting.map(s => {
@@ -83,7 +101,6 @@ export function buildPTKParams({
     }).join(',');
 
     params.append("sort", sortString); 
-    // Hapus params 'sort_by' & 'sort_order' yang lama biar ga bingung
   }
 
   return params;

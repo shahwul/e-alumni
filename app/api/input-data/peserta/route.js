@@ -11,8 +11,11 @@ export async function GET(request) {
     if (!diklatId) return NextResponse.json({ data: [] });
 
     let query = `
-      SELECT id, nik, nama_peserta, npsn, snapshot_nama_sekolah, snapshot_jabatan, snapshot_pangkat, status_kelulusan 
-      FROM data_alumni 
+      SELECT 
+      da.*,
+      sp.nama as nama_sekolah
+      FROM data_alumni da
+      JOIN satuan_pendidikan sp ON da.npsn = sp.npsn
       WHERE id_diklat = $1 
     `;
     

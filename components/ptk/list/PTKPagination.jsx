@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Pastikan import ini ada
+import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -8,9 +15,10 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export function PTKPagination({ page, limit, totalData, setPage, loading }) {
+// Tambahkan setLimit ke props
+export function PTKPagination({ page, limit, totalData, setPage, setLimit, loading }) {
   const totalPage = Math.ceil(totalData / limit);
-  const startEntry = (page - 1) * limit + 1;
+  const startEntry = totalData === 0 ? 0 : (page - 1) * limit + 1;
   const endEntry = Math.min(page * limit, totalData);
 
   const [inputPage, setInputPage] = useState(page);
@@ -28,18 +36,44 @@ export function PTKPagination({ page, limit, totalData, setPage, loading }) {
   };
 
   return (
-    <div className="border-t border-slate-100 bg-white p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-      {/* INFO */}
-      <div className="text-slate-500">
-        Menampilkan{" "}
-        <span className="font-medium text-slate-900">
-          {totalData > 0 ? startEntry : 0}
-        </span>{" "}
-        - <span className="font-medium text-slate-900">{endEntry}</span> dari{" "}
-        <span className="font-medium text-slate-900">{totalData}</span> data
+    <div className="border-t border-slate-100 bg-white p-4 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-sm">
+      
+      {/* KIRI: INFO & LIMIT */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full sm:w-auto justify-between sm:justify-start">
+        
+        {/* 1. TEXT INFO */}
+        <div className="text-slate-500 whitespace-nowrap">
+          Menampilkan{" "}
+          <span className="font-medium text-slate-900">{startEntry}</span> -{" "}
+          <span className="font-medium text-slate-900">{endEntry}</span> dari{" "}
+          <span className="font-medium text-slate-900">{totalData}</span> data
+        </div>
+
+        {/* 2. INPUT LIMIT (DROPDOWN) */}
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 whitespace-nowrap hidden sm:inline-block">Baris per hal:</span>
+          <Select
+            value={`${limit}`}
+            onValueChange={(value) => {
+              setLimit(Number(value));
+              setPage(1); // Reset ke halaman 1 saat limit berubah agar tidak out of bounds
+            }}
+          >
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={limit} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {[10, 25, 50, 100].map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* CONTROLS */}
+      {/* KANAN: CONTROLS */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
@@ -63,8 +97,7 @@ export function PTKPagination({ page, limit, totalData, setPage, loading }) {
         </Button>
 
         {/* Input halaman */}
-        <div className="flex items-center gap-1">
-          <span className="text-slate-500">Hal</span>
+        <div className="flex items-center gap-1 mx-1">
           <Input
             type="number"
             min={1}
@@ -77,12 +110,7 @@ export function PTKPagination({ page, limit, totalData, setPage, loading }) {
                 goToPage(Number(inputPage));
               }
             }}
-            className="
-              h-8 w-16 text-center
-              [appearance:textfield]
-              [&::-webkit-inner-spin-button]:appearance-none
-              [&::-webkit-outer-spin-button]:appearance-none
-            "
+            className="h-8 w-12 p-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             disabled={loading}
           />
           <span className="text-slate-500">/ {totalPage || 1}</span>

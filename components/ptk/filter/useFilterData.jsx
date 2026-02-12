@@ -1,91 +1,34 @@
 "use client";
-import { useEffect, useState } from "react";
 
-export function useFilterData(filters, setFilters) {
-  const [wilayah, setWilayah] = useState([]);
-  const [rumpunOptions, setRumpunOptions] = useState([]);
-  const [subRumpunOptions, setSubRumpunOptions] = useState([]);
-  const [kategoriOption, setKategoriOption] = useState([]);
+import { 
+  useWilayah, 
+  useRumpun, 
+  useKategori, 
+  useSubRumpun 
+} from "./hooks/useReferences"; // Sesuaikan path import
 
-  // 1. Fetch filter wilayah
-  useEffect(() => {
-    async function fetchWilayah() {
-      try {
-        const response = await fetch("/api/ref/wilayah");
-        const data = await response.json();
-        console.log("Fetched wilayah data:", data);
-        if (Array.isArray(data)) {
-          setWilayah(data);
-        }
-      } catch (error) {
-        console.error("gagal fetch wilayah");
-      }
-    }
-    fetchWilayah();
-  }, []);
+export function useFilterData(filters) {
+  // 1. Ambil Wilayah (Auto Cache & Deduplication via SWR)
+  const { wilayah, isLoading: loadingWilayah } = useWilayah();
 
-  // 2. Fetch filter rumpun
-  useEffect(() => {
-    async function fetchRumpun() {
-      try {
-        const res = await fetch("/api/ref/rumpun");
-        if (res.ok) {
-          const data = await res.json();
-          setRumpunOptions(data);
-        }
-      } catch (err) {
-        console.error("Gagal load rumpun:", err);
-      }
-    }
-    fetchRumpun();
-  }, []);
+  // 2. Ambil Rumpun
+  const { rumpun, isLoading: loadingRumpun } = useRumpun();
 
-  // 3. Fetch filter sub-rumpun
-  useEffect(() => {
-    if (!filters.rumpun || filters.rumpun === "ALL") {
-      setSubRumpunOptions([]);
-      setFilters((prev) => ({ ...prev, sub_rumpun: "" }));
-      return;
-    }
+  // 3. Ambil Kategori
+  const { kategori, isLoading: loadingKategori } = useKategori();
 
-    async function fetchSubRumpun() {
-      try {
-        const res = await fetch(
-          `/api/ref/sub-rumpun?topic_id=${filters.rumpun}`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setSubRumpunOptions(data);
-        }
-      } catch (err) {
-        console.error("Gagal load sub rumpun:", err);
-      }
-    }
+  // 4. Ambil Sub Rumpun (Otomatis fetch kalau filters.rumpun ada isinya)
+  // Logic "kapan harus fetch" sudah ada di dalam hook useSubRumpun
+  const { subRumpun, isLoading: loadingSub } = useSubRumpun(filters.rumpun);
 
-    setFilters((prev) => ({ ...prev, sub_rumpun: "" }));
-    fetchSubRumpun();
-  }, [filters.rumpun, setFilters]);
-
-  useEffect(() => {
-    async function fetchKategori() {
-      try {
-        const response = await fetch("/api/ref/kategori");
-        const data = await response.json();
-        console.log("Fetched kategori data:", data);
-        if (Array.isArray(data)) {
-          setKategoriOption(data);
-        }
-      } catch (error) {
-        console.error("gagal fetch kategori");
-      }
-    }
-    fetchKategori();
-  }, []);
-
+  // Return data bersih ke komponen UI
   return {
-    wilayah,
-    rumpunOptions,
-    subRumpunOptions,
-    kategoriOption,
+    wilayah,            // Array data wilayah
+    rumpunOptions: rumpun,
+    subRumpunOptions: subRumpun,
+    kategoriOption: kategori,
+    
+    // Bonus: Kita bisa kasih tau UI kalau lagi loading
+    loading: loadingWilayah || loadingRumpun || loadingKategori || loadingSub
   };
 }
