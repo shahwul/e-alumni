@@ -136,17 +136,11 @@ export default function DataSection({
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* Tabel View */}
-        <div className="lg:col-span-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm tracking-wide border-b pl-2 pb-2 ">
-            Data Tersedia
-          </h4>
           <TabelViewData
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
           />
-        </div>
-
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
 

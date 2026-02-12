@@ -9,8 +9,7 @@ import {
   Legend,
 } from "recharts";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { useMemo } from "react";
-import { useMetric } from "@/hooks/useMetric";
+import { useMemo, useState } from "react";
 
 import { processData, injectTotal } from "../helpers/utils";
 import { METRIC_OPTIONS } from "@/lib/constants";
@@ -19,7 +18,7 @@ import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
 export default function BarComparisonChart({ kab, kec, year, height = 400 }) {
-  const { metric, setMetric } = useMetric("ptk");
+  const [metric, setMetric] = useState("alumni");
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";

@@ -1,22 +1,27 @@
 import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { processData, injectTotal } from "../helpers/utils";
+import { METRIC_OPTIONS } from "@/lib/constants";
 
-import { CustomTooltip } from "../CustomTooltip";
+import { CustomTooltip }  from "../CustomTooltip";
 import ChartCard from "../ChartCard";
+import QuerySelector from "../QuerySelector";
 
 export default function PtkVsAlumniChart({ kab, kec, year, height = 300 }) {
+  const [ metric1, setMetric1 ] = useState("ptk");
+  const [ metric2, setMetric2 ] = useState("alumni");
+
   const alumni = useAnalytics({
-    metric: "alumni",
+    metric: metric2,
     kab,
     kec,
     year,
   });
 
   const untrained = useAnalytics({
-    metric: "untrained",
+    metric: metric1,
     kab,
     kec,
     year,
@@ -41,7 +46,6 @@ export default function PtkVsAlumniChart({ kab, kec, year, height = 300 }) {
     [loading, alumni.data, untrained.data], // Updated dependencies
   );
 
-  console.log("PTK vs Alumni Data:", data);
 
   if (loading) {
     return (
