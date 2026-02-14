@@ -136,34 +136,33 @@ export default function DataSection({
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* Tabel View */}
-          <TabelViewData
+        <TabelViewData
+          kab={selectedKab}
+          kec={selectedKec}
+          year={selectedYear}
+        />
+        {/* Chart Cards */}
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <JenjangAlumniChart
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
           />
-        {/* Chart Cards */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <JenjangAlumniChart
+          <PtkVsAlumniChart
+            kab={selectedKab}
+            kec={selectedKec}
+            year={selectedYear}
+          />
+
+          <div className="md:col-span-2">
+            <BarComparisonChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
+              height={400}
             />
-
-            <PtkVsAlumniChart
-              kab={selectedKab}
-              kec={selectedKec}
-              year={selectedYear}
-            />
-
-        <div className="md:col-span-2">
-              <BarComparisonChart
-                kab={selectedKab}
-                kec={selectedKec}
-                year={selectedYear}
-                height={400}
-              />
-          </div> 
+          </div>
 
           <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
             {triwulanData.some((d) => d.alumni > 0) ? (
@@ -196,13 +195,12 @@ export default function DataSection({
             )}
           </ChartCard>
 
-            <TimeGraphChart
-              kab={selectedKab}
-              kec={selectedKec}
-              timeGrain="year"
-              year={selectedYear}
-            />
-            
+          <TimeGraphChart
+            kab={selectedKab}
+            kec={selectedKec}
+            timeGrain="year"
+            year={selectedYear}
+          />
         </div>
       </div>
     </div>
