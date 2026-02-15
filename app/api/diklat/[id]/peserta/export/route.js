@@ -1,42 +1,58 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma';
 import ExcelJS from 'exceljs';
 
 export async function GET(request, { params }) {
   try {
-    const { id } = await params; // Ambil ID Diklat dari URL
+    const { id } = await params;
 
-    // 1. QUERY DATA PESERTA + NAMA DIKLAT
-    // Kita join ke MV (Materialized View) atau tabel PTK untuk dapat nama & sekolah
-    const query = `
-      SELECT DISTINCT ON (da.nik)
-        da.nik,
-        mv.nama_ptk,
-        mv.nama_sekolah,
-        mv.kabupaten,
-        da.nilai_akhir,
-        da.status_kelulusan,
-        md.title as judul_diklat,
-        md.start_date,
-        md.end_date
-      FROM data_alumni da
-      JOIN mv_dashboard_analitik mv ON da.nik = mv.nik
-      JOIN master_diklat md ON da.id_diklat = md.id
-      WHERE da.id_diklat = $1
-      ORDER BY da.nik, mv.nama_ptk ASC
-    `;
+    if (!id) {
+        return NextResponse.json({ error: 'ID Diklat diperlukan' }, { status: 400 });
+    }
+    const rawData = await prisma.data_alumni.findMany({
+        where: { 
+            id_diklat: parseInt(id) 
+        },
+        distinct: ['nik'],
+        orderBy: [
+            { nik: 'asc' }, 
+            { data_ptk: { nama_ptk: 'asc' } }
+        ],
+        select: {
+            nik: true,
+            nilai_akhir: true,
+            status_kelulusan: true,
+            master_diklat: {
+                select: { title: true }
+            },
+            data_ptk: {
+                select: {
+                    nama_ptk: true,
+                    satuan_pendidikan: {
+                        select: {
+                            nama: true,
+                            ref_wilayah: {
+                                select: { kabupaten: true }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    const judulDiklat = rawData.length > 0 ? rawData[0].master_diklat?.title : 'Diklat';
 
-    const res = await pool.query(query, [id]);
-    const rows = res.rows;
-    
-    // Ambil judul diklat dari baris pertama (jika ada data) untuk nama file
-    const judulDiklat = rows.length > 0 ? rows[0].judul_diklat : 'Diklat';
-
-    // 2. GENERATE EXCEL
+    const rows = rawData.map(item => ({
+        nik: item.nik,
+        nama_ptk: item.data_ptk?.nama_ptk || '-',
+        nama_sekolah: item.data_ptk?.satuan_pendidikan?.nama || '-',
+        kabupaten: item.data_ptk?.satuan_pendidikan?.ref_wilayah?.kabupaten || '-',
+        nilai_akhir: item.nilai_akhir,
+        status_kelulusan: item.status_kelulusan
+    }));
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Peserta Diklat');
 
-    // Definisi Kolom
     worksheet.columns = [
       { header: 'No', key: 'no', width: 5 },
       { header: 'Nama Lengkap', key: 'nama_ptk', width: 30 },
@@ -47,7 +63,6 @@ export async function GET(request, { params }) {
       { header: 'Status Kelulusan', key: 'status_kelulusan', width: 20 },
     ];
 
-    // Isi Data
     rows.forEach((row, index) => {
       worksheet.addRow({
         no: index + 1,
@@ -60,26 +75,26 @@ export async function GET(request, { params }) {
       });
     });
 
-    // Styling Header (Warna Orange biar beda dikit sama PTK)
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFED7D31' } // Orange
+      fgColor: { argb: 'FFED7D31' } 
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Auto Filter
     worksheet.autoFilter = {
       from: { row: 1, column: 1 },
       to: { row: 1, column: 7 }
     };
 
-    // 3. RETURN FILE
     const buffer = await workbook.xlsx.writeBuffer();
-    // Bersihkan nama file dari karakter aneh
-    const safeTitle = judulDiklat.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+
+    const safeTitle = (judulDiklat || 'Diklat')
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .substring(0, 30);
+        
     const filename = `Peserta_${safeTitle}_${new Date().toISOString().slice(0,10)}.xlsx`;
 
     return new NextResponse(buffer, {

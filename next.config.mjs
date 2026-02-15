@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  devServer: {
-    allowedDevOrigins: [
-      'shahwul.duckdns.org',
-      'http://shahwul.duckdns.org',
-      'https://shahwul.duckdns.org',
-    ],
-  },
+  output: 'standalone',
 };
 
 export default nextConfig;

@@ -1,0 +1,35 @@
+# Menghapus baris version karena sudah obsolete (pesan warning kamu tadi)
+services:
+  # --- DATABASE SERVICE ---
+  db:
+    build:
+      context: ./init-db
+      dockerfile: Dockerfile.db
+    container_name: e-alumni_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123"
+      POSTGRES_DB: e_alumni
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- APP SERVICE ---
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: e-alumni_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Nama DB di sini harus SAMA dengan POSTGRES_DB di atas
+      DATABASE_URL: "postgresql://postgres:123@db:5432/e_alumni?schema=public"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

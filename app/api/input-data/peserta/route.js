@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma'; 
 
-// 1. GET: Ambil daftar peserta
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -10,58 +9,99 @@ export async function GET(request) {
 
     if (!diklatId) return NextResponse.json({ data: [] });
 
-    let query = `
-      SELECT 
-      da.*,
-      sp.nama as nama_sekolah
-      FROM data_alumni da
-      JOIN satuan_pendidikan sp ON da.npsn = sp.npsn
-      WHERE id_diklat = $1 
-    `;
-    
-    const values = [diklatId];
+    const whereClause = {
+      id_diklat: parseInt(diklatId), 
+    };
 
     if (search) {
-      query += ` AND (nama_peserta ILIKE $2 OR nik ILIKE $2 OR snapshot_nama_sekolah ILIKE $2)`;
-      values.push(`%${search}%`);
+      whereClause.OR = [
+        { nama_peserta: { contains: search, mode: 'insensitive' } },
+        { nik: { contains: search } },
+        { snapshot_nama_sekolah: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    query += ` ORDER BY nama_peserta ASC`;
+    const results = await prisma.data_alumni.findMany({
+      where: whereClause,
+      include: {
+        satuan_pendidikan: {
+          select: { nama: true }
+        }
+      },
+      orderBy: {
+        nama_peserta: 'asc',
+      },
+    });
 
-    const res = await pool.query(query, values);
-    return NextResponse.json({ data: res.rows });
+    const flatData = results.map(row => ({
+      ...row,
+      nama_sekolah: row.satuan_pendidikan?.nama || row.snapshot_nama_sekolah || '-',
+      satuan_pendidikan: undefined 
+    }));
+
+    return NextResponse.json({ data: flatData });
 
   } catch (error) {
+    console.error("Error GET Peserta:", error);
     return NextResponse.json({ error: 'Gagal mengambil data' }, { status: 500 });
   }
 }
 
-// 2. PUT: Update data peserta
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const { id, nama_peserta, nik, npsn, snapshot_nama_sekolah, snapshot_jabatan, snapshot_pangkat } = body;
+    const { 
+      id, 
+      nama_peserta, 
+      nik, 
+      npsn, 
+      snapshot_nama_sekolah, 
+      snapshot_jabatan, 
+      snapshot_pangkat 
+    } = body;
 
-    await pool.query(`
-      UPDATE data_alumni 
-      SET nama_peserta=$1, nik=$2, npsn=$3, snapshot_nama_sekolah=$4, snapshot_jabatan=$5, snapshot_pangkat=$6
-      WHERE id=$7
-    `, [nama_peserta, nik, npsn, snapshot_nama_sekolah, snapshot_jabatan, snapshot_pangkat, id]);
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+
+    await prisma.data_alumni.update({
+      where: { id: parseInt(id) },
+      data: {
+        nama_peserta,
+        nik,
+        npsn,
+        snapshot_nama_sekolah,
+        snapshot_jabatan,
+        snapshot_pangkat
+
+      }
+    });
+
+    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
 
     return NextResponse.json({ success: true });
+
   } catch (error) {
+    console.error("Error PUT Peserta:", error);
     return NextResponse.json({ error: 'Gagal update data' }, { status: 500 });
   }
 }
 
-// 3. DELETE (Sama seperti sebelumnya)
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    await pool.query(`DELETE FROM data_alumni WHERE id = $1`, [id]);
+
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+
+    await prisma.data_alumni.delete({
+      where: { id: parseInt(id) }
+    });
+
+    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+
     return NextResponse.json({ success: true });
+
   } catch (error) {
+    console.error("Error DELETE Peserta:", error);
     return NextResponse.json({ error: 'Gagal hapus data' }, { status: 500 });
   }
 }

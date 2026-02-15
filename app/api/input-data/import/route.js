@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
@@ -9,36 +9,30 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Data kosong' }, { status: 400 });
     }
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+    const alumniData = peserta.map(p => ({
+        id_diklat: parseInt(id_diklat), 
+        nama_peserta: p.Nama,
+        nik: String(p.NIK),
+        npsn: String(p.NPSN),
+        snapshot_jabatan: p.Jabatan,
+        snapshot_pangkat: p.Golongan,
+        status_kelulusan: 'Lulus'  
+    }));
 
-      for (const p of peserta) {
-        await client.query(`
-          INSERT INTO data_alumni (
-            id_diklat, nama_peserta, nik, npsn, 
-            snapshot_jabatan, snapshot_pangkat, status_kelulusan
-          ) VALUES ($1, $2, $3, $4, $5, $6, 'Lulus') 
-        `, [
-            id_diklat, 
-            p.Nama, 
-            p.NIK, 
-            p.NPSN,
-            p.Jabatan,  // Masuk ke snapshot_jabatan
-            p.Golongan  // Masuk ke snapshot_pangkat
-        ]);
-      }
+    const result = await prisma.data_alumni.createMany({
+        data: alumniData,
+        skipDuplicates: false 
+    });
 
-      await client.query('COMMIT');
-      return NextResponse.json({ success: true, count: peserta.length });
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
+    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+
+    return NextResponse.json({ 
+        success: true, 
+        count: result.count 
+    });
 
   } catch (error) {
+    console.error("Error Import Alumni:", error);
     return NextResponse.json({ error: 'Gagal import data' }, { status: 500 });
   }
 }

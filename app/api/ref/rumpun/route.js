@@ -1,22 +1,25 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Sesuaikan nama tabel dan kolom dengan database kamu.
-    // Biasanya namanya 'ref_topik' atau 'master_topik'
-    const query = `
-      SELECT id, topic_name 
-      FROM ref_topik 
-      ORDER BY id ASC
-    `;
+    const rumpun = await prisma.ref_topik.findMany({
+      select: {
+        id: true,
+        topic_name: true,
+      },
+      orderBy: {
+        id: 'asc',
+      },
+    });
     
-    const res = await pool.query(query);
-    
-    return NextResponse.json(res.rows);
+    return NextResponse.json(rumpun);
 
   } catch (error) {
     console.error("Error API Rumpun:", error);
-    return NextResponse.json({ error: 'Gagal ambil data rumpun' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Gagal ambil data rumpun' }, 
+      { status: 500 }
+    );
   }
 }

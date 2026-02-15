@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import prisma from "@/lib/prisma";
 import {
-  buildPtkQuery,
+  fetchPtkData,
   PTK_QUERY_TYPE,
-} from "@/app/api/ptk/[nik]/queryBuilder";
+} from "../queryBuilder";
 
 export async function GET(request, { params }) {
   try {
@@ -13,30 +13,23 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "NIK wajib diisi" }, { status: 400 });
     }
 
-    const qRiwayat = buildPtkQuery({
-      type: PTK_QUERY_TYPE.RIWAYAT_DETAIL,
-      nik,
-    });
-
-    const qBio = buildPtkQuery({
-      type: PTK_QUERY_TYPE.PROFIL,
-      nik,
-    });
-    const [riwayatRes, bioRes] = await Promise.all([
-      pool.query(qRiwayat.sql, qRiwayat.values),
-      pool.query(qBio.sql, qBio.values),
+    const [riwayatPelatihan, ptkProfil] = await Promise.all([
+      fetchPtkData(prisma, PTK_QUERY_TYPE.RIWAYAT_DETAIL, nik),
+      fetchPtkData(prisma, PTK_QUERY_TYPE.PROFIL, nik),
     ]);
 
-    const ptkFull = bioRes.rows[0] || {};
+    const ptkFull = ptkProfil || {};
+    
     const biodata = {
-      nama_ptk: ptkFull.nama_ptk,
-      npsn: ptkFull.npsn,
+      nama_ptk: ptkFull.nama_ptk || null,
+      npsn: ptkFull.npsn || null,
     };
 
     return NextResponse.json({
       ptk: biodata,
-      riwayatPelatihan: riwayatRes.rows,
+      riwayatPelatihan: riwayatPelatihan, 
     });
+
   } catch (error) {
     console.error("Error Get History:", error);
     return NextResponse.json(
