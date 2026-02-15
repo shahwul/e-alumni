@@ -5,22 +5,29 @@ import { createContext, useContext, useMemo, useState } from "react";
 const DEFAULT_FILTERS = {
   kabupaten: [],
   kecamatan: [],
-  jenis_kelamin: "",
+  sekolah: [],
+  judul_diklat: [],
+
   jenjang: "",
   mapel: "",
   usia_min: "",
   usia_max: "",
   status: "",
-  sekolah: [],
-  judul_diklat: [],
   kategori: "",
   jenis: "",
   program: "",
-  mode_filter: "eligible",
+  mode_filter: "eligible", 
   rumpun: "",
   sub_rumpun: "",
-
   dateRange: { from: undefined, to: undefined },
+  
+  jenis_kelamin: "",
+  status_kepegawaian: "",
+  jenis_ptk: "",
+  pendidikan_terakhir: "",
+  pendidikan_bidang: "",
+  pangkat_golongan: "",
+  kepala_sekolah: "",
 };
 
 const FilterContext = createContext(null);

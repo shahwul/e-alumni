@@ -2,6 +2,16 @@ import React from "react";
 import { SectionCard, SectionHeader, InfoItem } from "../SubComponentPTK";
 import { IdCard } from "lucide-react";
 
+const formatGender = (code) => {
+  if (!code) return "-";
+  const cleanCode = String(code).toUpperCase().trim();
+
+  if (cleanCode === "L") return "Laki-Laki";
+  if (cleanCode === "P") return "Perempuan";
+
+  return code;
+};
+
 export default function Identitas({ mode, pusat, pelita }) {
   return (
     <>
@@ -15,8 +25,8 @@ export default function Identitas({ mode, pusat, pelita }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <InfoItem
             label="Jenis Kelamin"
-            pusat={pusat?.jenis_kelamin}
-            pelita={pelita?.jenis_kelamin}
+            pusat={formatGender(pusat?.jenis_kelamin)}
+            pelita={formatGender(pelita?.jenis_kelamin)}
             mode={mode}
           />
           <InfoItem

@@ -1,3 +1,5 @@
+// components/ptk/list/PTKPagination.jsx
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -6,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Pastikan import ini ada
+} from "@/components/ui/select";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,24 +17,24 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Tambahkan setLimit ke props
 export function PTKPagination({ page, limit, totalData, setPage, setLimit, loading }) {
-  const totalPage = Math.ceil(totalData / limit);
+  const totalPage = Math.ceil(totalData / limit) || 1; 
+  
   const startEntry = totalData === 0 ? 0 : (page - 1) * limit + 1;
   const endEntry = Math.min(page * limit, totalData);
 
   const [inputPage, setInputPage] = useState(page);
 
-  // sync input kalau page berubah dari luar (klik / filter)
   useEffect(() => {
     setInputPage(page);
   }, [page]);
 
   const goToPage = (next) => {
     if (loading) return;
-    if (next < 1) next = 1;
-    if (next > totalPage) next = totalPage;
-    setPage(next);
+    let target = next;
+    if (target < 1) target = 1;
+    if (target > totalPage) target = totalPage;
+    setPage(target);
   };
 
   return (
@@ -41,7 +43,6 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
       {/* KIRI: INFO & LIMIT */}
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full sm:w-auto justify-between sm:justify-start">
         
-        {/* 1. TEXT INFO */}
         <div className="text-slate-500 whitespace-nowrap">
           Menampilkan{" "}
           <span className="font-medium text-slate-900">{startEntry}</span> -{" "}
@@ -49,14 +50,12 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
           <span className="font-medium text-slate-900">{totalData}</span> data
         </div>
 
-        {/* 2. INPUT LIMIT (DROPDOWN) */}
         <div className="flex items-center gap-2">
           <span className="text-slate-500 whitespace-nowrap hidden sm:inline-block">Baris per hal:</span>
           <Select
-            value={`${limit}`}
+            value={String(limit)} 
             onValueChange={(value) => {
-              setLimit(Number(value));
-              setPage(1); // Reset ke halaman 1 saat limit berubah agar tidak out of bounds
+               setLimit(Number(value)); 
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">
@@ -64,7 +63,7 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
             </SelectTrigger>
             <SelectContent side="top">
               {[10, 25, 50, 100].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
+                <SelectItem key={pageSize} value={String(pageSize)}>
                   {pageSize}
                 </SelectItem>
               ))}
@@ -75,6 +74,7 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
 
       {/* KANAN: CONTROLS */}
       <div className="flex items-center gap-2">
+        {/* Jump -5 */}
         <Button
           variant="outline"
           size="sm"
@@ -104,7 +104,9 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
             max={totalPage}
             value={inputPage}
             onChange={(e) => setInputPage(e.target.value)}
-            onBlur={() => goToPage(Number(inputPage))}
+            onBlur={() => {
+                if(inputPage !== "" && Number(inputPage) !== page) goToPage(Number(inputPage));
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 goToPage(Number(inputPage));
@@ -113,7 +115,7 @@ export function PTKPagination({ page, limit, totalData, setPage, setLimit, loadi
             className="h-8 w-12 p-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             disabled={loading}
           />
-          <span className="text-slate-500">/ {totalPage || 1}</span>
+          <span className="text-slate-500">/ {totalPage}</span>
         </div>
 
         {/* Next */}

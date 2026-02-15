@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
+import { Trash2, FileSpreadsheet, Loader2, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { generateAndDownloadExcel } from "./utils/export-excel";
 import { set } from "date-fns";
@@ -12,6 +12,7 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -29,6 +30,33 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
   useEffect(() => {
     if (diklatId) fetchData();
   }, [diklatId]);
+
+  const handleSaveToAlumni = async () => {
+    if (data.length === 0) return;
+    if (!confirm(`Yakin ingin memindahkan ${data.length} kandidat ini ke daftar peserta alumni?`)) return;
+
+    setIsSaving(true);
+    try {
+        const res = await fetch(`/api/diklat/${diklatId}/alumni`, {
+            method: 'POST',
+        });
+        
+        const json = await res.json();
+
+        if (res.ok) {
+            toast.success(json.message);
+            fetchData();
+            // Opsional: Redirect ke tab Alumni atau refresh data
+        } else {
+            toast.error(json.error || "Gagal menyimpan");
+        }
+    } catch (e) {
+        console.error(e);
+        toast.error("Terjadi kesalahan sistem");
+    } finally {
+        setIsSaving(false);
+    }
+  };
 
   // --- LOGIC EXPORT EXCEL ---
   const handleExport = async () => {
@@ -65,6 +93,16 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
         <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={fetchData} title="Refresh">
                 <RefreshCw className="w-4 h-4"/>
+            </Button>
+            <Button 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 text-white" 
+                title="Tambahkan ke Alumni"
+                onClick={handleSaveToAlumni}
+                disabled={isSaving || data.length === 0}
+            >
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Save className="w-4 h-4 mr-2"/>}
+                {isSaving ? "Menyimpan..." : "Simpan ke Alumni"}
             </Button>
             <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleExport} disabled={data.length === 0}>
                 <FileSpreadsheet className="w-4 h-4 mr-2"/> Export Excel

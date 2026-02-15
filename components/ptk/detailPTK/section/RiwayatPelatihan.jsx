@@ -23,7 +23,7 @@ export default function RiwayatPelatihan({ mode, pusat, pelita }) {
 
       {isEmpty ? (
         <div className="flex items-center justify-center h-24 text-slate-400 text-sm">
-          —
+          Belum Pernah Pelatihan
         </div>
       ) : (
         <Accordion type="multiple" className="mt-4">

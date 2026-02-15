@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useFilterContext } from "../FilterContext";
 import { useDebounceSearch } from "../useDebounceSearch";
 
-// UI
 import {
   Popover,
   PopoverContent,
@@ -94,7 +93,11 @@ export function DiklatFilter() {
                 value={search}
                 onValueChange={setSearch}
               />
-              <CommandList>
+              <CommandList
+                className="max-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
                 {loading && (
                   <div className="p-4 text-xs text-center text-slate-500">
                     Mencari...

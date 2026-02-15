@@ -1,14 +1,29 @@
 import useSWR from 'swr';
 
-// Fetcher standar
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
-// Hook Khusus Wilayah
+export function usePTKMetadata() {
+  const { data, error, isLoading } = useSWR('/api/ref/ptk-metadata', fetcher, {
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    dedupingInterval: 3600000,
+  });
+
+  return {
+    jenisPtk: data?.jenisPtk || [],
+    statusKepegawaian: data?.statusKepegawaian || [],
+    mapel: data?.mapel || [],
+    jurusan: data?.jurusan || [],
+    
+    isLoading,
+    isError: error
+  };
+}
+
 export function useWilayah() {
   const { data, error, isLoading } = useSWR('/api/ref/wilayah', fetcher, {
-    // OPTION PENTING:
-    revalidateOnFocus: false, // Jangan fetch ulang pas klik tab browser
-    dedupingInterval: 60000,  // (1 Menit) - Dalam 1 menit, request yang sama GA BAKAL dikirim lagi
+    revalidateOnFocus: false, 
+    dedupingInterval: 60000, 
   });
 
   return {
@@ -18,7 +33,6 @@ export function useWilayah() {
   };
 }
 
-// Hook Khusus Rumpun
 export function useRumpun() {
   const { data, error, isLoading } = useSWR('/api/ref/rumpun', fetcher, {
     revalidateOnFocus: false,
@@ -49,7 +63,6 @@ export function useSubRumpun(topicId) {
   };
 }
 
-// Hook Khusus Kategori
 export function useKategori() {
   const { data, error, isLoading } = useSWR('/api/ref/kategori', fetcher, {
     revalidateOnFocus: false,

@@ -1,9 +1,13 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+
+//hooks
+import { useDetailPTK } from "./useDetailPTK";
 
 import ModeSwitcherPTK from "./section/ModeSwitcherPTK";
-
 import InformasiUtama from "./section/InformasiUtama";
 import RiwayatPelatihan from "./section/RiwayatPelatihan";
 import Indentitas from "./section/Indentitas";
@@ -12,187 +16,115 @@ import Wilayah from "./section/Wilayah";
 import Kepegawaian from "./section/Kepegawaian";
 import RiwayatPendidikanSertifikasi from "./section/RiwayatPendidikanSertifikasi";
 
-const DATA = {
-  "terpusat": {
-    "informasiUtama": {
-      "nama_lengkap": "Ahmad Fauzi",
-      "nik": "3275010101900001",
-      "nuptk": "1234567890",
-      "nip": "198001012005011001",
-      "jenis_ptk": "Guru",
-      "jabatan_ptk": "Guru BK",
-      "status_kepegawaian": "PNS",
-      "pernah_pelatihan": true,
-    },
+export default function DetailPTK({ nik }) {
+  const router = useRouter();
+  const { data, loading, error } = useDetailPTK(nik);
 
-    "riwayatPelatihan": [
-      {
-        "id": "p1",
-        "nama": "Pelatihan Kurikulum Merdeka",
-        "tahun": "2023",
-        "angkatan": "Angkatan 2",
-        "status": "Lulus",
-        "nilai_akhir": "89",
-      },
-      {
-        "id": "p2",
-        "nama": "Pelatihan Asesmen Nasional",
-        "tahun": "2022",
-        "angkatan": "Angkatan 1",
-        "status": "Lulus",
-        "nilai_akhir": "92",
-      },
-    ],
-
-    "identitas": {
-      "jenis_kelamin": "Laki-laki",
-      "tempat_lahir": "Bandung",
-      "tanggal_lahir": "1990-01-01",
-      "agama": "Islam",
-    },
-
-    "kontak": {
-      "no_hp": "081234567890",
-      "email": "ahmad.fauzi@sekolah.id",
-    },
-
-    "wilayah": {
-      "kode_pos": "40123",
-      "kecamatan": "Coblong",
-      "kabupaten_kota": "Kota Bandung",
-      "npsn": "20212345",
-    },
-
-    "kepegawaian": {
-      "pangkat_golongan": "III/b",
-      "sk_cpns": "SK-CPNS-2020-001",
-      "tanggal_cpns": "2020-01-01",
-      "sk_pengangkatan": "SK-PNS-2020-045",
-      "tmt_pengangkatan": "2020-03-01",
-      "tmt_tugas": "2020-07-01",
-      "masa_kerja": "5 Tahun",
-    },
-
-    "riwayatPendidikanSertifikasi": {
-      "jenjang_terakhir": "S1",
-      "bidang_pendidikan": "Bimbingan dan Konseling",
-      "sertifikasi": "Sertifikasi Pendidik (2021)",
-      "tugas_tambahan": null,
-    },
-  },
-
-  "pelita": {
-    "informasiUtama": {
-      "nama_lengkap": "Ahmad Fauzi, S.Pd",
-      "nik": "3275010101900001",
-      "nuptk": "1234567890",
-      "nip": "198001012005011001",
-      "jenis_ptk": "Guru",
-      "jabatan_ptk": "Guru Bimbingan Konseling",
-      "status_kepegawaian": "PNS",
-      "pernah_pelatihan": true,
-    },
-
-    "riwayatPelatihan": [
-      {
-        "id": "p1",
-        "nama": "Pelatihan Kurikulum Merdeka",
-        "tahun": "2023",
-        "angkatan": "Angkatan 2",
-        "status": "Lulus",
-        "nilai_akhir": "90",
-      },
-    ],
-
-    "identitas": {
-      "jenis_kelamin": "Laki-laki",
-      "tempat_lahir": "Bandung",
-      "tanggal_lahir": "1990-01-01",
-      "agama": "Islam",
-    },
-
-    "kontak": {
-      "no_hp": "081234567890",
-      "email": "ahmad.fauzi@pelita.id",
-    },
-
-    "wilayah": {
-      "kode_pos": "40123",
-      "kecamatan": "Coblong",
-      "kabupaten_kota": "Kota Bandung",
-      "npsn": "20212345",
-    },
-
-    "kepegawaian": {
-      "pangkat_golongan": "III/c",
-      "sk_cpns": "SK-CPNS-2020-001",
-      "tanggal_cpns": "2020-01-01",
-      "sk_pengangkatan": "SK-PNS-2020-045",
-      "tmt_pengangkatan": "2020-03-01",
-      "tmt_tugas": "2020-07-01",
-      "masa_kerja": "5 Tahun",
-    },
-
-    "riwayatPendidikanSertifikasi": {
-      "jenjang_terakhir": "S1",
-      "bidang_pendidikan": "Bimbingan dan Konseling",
-      "sertifikasi": "Sertifikasi Pendidik (2021)",
-      "tugas_tambahan": "Koordinator BK",
-    },
-  },
-};
-
-export default function DetailPTK() {
   const [mode, setMode] = useState("terpusat");
+  // === HANDLING LOADING STATE ===
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-slate-500">Memuat data PTK...</p>
+      </div>
+    );
+  }
+
+  // === HANDLING ERROR STATE ===
+  if (error) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
+        <AlertCircle className="h-10 w-10 text-red-500" />
+        <p className="text-red-500 font-medium">Gagal memuat data: {error}</p>
+        <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
+      </div>
+    );
+  }
+
+  // === HANDLING DATA KOSONG ===
+  if (!data || !data.terpusat) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <p>Data PTK tidak ditemukan.</p>
+      </div>
+    );
+  }
+
+  const isPelitaAvailable = !!data.pelita;
+
+  const pelitaData = data.pelita || {};
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 space-y-8">
-      {/* === PAGE HEADER === */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Detail Informasi PTK
-        </h1>
-        <p className="text-sm text-slate-500">
-          Informasi lengkap identitas, kepegawaian, dan riwayat pelatihan
-        </p>
+        <Button
+          variant="ghost"
+          className="pl-0 hover:bg-transparent hover:text-blue-600 text-slate-500"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
+        </Button>
       </div>
 
-      <ModeSwitcherPTK mode={mode} setMode={setMode} />
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Detail Informasi PTK
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Informasi lengkap identitas, kepegawaian, dan riwayat pelatihan
+          </p>
+        </div>
+      </div>
+
+      <ModeSwitcherPTK
+        mode={mode}
+        setMode={setMode}
+        disabled={!isPelitaAvailable}
+      />
+
+      {!isPelitaAvailable && mode === "pelita" && (
+        <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md text-sm">
+          Data Pelita (Alumni) belum tersedia untuk PTK ini. Menampilkan data
+          kosong.
+        </div>
+      )}
 
       <InformasiUtama
         mode={mode}
-        pusat={DATA.terpusat.informasiUtama}
-        pelita={DATA.pelita.informasiUtama}
+        pusat={data.terpusat.informasiUtama}
+        pelita={pelitaData?.informasiUtama}
       />
       <RiwayatPelatihan
         mode={mode}
-        pusat={DATA.terpusat.riwayatPelatihan}
-        pelita={DATA.pelita.riwayatPelatihan}
+        pusat={data.terpusat.riwayatPelatihan}
+        pelita={pelitaData?.riwayatPelatihan}
       />
       <Indentitas
         mode={mode}
-        pusat={DATA.terpusat.identitas}
-        pelita={DATA.pelita.identitas}
+        pusat={data.terpusat.identitas}
+        pelita={pelitaData?.identitas}
       />
       <Kontak
         mode={mode}
-        pusat={DATA.terpusat.kontak}
-        pelita={DATA.pelita.kontak}
+        pusat={data.terpusat.kontak}
+        pelita={pelitaData?.kontak}
       />
       <Wilayah
         mode={mode}
-        pusat={DATA.terpusat.wilayah}
-        pelita={DATA.pelita.wilayah}
+        pusat={data.terpusat.wilayah}
+        pelita={pelitaData?.wilayah}
       />
       <Kepegawaian
         mode={mode}
-        pusat={DATA.terpusat.kepegawaian}
-        pelita={DATA.pelita.kepegawaian}
+        pusat={data.terpusat.kepegawaian}
+        pelita={pelitaData?.kepegawaian}
       />
       <RiwayatPendidikanSertifikasi
         mode={mode}
-        pusat={DATA.terpusat.riwayatPendidikanSertifikasi}
-        pelita={DATA.pelita.riwayatPendidikanSertifikasi}
+        pusat={data.terpusat.riwayatPendidikanSertifikasi}
+        pelita={pelitaData?.riwayatPendidikanSertifikasi}
       />
     </main>
   );
