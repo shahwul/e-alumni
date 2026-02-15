@@ -20,137 +20,99 @@ export const GROUP_BY = {
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
   JENJANG: "bentuk_pendidikan",
-}; 
+};
 
-export function timeSelect(grain) {
-  switch (grain) {
-    case "year":
-      return `EXTRACT(YEAR FROM end_date)`;
-    case "quarter": 
-      return `'Q' || EXTRACT(QUARTER FROM end_date)`;
-    case "month":
-      return `TO_CHAR(end_date, 'YYYY-MM')`;
-    default:
-      return null;
+function buildWhereClause(filters, metric) {
+  const conditions = ["1=1"]; 
+  const params = [];
+  let paramCounter = 1;
+
+  if (metric === METRIC.ALUMNI) {
+    conditions.push(`is_sudah_pelatihan = true`);
+  } else if (metric === METRIC.UNTRAINED) {
+    conditions.push(`(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)`);
   }
-}
 
-export function buildContext({ kab, kec, year, jenjang }) {
-  const where = [];
-  const values = [];
-  let i = 1;
+  const { kab, kec, year, jenjang } = filters;
 
   if (kab && KAB_CODE_TO_NAME[kab]) {
-    where.push(`UPPER(kabupaten) LIKE $${i++}`);
-    values.push(`%${KAB_CODE_TO_NAME[kab]}%`);
+    conditions.push(`UPPER(kabupaten) LIKE $${paramCounter++}`);
+    params.push(`%${KAB_CODE_TO_NAME[kab]}%`);
   }
 
   if (kec) {
-    where.push(`UPPER(kecamatan) LIKE $${i++}`);
-    values.push(`%${kec.toUpperCase()}%`);
+    conditions.push(`UPPER(kecamatan) LIKE $${paramCounter++}`);
+    params.push(`%${kec.toUpperCase()}%`);
   }
 
   if (year) {
-    where.push(`EXTRACT(YEAR FROM end_date) = $${i++}`);
-    values.push(Number(year));
+    conditions.push(`EXTRACT(YEAR FROM end_date) = $${paramCounter++}`);
+    params.push(parseInt(year));
   }
 
   if (jenjang) {
-    where.push(`UPPER(bentuk_pendidikan) LIKE $${i++}`);
-    values.push(`%${jenjang.toUpperCase()}%`);
+    conditions.push(`UPPER(bentuk_pendidikan) LIKE $${paramCounter++}`);
+    params.push(`%${jenjang.toUpperCase()}%`);
   }
 
   return {
-    where: where.length ? `WHERE ${where.join(" AND ")}` : "",
-    values,
+    clause: `WHERE ${conditions.join(" AND ")}`,
+    params,
+    nextIndex: paramCounter
   };
 }
-
-export function buildQuery({
-  metric,
-  groupBy,
-  timeGrain = TIME_GRAIN.NONE,
-  filters = {},
-  ranking = null,
-}) {
-  const context = buildContext(filters);
-
-  let where = context.where;
-  let values = context.values;
-
-  const selectParts = [];
+export async function fetchAnalyticsData(prisma, { metric, groupBy, timeGrain, filters }) {
+  const { clause: whereClause, params } = buildWhereClause(filters, metric);
+  const selectParts = [`COUNT(DISTINCT nik)::int AS value`];
   const groupParts = [];
 
-  switch (metric) {
-    case METRIC.PTK:
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
-      break;
-    case METRIC.ALUMNI:
-      where += where ? " AND " : "WHERE ";
-      where += "is_sudah_pelatihan = true";
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
-      break;
-    case METRIC.UNTRAINED:
-      where += where ? " AND " : "WHERE ";
-      where += "(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)";
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
-      break;
-    default:
-      throw new Error("Invalid metric");
-  }
-
-  const timeSelectPart = timeSelect(timeGrain);
-  if (timeSelectPart) {
-    selectParts.unshift(`${timeSelectPart} AS time`);
-    groupParts.push("time");
-
-    where += where ? " AND " : "WHERE ";
-    where += "is_sudah_pelatihan = true";
+  if (timeGrain) {
+    let timeExpr = "";
+    switch (timeGrain) {
+      case TIME_GRAIN.YEAR:
+        timeExpr = `CAST(EXTRACT(YEAR FROM end_date) AS VARCHAR)`;
+        break;
+      case TIME_GRAIN.QUARTER:
+        timeExpr = `'Q' || EXTRACT(QUARTER FROM end_date)`;
+        break;
+      case TIME_GRAIN.MONTH:
+        timeExpr = `TO_CHAR(end_date, 'YYYY-MM')`;
+        break;
+    }
+    
+    if (timeExpr) {
+      selectParts.unshift(`${timeExpr} AS time`);
+      groupParts.push(`time`); 
+    }
   }
 
   if (groupBy) {
-    if (!Object.values(GROUP_BY).includes(GROUP_BY[groupBy.toUpperCase()])) {
-      throw new Error("Unsupported groupBy");
-    }
+    const column = GROUP_BY[groupBy.toUpperCase()];
+    if (!column) throw new Error("Unsupported groupBy");
 
-    const groupExpr =
-      groupBy === GROUP_BY.STATUS_KEPEGAWAIAN
-        ? `COALESCE(${groupBy}, 'Lainnya')`
-        : GROUP_BY[groupBy.toUpperCase()];
-
+    const groupExpr = `COALESCE(${column}, 'Lainnya')`;
+    
     selectParts.unshift(`${groupExpr} AS name`);
-    groupParts.push("name");
+    groupParts.push(`name`);
   }
 
-  // if (ranking) {
-  //   let orderBy;
-  //   if (ranking.by === "time") {
-  //     orderBy = timeGrain ? "time" : null;
-  //   } else if (ranking.by === "value") {
-  //     orderBy = "value";
-  //   } else {
-  //     throw new Error("Invalid ranking.by value");
-  //   }
+  const groupByClause = groupParts.length > 0 ? `GROUP BY ${groupParts.join(", ")}` : "";
+  const orderByClause = timeGrain ? `ORDER BY time ASC` : `ORDER BY value DESC`;
 
-  //   if (!orderBy) {
-  //     throw new Error("Invalid ranking configuration");
-  //   }
-
-  //   orderClause = `ORDER BY ${orderBy} ${ranking.order || "DESC"}`;
-
-  //   if (ranking.limit) {
-  //     limitClause = `LIMIT ${Number(ranking.limit)}`;
-  //   }
-  // }
-
-  return {
-    sql: `
-    SELECT
-      ${selectParts.join(",\n        ")}
+  const query = `
+    SELECT 
+      ${selectParts.join(", ")}
     FROM mv_dashboard_analitik
-    ${where}
-    ${groupParts.length ? `GROUP BY ${groupParts.join(", ")}` : ""}
-  `,
-    values,
-  };
+    ${whereClause}
+    ${groupByClause}
+    ${orderByClause}
+  `;
+
+  try {
+    const results = await prisma.$queryRawUnsafe(query, ...params);
+    return results;
+  } catch (error) {
+    console.error("Analytics Error:", error);
+    throw new Error("Gagal mengambil data analitik");
+  }
 }

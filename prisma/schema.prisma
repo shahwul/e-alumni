@@ -1,0 +1,260 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"] 
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model data_alumni {
+  id                    Int                @id @default(autoincrement())
+  nik                   String?            @db.VarChar(16)
+  id_diklat             Int?
+  status_kelulusan      String?            @db.VarChar(20)
+  no_sertifikat         String?            @db.VarChar(50)
+  nilai_akhir           Decimal?           @db.Decimal(5, 2)
+  snapshot_nama_sekolah String?            @db.VarChar(100)
+  snapshot_jabatan      String?            @db.VarChar(50)
+  snapshot_pangkat      String?            @db.VarChar(30)
+  created_at            DateTime?          @default(now()) @db.Timestamp(6)
+  npsn                  String?            @db.VarChar(8)
+  nama_peserta          String?            @db.VarChar(100)
+  master_diklat         master_diklat?     @relation(fields: [id_diklat], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  data_ptk              data_ptk?          @relation(fields: [nik], references: [nik], onDelete: Cascade, onUpdate: NoAction)
+  satuan_pendidikan     satuan_pendidikan? @relation(fields: [npsn], references: [npsn], map: "fk_alumni_sekolah")
+
+  @@unique([id_diklat, nik], map: "unik_peserta_per_diklat")
+  @@index([id_diklat], map: "idx_alumni_diklat")
+  @@index([nik], map: "idx_alumni_nik")
+  @@index([npsn], map: "idx_alumni_npsn")
+}
+
+model data_ptk {
+  nik                  String             @id @db.VarChar(16)
+  nuptk                String?            @db.VarChar(16)
+  nip                  String?            @db.VarChar(18)
+  nama_ptk             String             @db.VarChar(100)
+  jenis_kelamin        String?            @db.Char(1)
+  tempat_lahir         String?            @db.VarChar(32)
+  tanggal_lahir        DateTime?          @db.Date
+  agama                String?            @db.VarChar(25)
+  no_hp                String?            @db.VarChar(20)
+  kode_pos             String?            @db.Char(5)
+  email                String?            @db.VarChar(100)
+  status_kepegawaian   String?            @db.VarChar(40)
+  pangkat_golongan     String?            @db.VarChar(30)
+  jenis_ptk            String?            @db.VarChar(30)
+  jabatan_ptk          String?            @db.VarChar(50)
+  tugas_tambahan       String?            @db.VarChar(50)
+  sk_cpns              String?            @db.VarChar(80)
+  tgl_cpns             DateTime?          @db.Date
+  sk_pengangkatan      String?            @db.VarChar(80)
+  tmt_pengangkatan     DateTime?          @db.Date
+  tmt_tugas            DateTime?          @db.Date
+  masa_kerja_tahun     Int?
+  riwayat_pend_jenjang String?            @db.VarChar(50)
+  riwayat_pend_bidang  String?            @db.VarChar(50)
+  riwayat_sertifikasi  String?            @db.VarChar(50)
+  npsn                 String?            @db.Char(8)
+  data_alumni          data_alumni[]
+  satuan_pendidikan    satuan_pendidikan? @relation(fields: [npsn], references: [npsn], onDelete: NoAction, onUpdate: NoAction)
+  diklat_kandidat      diklat_kandidat[]
+
+  @@index([riwayat_pend_jenjang], map: "idx_ptk_jenjang")
+  @@index([nama_ptk], map: "idx_ptk_nama")
+  @@index([npsn], map: "idx_ptk_npsn")
+  @@index([status_kepegawaian], map: "idx_ptk_status")
+  @@index([tanggal_lahir], map: "idx_ptk_tgl_lahir")
+}
+
+model diklat_kandidat {
+  id            Int           @id @default(autoincrement())
+  diklat_id     Int
+  nik           String        @db.VarChar(50)
+  status        String?       @default("Draft") @db.VarChar(20)
+  created_at    DateTime?     @default(now()) @db.Timestamp(6)
+  master_diklat master_diklat @relation(fields: [diklat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  data_ptk      data_ptk      @relation(fields: [nik], references: [nik], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([diklat_id, nik], map: "unique_kandidat")
+}
+
+model master_diklat {
+  id                  Int                  @id @default(autoincrement())
+  origin_id           Int?
+  title               String               @db.VarChar(255)
+  short_title         String?              @db.VarChar(50)
+  total_jp            Int?
+  start_date          DateTime?            @db.Date
+  end_date            DateTime?            @db.Date
+  location            String?              @db.VarChar(255)
+  category_id         Int?
+  mode_id             Int?
+  education_level_id  Int?
+  occupation_id       Int?
+  sub_topic_id        Int?
+  course_code         String?              @db.VarChar(50)
+  slug                String?              @db.VarChar(255)
+  description         String?              @db.VarChar(255)
+  participant_limit   Int?
+  chain_code          String?              @db.VarChar(6)
+  jenis_kegiatan      tipe_kegiatan?       @default(Pelatihan)
+  jenis_program       sumber_program?      @default(BBGTK_DIY)
+  topic_id            Int?
+  jenis_perekrutan    String?              @db.VarChar(24)
+  data_alumni         data_alumni[]
+  diklat_kandidat     diklat_kandidat[]
+  ref_topik           ref_topik?           @relation(fields: [topic_id], references: [id], onUpdate: NoAction, map: "fk_master_diklat_topic")
+  ref_kategori        ref_kategori?        @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ref_jenjang_sasaran ref_jenjang_sasaran? @relation(fields: [education_level_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ref_mode            ref_mode?            @relation(fields: [mode_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ref_jabatan_sasaran ref_jabatan_sasaran? @relation(fields: [occupation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ref_sub_topik       ref_sub_topik?       @relation(fields: [sub_topic_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([course_code], map: "idx_diklat_code")
+  @@index([jenis_kegiatan], map: "idx_master_diklat_kategori")
+  @@index([jenis_program], map: "idx_master_diklat_program")
+  @@index([topic_id], map: "idx_master_diklat_topic_id")
+}
+
+model ref_jabatan_sasaran {
+  id              Int             @id @default(autoincrement())
+  origin_id       Int?
+  occupation_name String?         @db.VarChar(100)
+  master_diklat   master_diklat[]
+}
+
+model ref_jenjang_sasaran {
+  id            Int             @id @default(autoincrement())
+  origin_id     Int?
+  level_name    String?         @db.VarChar(100)
+  master_diklat master_diklat[]
+}
+
+model ref_kategori {
+  id            Int             @id @default(autoincrement())
+  origin_id     Int?
+  category_name String?         @db.VarChar(100)
+  master_diklat master_diklat[]
+}
+
+model ref_mode {
+  id            Int             @id @default(autoincrement())
+  origin_id     Int?
+  mode_name     String?         @db.VarChar(50)
+  master_diklat master_diklat[]
+}
+
+model ref_sub_topik {
+  id             Int             @id @default(autoincrement())
+  topic_id       Int?
+  sub_topic_name String?         @db.VarChar(100)
+  code           String?         @db.VarChar(50)
+  master_diklat  master_diklat[]
+  ref_topik      ref_topik?      @relation(fields: [topic_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ref_topik {
+  id            Int             @id @default(autoincrement())
+  topic_name    String?         @db.VarChar(100)
+  code          String?         @db.VarChar(50)
+  master_diklat master_diklat[]
+  ref_sub_topik ref_sub_topik[]
+}
+
+model ref_wilayah {
+  kode_kecamatan    String              @id @db.Char(8)
+  kecamatan         String              @db.VarChar(60)
+  kode_kabupaten    String              @db.Char(8)
+  kabupaten         String              @db.VarChar(60)
+  kode_provinsi     String              @db.Char(8)
+  provinsi          String              @db.VarChar(60)
+  satuan_pendidikan satuan_pendidikan[]
+
+  @@index([kode_kabupaten], map: "idx_wilayah_kabupaten")
+}
+
+model satuan_pendidikan {
+  npsn                  String        @id @db.Char(8)
+  nama                  String        @db.VarChar(100)
+  nama_nomenklatur      String?       @db.VarChar(100)
+  bentuk_pendidikan     String?       @db.VarChar(50)
+  status_sekolah        String?       @db.VarChar(20)
+  alamat_jalan          String?       @db.VarChar(255)
+  kode_kecamatan        String?       @db.Char(8)
+  sk_pendirian_sekolah  String?       @db.VarChar(50)
+  tanggal_sk_pendirian  DateTime?     @db.Date
+  status_kepemilikan    String?       @db.VarChar(50)
+  yayasan               String?       @db.VarChar(100)
+  sk_izin_operasional   String?       @db.VarChar(80)
+  npwp                  String?       @db.Char(15)
+  nomor_telepon         String?       @db.VarChar(20)
+  email                 String?       @db.VarChar(60)
+  website               String?       @db.VarChar(256)
+  kebutuhan_khusus      String?       @db.VarChar(40)
+  daya_listrik          Decimal?      @db.Decimal(10, 2)
+  sumber_listrik        String?       @db.VarChar(50)
+  akses_internet        String?       @db.VarChar(50)
+  akreditasi            String?       @db.VarChar(30)
+  partisipasi_bos       String?       @db.VarChar(5)
+  sertifikasi_iso       String?       @db.VarChar(50)
+  waktu_penyelenggaraan String?       @db.VarChar(50)
+  keaktifan             String?       @db.VarChar(5)
+  data_alumni           data_alumni[]
+  data_ptk              data_ptk[]
+  ref_wilayah           ref_wilayah?  @relation(fields: [kode_kecamatan], references: [kode_kecamatan], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([kode_kecamatan], map: "idx_sekolah_kecamatan")
+}
+
+view mv_dashboard_analitik {
+  id                    BigInt    @unique // Ini ID dari ROW_NUMBER()
+  nama_ptk              String?
+  nik                   String?
+  nuptk                 String?
+  nip                   String?
+  jenis_kelamin         String?
+  tanggal_lahir         DateTime? @db.Date
+  no_hp                 String?
+  jenis_ptk             String?
+  jabatan_ptk           String?
+  riwayat_pend_jenjang  String?
+  riwayat_pend_bidang   String?
+  riwayat_sertifikasi   String?
+  status_kepegawaian    String?
+  pangkat_golongan      String?
+  usia_tahun            Int?
+  nama_sekolah          String?
+  npsn_sekolah          String?
+  bentuk_pendidikan     String?
+  kecamatan             String?
+  kabupaten             String?
+  is_sudah_pelatihan    Boolean?
+  is_kepala_sekolah     Boolean?
+  judul_diklat          String?
+  total_jp              Int?
+  start_date            DateTime? @db.Date
+  end_date              DateTime? @db.Date
+  moda_diklat           String?
+  sub_topic_id          Int?
+  topic_id              Int?
+  category_id           Int?
+  jenis_kegiatan        tipe_kegiatan? // Enum
+  jenis_program         sumber_program? // Enum
+  status_kelulusan      String?
+
+  @@map("mv_dashboard_analitik") // Mapping ke nama view di DB
+}
+
+enum sumber_program {
+  Nasional
+  BBGTK_DIY @map("BBGTK DIY")
+}
+
+enum tipe_kegiatan {
+  Pelatihan
+  Non_Pelatihan @map("Non Pelatihan")
+}

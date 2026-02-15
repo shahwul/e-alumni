@@ -1,31 +1,65 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma'; 
 
 export async function GET(request, { params }) {
-  // PERBAIKAN: Tambahkan 'await' sebelum 'params'
-  const { id } = await params; 
-
   try {
-    const query = `
-      SELECT DISTINCT ON (da.nik)
-        da.nik,
-        mv.nama_ptk,
-        mv.nama_sekolah,
-        mv.kabupaten,
-        da.nilai_akhir,
-        da.status_kelulusan,
-        md.title as judul_diklat,
-        md.start_date,
-        md.end_date
-      FROM data_alumni da
-      JOIN mv_dashboard_analitik mv ON da.nik = mv.nik
-      JOIN master_diklat md ON da.id_diklat = md.id
-      WHERE da.id_diklat = $1
-      ORDER BY da.nik, mv.nama_ptk ASC
-    `;
-    
-    const res = await pool.query(query, [id]);
-    return NextResponse.json(res.rows);
+    const { id } = await params; 
+
+    if (!id) {
+        return NextResponse.json({ data: [] });
+    }
+
+    const participants = await prisma.data_alumni.findMany({
+        where: { 
+            id_diklat: parseInt(id)
+        },
+        distinct: ['nik'], 
+        orderBy: [
+            { nik: 'asc' }, 
+            { data_ptk: { nama_ptk: 'asc' } }
+        ],
+        select: {
+            nik: true,
+            nilai_akhir: true,
+            status_kelulusan: true,
+            master_diklat: {
+                select: {
+                    title: true, 
+                    start_date: true,
+                    end_date: true
+                }
+            },
+            data_ptk: {
+                select: {
+                    nama_ptk: true,
+                    satuan_pendidikan: {
+                        select: {
+                            nama: true,
+                            ref_wilayah: {
+                                select: {
+                                    kabupaten: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const flatData = participants.map(p => ({
+        nik: p.nik,
+        nama_ptk: p.data_ptk?.nama_ptk || '-',
+        nama_sekolah: p.data_ptk?.satuan_pendidikan?.nama || '-',
+        kabupaten: p.data_ptk?.satuan_pendidikan?.ref_wilayah?.kabupaten || '-',
+        nilai_akhir: p.nilai_akhir,
+        status_kelulusan: p.status_kelulusan,
+        judul_diklat: p.master_diklat?.title,
+        start_date: p.master_diklat?.start_date,
+        end_date: p.master_diklat?.end_date
+    }));
+
+    return NextResponse.json(flatData);
 
   } catch (error) {
     console.error("Error API Peserta:", error);
