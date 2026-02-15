@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useFilterContext } from "../FilterContext";
-import { useDebounceSearch } from "../useDebounceSearch";
+import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 
 import {
   Popover,
