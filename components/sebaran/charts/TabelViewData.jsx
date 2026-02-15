@@ -24,13 +24,12 @@ import {
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { METRIC_OPTIONS } from "@/lib/constants";
 
-
 import QuerySelector from "../QuerySelector";
 
 export default function TabelViewData({ kab, kec, year }) {
   const [jenjang, setJenjang] = useState("");
-  const [ groupBy, setGroupBy ] = useState("");
-  const [ metric, setMetric] = useState("alumni");
+  const [groupBy, setGroupBy] = useState("");
+  const [metric, setMetric] = useState("alumni");
 
   useEffect(() => {
     if (!kab) {
@@ -64,12 +63,6 @@ export default function TabelViewData({ kab, kec, year }) {
           onChange={setMetric}
           options={METRIC_OPTIONS}
         />
-
-        
-
-        
-
-
       </div>
       <Table>
         <TableHeader>
