@@ -17,7 +17,7 @@ import { METRIC_OPTIONS } from "@/lib/constants";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
-export default function BarComparisonChart({ kab, kec, year, height = 400 }) {
+export default function BarComparisonChart({ kab, kec, year, height = 400, onExpand }) {
   const [metric, setMetric] = useState("alumni");
 
   const groupBy = useMemo(() => {
@@ -57,7 +57,7 @@ export default function BarComparisonChart({ kab, kec, year, height = 400 }) {
   }
 
   return (
-    <ChartCard height={height}>
+    <ChartCard height={height} onExpand={onExpand}>
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <h5 className="text-sm font-semibold text-slate-600">
           Perbandingan Data PTK

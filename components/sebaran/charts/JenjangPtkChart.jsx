@@ -8,7 +8,7 @@ import { processData, injectTotal } from "../helpers/utils";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function JenjangAlumniChart({ kab, kec, year, height = 300 }) {
+export default function JenjangPtkChart({ kab, kec, year, height = 300, onExpand }) {
   const [metric, setMetric] = useState("alumni");
 
   const { data, loading } = useAnalytics({
@@ -42,7 +42,7 @@ export default function JenjangAlumniChart({ kab, kec, year, height = 300 }) {
   }
 
   return (
-    <ChartCard height={height}>
+    <ChartCard height={height} onExpand={onExpand}>
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <h5 className="text-sm font-semibold text-slate-600">
           Jenjang Pendidikan

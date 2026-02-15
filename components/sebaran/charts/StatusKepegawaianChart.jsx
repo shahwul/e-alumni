@@ -10,6 +10,7 @@ export default function StatusKepegawaianChart({
   kec,
   year,
   height = 300,
+  onExpand
 }) {
   const { data, loading } = useAnalytics({
     metric: "ptk",
@@ -41,7 +42,7 @@ export default function StatusKepegawaianChart({
   }
 
   return (
-    <ChartCard height={height}>
+    <ChartCard height={height} onExpand={onExpand}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

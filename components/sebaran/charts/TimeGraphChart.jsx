@@ -15,7 +15,8 @@ export default function TimeGraphChart({kab,
   kec,
   year,
   timeGrain = "year", // "year" | "quarter" | "month"
-  height = 300
+  height = 300,
+  onExpand
 }) {
   const { data, loading, error } = useAnalytics({
     metric: "alumni",
@@ -24,12 +25,10 @@ export default function TimeGraphChart({kab,
     year,
     timeGrain,
   });
-  console.log("TimeGraphChart props:", { kab, kec, year, timeGrain });
-  console.log("TimeGraphChart data:", data);
 
   if (loading) {
     return (
-      <ChartCard title="Tren Alumni" height={height}>
+      <ChartCard title="Tren Alumni" height={height} onExpand={onExpand}>
       <div className="h-full flex items-center justify-center text-slate-400">
         Loading…
       </div>
@@ -48,7 +47,7 @@ export default function TimeGraphChart({kab,
   }
 
   return (
-    <ChartCard title="Tren Alumni" height={height}>
+    <ChartCard title="Tren Alumni" height={height} onExpand={onExpand}>
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />

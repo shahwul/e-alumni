@@ -9,7 +9,7 @@ import { CustomTooltip }  from "../CustomTooltip";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function PtkVsAlumniChart({ kab, kec, year, height = 300 }) {
+export default function PtkVsAlumniChart({ kab, kec, year, height = 300, onExpand }) {
   const [ metric1, setMetric1 ] = useState("ptk");
   const [ metric2, setMetric2 ] = useState("alumni");
 
@@ -68,7 +68,12 @@ export default function PtkVsAlumniChart({ kab, kec, year, height = 300 }) {
   }
 
   return (
-    <ChartCard title="PTK vs Alumni" height={height}>
+    <ChartCard height={height} onExpand={onExpand}>
+            <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <h5 className="text-sm font-semibold text-slate-600">
+          Ptk vs Alumni
+        </h5>
+        </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

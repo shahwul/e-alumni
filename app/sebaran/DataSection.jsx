@@ -24,11 +24,13 @@ import {
 } from "../../components/sebaran/helpers/utils";
 import { CustomTooltip } from "../../components/sebaran/CustomTooltip";
 import ChartCard from "../../components/sebaran/ChartCard";
+import PopupModal from "@/components/sebaran/PopupModal";
+
 import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
-import JenjangAlumniChart from "@/components/sebaran/charts/JenjangAlumniChart";
+import JenjangPtkChart from "@/components/sebaran/charts/JenjangPtkChart";
 import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
 
 export default function DataSection({
@@ -37,7 +39,44 @@ export default function DataSection({
   selectedYear,
 }) {
   const [data, setData] = useState(null);
+  const [activeChart, setActiveChart] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const chartMap = {
+    jenjang: (
+      <JenjangPtkChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        height={500}
+      />
+    ),
+    ptkVsAlumni: (
+      <PtkVsAlumniChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        height={500}
+      />
+    ),
+    barComparison: (
+      <BarComparisonChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        height={500}
+      />
+    ),
+    timeGraph: (
+      <TimeGraphChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        timeGrain="year"
+        height={500}
+      />
+    ),
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -74,31 +113,6 @@ export default function DataSection({
     return () => controller.abort();
   }, [selectedKab, selectedKec, selectedYear]);
 
-  const statusData = useMemo(
-    () => processData(data?.statusKepegawaian),
-    [data],
-  );
-  const ptkAlumniData = useMemo(
-    () => processData(data?.ptkVsAlumni, ["#82ca9d", "#8884d8"]),
-    [data],
-  );
-  const kepsekData = useMemo(
-    () => processData(data?.kepsekVsGuru, ["#8884d8", "#00C49F"]),
-    [data],
-  );
-  const jabatanData = useMemo(() => processData(data?.jabatan), [data]);
-  const triwulanData = useMemo(
-    () =>
-      data?.trenTriwulan?.map((d) => ({ ...d, alumni: Number(d.alumni) })) ||
-      [],
-    [data],
-  );
-  const tahunanData = useMemo(
-    () =>
-      data?.trenTahunan?.map((d) => ({ ...d, alumni: Number(d.alumni) })) || [],
-    [data],
-  );
-
   if (loading)
     return (
       <div className="flex-1 p-8 flex justify-center items-center text-slate-400">
@@ -113,6 +127,12 @@ export default function DataSection({
 
   return (
     <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 overflow-y-auto min-h-0">
+      <PopupModal
+        isOpen={activeChart !== null}
+        onClose={() => setActiveChart(null)}
+      >
+        {chartMap[activeChart] || null}
+      </PopupModal>
       <div className="mb-6">
         <h3 className="text-xl font-bold text-slate-800">
           {selectedKec
@@ -143,16 +163,18 @@ export default function DataSection({
         />
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <JenjangAlumniChart
+          <JenjangPtkChart
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
+            onExpand={() => setActiveChart("jenjang")}
           />
 
           <PtkVsAlumniChart
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
+            onExpand={() => setActiveChart("ptkVsAlumni")}
           />
 
           <div className="md:col-span-2">
@@ -161,46 +183,19 @@ export default function DataSection({
               kec={selectedKec}
               year={selectedYear}
               height={400}
+              onExpand={() => setActiveChart("barComparison")}
             />
           </div>
 
-          <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
-            {triwulanData.some((d) => d.alumni > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={triwulanData}
-                  margin={{ top: 10, right: 10, bottom: 0, left: -10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    formatter={(val) =>
-                      new Intl.NumberFormat("id-ID").format(val)
-                    }
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="alumni"
-                    stroke="#ff7300"
-                    strokeWidth={2}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Belum ada data tren
-              </div>
-            )}
-          </ChartCard>
-
-          <TimeGraphChart
-            kab={selectedKab}
-            kec={selectedKec}
-            timeGrain="year"
-            year={selectedYear}
-          />
+          <div className="md:col-span-2">
+            <TimeGraphChart
+              kab={selectedKab}
+              kec={selectedKec}
+              timeGrain="year"
+              year={selectedYear}
+              onExpand={() => setActiveChart("timeGraph")}
+            />
+          </div>
         </div>
       </div>
     </div>
