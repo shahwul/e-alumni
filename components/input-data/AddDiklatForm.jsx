@@ -135,11 +135,11 @@ export default function AddDiklatForm({ onBack, onSuccess }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormSelect 
                 control={form.control} name="jenis_kegiatan" label="Jenis Kegiatan" placeholder="Pilih..."
-                options={[{id: 'Non_Pelatihan', label: 'Non Pelatihan'}, {id: 'Pelatihan', label: 'Pelatihan'}]}
+                options={[{id: 'Non Pelatihan', label: 'Non Pelatihan'}, {id: 'Pelatihan', label: 'Pelatihan'}]}
               />
               <FormSelect 
                 control={form.control} name="jenis_program" label="Jenis Program" placeholder="Pilih..."
-                options={[{id: 'Nasional', label: 'Nasional'}, {id: 'BBGTK_DIY', label: 'BBGTK DIY'}]}
+                options={[{id: 'Nasional', label: 'Nasional'}, {id: 'BBGTK DIY', label: 'BBGTK DIY'}]}
               />
             </div>
 

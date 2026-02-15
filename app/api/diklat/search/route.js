@@ -1,42 +1,45 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import pool from '@/lib/db';
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
-    const topicId = searchParams.get('topic_id');
-    const subTopicId = searchParams.get('sub_topic_id');
+    const topicId = searchParams.get('topic_id');         // Parameter Baru
+    const subTopicId = searchParams.get('sub_topic_id');  // Parameter Baru
 
+    // Minimal ketik 3 huruf (opsional, sesuaikan kebutuhan)
     if (!query) return NextResponse.json([]);
 
-    const whereClause = {
-      title: { contains: query, mode: 'insensitive' }
-    };
+    // Base Query: JOIN ke ref_sub_topik biar bisa filter by Topic ID
+    let sql = `
+      SELECT DISTINCT md.title 
+      FROM master_diklat md
+      LEFT JOIN ref_sub_topik rst ON md.sub_topic_id = rst.id
+      WHERE md.title ILIKE $1
+    `;
+    
+    const values = [`%${query}%`];
+    let counter = 2;
 
+    // 1. Filter by Rumpun (Topic)
     if (topicId && topicId !== 'ALL') {
-      whereClause.ref_sub_topik = {
-        topic_id: parseInt(topicId)
-      };
+      sql += ` AND rst.topic_id = $${counter}`;
+      values.push(topicId);
+      counter++;
     }
 
+    // 2. Filter by Sub Rumpun (Sub Topic)
     if (subTopicId && subTopicId !== 'ALL') {
-      whereClause.sub_topic_id = parseInt(subTopicId);
+      sql += ` AND md.sub_topic_id = $${counter}`;
+      values.push(subTopicId);
+      counter++;
     }
 
-    const results = await prisma.master_diklat.findMany({
-      where: whereClause,
-      select: {
-        title: true 
-      },
-      distinct: ['title'], 
-      orderBy: {
-        title: 'asc'
-      },
-      take: 10 
-    });
+    sql += ` ORDER BY md.title ASC LIMIT 10`;
 
-    return NextResponse.json(results);
+    const res = await pool.query(sql, values);
+    return NextResponse.json(res.rows);
 
   } catch (error) {
     console.error("Error Search Diklat:", error);

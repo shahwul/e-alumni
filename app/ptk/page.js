@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useState, useEffect, Suspense } from "react"; // Tambah Suspense
+import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { PTKHeader } from "@/components/ptk/list/PTKHeader";
 import { PTKToolbar } from "@/components/ptk/list/PTKToolbar";
@@ -13,8 +11,7 @@ import { AddToDiklatModal } from "@/components/ptk/AddToDiklatModal";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-// 1. Buat komponen internal untuk menampung seluruh logika Client
-function PTKListContent() {
+export default function DataPTKPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -30,25 +27,25 @@ function PTKListContent() {
 
     Object.entries(updates).forEach(([key, value]) => {
       if (key === "kabupaten" || key === "kecamatan" || key === "sekolah" || key === "judul_diklat") {
-          params.delete(key);
-          if (Array.isArray(value)) {
-             value.forEach(v => params.append(key, v));
-          }
+         params.delete(key);
+         if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v));
+         }
       } 
       else if (key === "dateRange") {
-          params.delete("date_from");
-          params.delete("date_to");
-          if (value?.from) params.set("date_from", value.from.toISOString());
-          if (value?.to) params.set("date_to", value.to.toISOString());
+         params.delete("date_from");
+         params.delete("date_to");
+         if (value?.from) params.set("date_from", value.from.toISOString());
+         if (value?.to) params.set("date_to", value.to.toISOString());
       } 
       else if (key === "sorting") {
-          if (value && value[0]) {
-             params.set("sort", `${value[0].id}:${value[0].desc ? 'desc' : 'asc'}`);
-          }
+         if (value && value[0]) {
+            params.set("sort", `${value[0].id}:${value[0].desc ? 'desc' : 'asc'}`);
+         }
       }
       else {
-          if (value) params.set(key, value);
-          else params.delete(key);
+         if (value) params.set(key, value);
+         else params.delete(key);
       }
     });
 
@@ -60,12 +57,13 @@ function PTKListContent() {
   };
   
   const setPage = (newPage) => updateURL({ page: newPage });
-  const setLimit = (newLimit) => updateURL({ limit: newLimit, page: 1 });
+  const setLimit = (newLimit) => updateURL({ limit: newLimit, page: 1 }); // Reset ke halaman 1 saat limit berubah
   const setSearch = (newSearch) => updateURL({ search: newSearch });
   const setSorting = (newSort) => updateURL({ sorting: newSort });
   
   const setActiveFilters = (newFilters) => {
       const resolvedFilters = typeof newFilters === 'function' ? newFilters(activeFilters) : newFilters;
+      
       updateURL(resolvedFilters);
   };
 
@@ -81,6 +79,7 @@ function PTKListContent() {
 
   return (
     <div className="space-y-6 relative p-1"> 
+      
       <PTKHeader onExport={onExport} />
       
       <PTKToolbar
@@ -113,6 +112,7 @@ function PTKListContent() {
         />
       </div>
 
+      {/* Floating Action Bar */}
       {selectedNiks.length > 0 && (
         <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-50 animate-in slide-in-from-bottom-4 border border-slate-700">
            <div className="flex flex-col">
@@ -145,18 +145,5 @@ function PTKListContent() {
         onSuccess={() => setRowSelection({})} 
       />
     </div>
-  );
-}
-
-// 2. Default export hanya membungkus komponen di atas dengan Suspense
-export default function DataPTKPage() {
-  return (
-    <Suspense fallback={
-      <div className="p-8 text-center text-slate-500 animate-pulse">
-        Memuat Data PTK...
-      </div>
-    }>
-      <PTKListContent />
-    </Suspense>
   );
 }

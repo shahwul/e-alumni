@@ -1,4 +1,0 @@
-# Gunakan versi yang sama dengan docker-compose
-FROM postgres:17-alpine
-
-COPY data_backup15022026.sql /docker-entrypoint-initdb.d/

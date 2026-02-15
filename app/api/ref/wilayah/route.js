@@ -1,40 +1,44 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; 
+import pool from '@/lib/db'; // Pastikan path koneksi db benar
 
 export async function GET() {
   try {
-    const rawWilayah = await prisma.ref_wilayah.findMany({
-      distinct: ['kabupaten', 'kecamatan'],
-      select: {
-        kabupaten: true,
-        kecamatan: true,
-      },
-      orderBy: [
-        { kabupaten: 'asc' },
-        { kecamatan: 'asc' },
-      ],
-    });
+    // 1. Query ambil data unik Kabupaten & Kecamatan
+    // Kita urutkan biar rapi saat looping
+    const query = `
+      SELECT DISTINCT 
+        kabupaten, 
+        kecamatan 
+      FROM ref_wilayah 
+      ORDER BY kabupaten ASC, kecamatan ASC
+    `;
 
+    const res = await pool.query(query);
+    const rows = res.rows;
+
+    // 2. Logic Grouping (Mengubah Flat Data -> Nested JSON)
+    // Tujuan: [{ kabupaten: "SLEMAN", kecamatan: ["DEPOK", "GAMPING", ...] }, ...]
+    
     const groupedData = [];
-    const kabMap = new Map();
+    const map = new Map();
 
-    rawWilayah.forEach(item => {
-      const kab = item.kabupaten?.trim();
-      const kec = item.kecamatan?.trim();
+    rows.forEach(row => {
+      // Trim() penting untuk menghapus spasi di database (misal 'SLEMAN   ')
+      const kab = row.kabupaten?.trim(); 
+      const kec = row.kecamatan?.trim();
 
       if (!kab) return;
 
-      if (!kabMap.has(kab)) {
-        const newKab = {
+      if (!map.has(kab)) {
+        map.set(kab, []);
+        groupedData.push({
           kabupaten: kab,
-          kecamatan: []
-        };
-        kabMap.set(kab, newKab.kecamatan);
-        groupedData.push(newKab);
+          kecamatan: map.get(kab)
+        });
       }
       
       if (kec) {
-        kabMap.get(kab).push(kec);
+        map.get(kab).push(kec);
       }
     });
 
@@ -42,9 +46,6 @@ export async function GET() {
 
   } catch (error) {
     console.error("Error API Wilayah:", error);
-    return NextResponse.json(
-      { error: 'Gagal mengambil data wilayah' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Gagal ambil wilayah' }, { status: 500 });
   }
 }
