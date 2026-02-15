@@ -73,7 +73,11 @@ export function SekolahFilter() {
               onValueChange={setSearch}
             />
 
-            <CommandList>
+            <CommandList
+              className="max-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar"
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               {loading && (
                 <div className="p-4 text-xs text-center text-slate-500">
                   Mencari...

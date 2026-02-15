@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useFilterContext } from "../FilterContext";
+import { usePTKMetadata } from "../hooks/useReferences";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,20 +14,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Tambahan Import Input
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import { XCircle } from "lucide-react";
+import { XCircle, Loader2 } from "lucide-react"; 
 import { cn } from "@/lib/utils";
 
 export function KriteriaPTK() {
   const { filters, setFilters } = useFilterContext();
 
-  // --- STATE USIA ---
+  const { 
+    jenisPtk, 
+    statusKepegawaian, 
+    mapel, 
+    jurusan, 
+    isLoading 
+  } = usePTKMetadata();
+
   const [ageRange, setAgeRange] = useState([20, 60]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
@@ -51,7 +60,6 @@ export function KriteriaPTK() {
     setAgeRange([20, 60]);
   };
 
-  // --- HELPER UNTUK CLEAR BUTTON (X) ---
   const ClearButton = ({ field }) => (
     <span
       onPointerDown={(e) => {
@@ -72,11 +80,13 @@ export function KriteriaPTK() {
       <h4 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
         <span className="h-4 w-1 bg-green-500 rounded-full" />
         Kriteria PTK
+        {/* Indikator Loading Data Referensi */}
+        {isLoading && <Loader2 className="h-3 w-3 animate-spin text-slate-400" />}
       </h4>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-4">
         
-        {/* ================= 1. JENJANG ================= */}
+        {/* ================= 1. JENJANG (HARDCODE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Jenjang</Label>
           <Select
@@ -100,14 +110,15 @@ export function KriteriaPTK() {
           </Select>
         </div>
 
-        {/* ================= 2. MAPEL ================= */}
+        {/* ================= 2. MAPEL (AUTOCOMPLETE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Mapel / Sertifikasi</Label>
-          <Input 
-            placeholder="Cari Mapel..." 
-            className="h-9 text-xs"
-            value={filters.mapel || ""}
-            onChange={(e) => setFilters(p => ({...p, mapel: e.target.value}))}
+          <SearchableSelect 
+             value={filters.mapel}
+             onChange={(val) => setFilters(p => ({...p, mapel: val}))}
+             options={mapel} 
+             placeholder="Pilih Mapel..."
+             emptyMessage="Mapel tidak ditemukan"
           />
         </div>
 
@@ -149,58 +160,55 @@ export function KriteriaPTK() {
           </Popover>
         </div>
 
-        {/* ================= 4. STATUS KEPEGAWAIAN ================= */}
+        {/* ================= 4. STATUS KEPEGAWAIAN (DYNAMIC) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Status Kepegawaian</Label>
           <Select
             value={filters.status_kepegawaian || "ALL"}
             onValueChange={(val) => setFilters((p) => ({ ...p, status_kepegawaian: val === "ALL" ? "" : val }))}
+            disabled={isLoading}
           >
             <SelectTrigger className="h-9 text-xs">
               <div className="flex items-center justify-between w-full pr-2">
-                <SelectValue placeholder="Semua" />
+                <SelectValue placeholder={isLoading ? "Memuat..." : "Semua"} />
                 {filters.status_kepegawaian && <ClearButton field="status_kepegawaian" />}
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="PNS">PNS</SelectItem>
-              <SelectItem value="PNS Diperbantukan">PNS Diperbantukan</SelectItem>
-              <SelectItem value="PNS Depag">PNS Depag</SelectItem>
-              <SelectItem value="PPPK">PPPK</SelectItem>
-              <SelectItem value="GTY/PTY">GTY/PTY</SelectItem>
-              <SelectItem value="Guru Honor Sekolah">Guru Honor Sekolah</SelectItem>
-              <SelectItem value="Tenaga Honor Sekolah">Tenaga Honor Sekolah</SelectItem>
+              {/* Mapping Data dari API */}
+              {statusKepegawaian.map((status) => (
+                <SelectItem key={status} value={status}>{status}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* ================= 5. JENIS PTK ================= */}
+        {/* ================= 5. JENIS PTK (DYNAMIC) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Jenis PTK</Label>
           <Select
             value={filters.jenis_ptk || "ALL"}
             onValueChange={(val) => setFilters((p) => ({ ...p, jenis_ptk: val === "ALL" ? "" : val }))}
+            disabled={isLoading}
           >
             <SelectTrigger className="h-9 text-xs">
               <div className="flex items-center justify-between w-full pr-2">
-                <SelectValue placeholder="Semua" />
+                <SelectValue placeholder={isLoading ? "Memuat..." : "Semua"} />
                 {filters.jenis_ptk && <ClearButton field="jenis_ptk" />}
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="Guru Mapel">Guru Mapel</SelectItem>
-              <SelectItem value="Guru Kelas">Guru Kelas</SelectItem>
-              <SelectItem value="Guru BK">Guru BK</SelectItem>
-              <SelectItem value="Guru TIK">Guru TIK</SelectItem>
-              <SelectItem value="Kepala Sekolah">Kepala Sekolah</SelectItem>
-              <SelectItem value="Tenaga Administrasi">Tenaga Administrasi</SelectItem>
+              {/* Mapping Data dari API */}
+              {jenisPtk.map((jenis) => (
+                <SelectItem key={jenis} value={jenis}>{jenis}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* ================= 6. PENDIDIKAN TERAKHIR ================= */}
+        {/* ================= 6. PENDIDIKAN TERAKHIR (HARDCODE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Pendidikan Terakhir</Label>
           <Select
@@ -225,18 +233,19 @@ export function KriteriaPTK() {
           </Select>
         </div>
 
-        {/* ================= 7. JURUSAN (INPUT TEXT) ================= */}
+        {/* ================= 7. JURUSAN (AUTOCOMPLETE) ================= */}
         <div className="space-y-1.5">
             <Label className="text-xs text-slate-500">Jurusan / Bidang</Label>
-            <Input 
-                placeholder="Cth: Matematika..." 
-                className="h-9 text-xs"
-                value={filters.pendidikan_bidang || ""}
-                onChange={(e) => setFilters(p => ({...p, pendidikan_bidang: e.target.value}))}
+            <SearchableSelect 
+                value={filters.pendidikan_bidang}
+                onChange={(val) => setFilters(p => ({...p, pendidikan_bidang: val}))}
+                options={jurusan} 
+                placeholder="Cari Jurusan..."
+                emptyMessage="Jurusan tidak ditemukan"
             />
         </div>
 
-        {/* ================= 8. STATUS KEPALA SEKOLAH ================= */}
+        {/* ================= 8. STATUS KEPALA SEKOLAH (HARDCODE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Kepala Sekolah?</Label>
           <Select

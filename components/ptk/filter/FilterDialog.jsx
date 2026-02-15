@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react"; // 1. IMPORT USEEFFECT
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 import { FilterProvider, useFilterContext } from "./FilterContext";
-import { getActiveFilterCount } from "./helpers/getActiveFilterCount";
 
-// Komponen semua filter PTK
+
 import { WilayahFilter } from "./section/WilayahFilter";
 import { KriteriaPTK } from "./section/KriteriaPTKFilter";
 import { SekolahFilter } from "./section/SekolahFilter";
@@ -26,17 +26,18 @@ import { DateRangeFilter } from "./section/DateRange";
 import { ModeSwitcher } from "./section/ModeSwitcher";
 import { KategoriJenisProgramFilter } from "./section/KategoriJenisProgramFilter";
 
-// --- 2. TERIMA PROPS activeFilters DI SINI ---
 function FilterDialogContent({ onApplyFilter, activeFilters }) {
   const { filters, setFilters, resetFilters } = useFilterContext();
 
-  // --- 3. LOGIKA SINKRONISASI ---
-  // Setiap kali activeFilters (dari Toolbar/Parent) berubah, update state internal Context
   useEffect(() => {
     if (activeFilters) {
       setFilters(activeFilters);
     }
   }, [activeFilters, setFilters]);
+
+  const handleApply = () => {
+    onApplyFilter(filters);
+  };
 
   return (
     <>
@@ -44,7 +45,7 @@ function FilterDialogContent({ onApplyFilter, activeFilters }) {
         <DialogTitle>Filter Data PTK</DialogTitle>
       </DialogHeader>
 
-      <div className="grid gap-5 py-4 overflow-y-auto">
+      <div className="grid gap-5 py-4 px-1">
         <WilayahFilter />
         <Separator />
         <KriteriaPTK />
@@ -57,7 +58,7 @@ function FilterDialogContent({ onApplyFilter, activeFilters }) {
         <RumpunFilter />
       </div>
 
-      <DialogFooter className="flex justify-between border-t sticky bottom-0 bg-white py-4">
+      <DialogFooter className="flex justify-between border-t sticky bottom-0 bg-white py-4 mt-2">
         <Button
           type="button"
           variant="ghost"
@@ -68,7 +69,7 @@ function FilterDialogContent({ onApplyFilter, activeFilters }) {
         </Button>
 
         <Button
-          onClick={() => onApplyFilter(filters)}
+          onClick={handleApply}
           className="bg-blue-600 hover:bg-blue-700 text-white min-w-30"
         >
           Terapkan Filter
@@ -78,21 +79,18 @@ function FilterDialogContent({ onApplyFilter, activeFilters }) {
   );
 }
 
-function FilterDialogTrigger() {
-  const { filters } = useFilterContext();
-  const activeCount = getActiveFilterCount(filters);
-
+function FilterDialogTrigger({ filterCount }) {
   return (
     <DialogTrigger asChild>
-      <Button variant="outline" className="gap-2 border-dashed">
+      <Button variant="outline" className="relative border-dashed gap-2">
         <Filter size={16} />
         Filter
-        {activeCount > 0 && (
-          <span
-            className="flex items-center justify-center h-5 w-5 rounded-full
+
+        {filterCount > 0 && (
+          <span className="flex items-center justify-center h-5 w-5 rounded-full
                       bg-blue-100 text-blue-700 text-[10px] font-bold"
           >
-            {activeCount}
+            {filterCount > 9 ? "9+" : filterCount}
           </span>
         )}
       </Button>
@@ -100,15 +98,13 @@ function FilterDialogTrigger() {
   );
 }
 
-// --- 4. TERIMA PROPS activeFilters DARI PARENT ---
-export function FilterDialog({ onApplyFilter, activeFilters }) {
+export function FilterDialog({ onApplyFilter, activeFilters, filterCount }) {
   return (
     <FilterProvider>
       <Dialog>
-        <FilterDialogTrigger />
+        <FilterDialogTrigger filterCount={filterCount} />
 
-        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto pb-0">
-          {/* Teruskan activeFilters ke Content */}
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto pb-0">
           <FilterDialogContent 
             onApplyFilter={onApplyFilter} 
             activeFilters={activeFilters} 

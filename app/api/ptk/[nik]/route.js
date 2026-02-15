@@ -3,24 +3,15 @@ import pool from "@/lib/db";
 
 export async function GET(request, { params }) {
   try {
-    // 1. Ambil NIK dari URL (Dynamic Route)
     const { nik } = await params;
 
     if (!nik) {
       return NextResponse.json({ error: "NIK wajib diisi" }, { status: 400 });
     }
 
-    // ==========================================
-    // QUERY 1: PROFIL LENGKAP (PTK + SEKOLAH + WILAYAH)
-    // ==========================================
-    // Saya sesuaikan kolomnya pakai 'nama_ptk' dan 'npsn' sesuai kodemu.
-    // Saya kasih alias 'as nama' biar frontend gak perlu diubah.
     const profilSql = `
       SELECT 
-        dp.nik,
-        dp.nama_ptk, 
-        dp.status_kepegawaian,
-        dp.npsn,
+        dp.*,
         sp.nama,
         rw.kecamatan,
         rw.kabupaten
@@ -38,9 +29,6 @@ export async function GET(request, { params }) {
       );
     }
 
-    // ==========================================
-    // QUERY 2: HISTORY DIKLAT (VERSI KAMU YANG UDAH BENER)
-    // ==========================================
     const historySql = `
       SELECT 
         md.id as diklat_id,
@@ -64,9 +52,6 @@ export async function GET(request, { params }) {
     `;
     const historyRes = await pool.query(historySql, [nik]);
 
-    // ==========================================
-    // RETURN DATA GABUNGAN
-    // ==========================================
     return NextResponse.json({
       profil: profilRes.rows[0],
       history: historyRes.rows,
