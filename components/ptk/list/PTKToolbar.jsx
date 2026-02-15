@@ -5,6 +5,28 @@ import { Search, UserPlus, History } from "lucide-react";
 import { FilterDialog } from "@/components/ptk/filter/FilterDialog";
 import { cn } from "@/lib/utils"; 
 
+const countActiveFilters = (filters) => {
+  if (!filters) return 0;
+  
+  let count = 0;
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!value) return;
+    
+    if (key === "mode_filter") return; 
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) count++;
+    } 
+    else if (key === "dateRange") {
+      if (value.from || value.to) count++;
+    } 
+    else if (typeof value === "string" && value.trim() !== "") {
+      count++;
+    }
+  });
+  return count;
+};
+
 export function PTKToolbar({
   search,
   setSearch,
@@ -15,14 +37,15 @@ export function PTKToolbar({
   const currentMode = activeFilters.mode_filter || 'eligible';
   const isCandidateMode = currentMode === 'eligible';
 
+  const filterCount = countActiveFilters(activeFilters);
+
   const handleModeChange = (mode) => {
     onApplyFilter({ ...activeFilters, mode_filter: mode });
   };
 
   return (
     <div className="space-y-3">
-      
-      {/* --- BAGIAN 1: SWITCHER MODE --- */}
+
       <div className="grid grid-cols-2 p-1 gap-1 bg-slate-100/80 rounded-xl border border-slate-200">
         <button
           onClick={() => handleModeChange('eligible')}
@@ -51,13 +74,11 @@ export function PTKToolbar({
         </button>
       </div>
 
-      {/* --- BAGIAN 2: TOOLBAR BERSIH (HANYA SEARCH & FILTER) --- */}
       <div className={cn(
           "bg-white p-4 rounded-xl border shadow-sm flex flex-col md:flex-row gap-4 items-center transition-colors duration-300",
           isCandidateMode ? "border-blue-100 shadow-blue-50" : "border-slate-200"
       )}>
         
-        {/* Kolom Search jadi Full Width di mobile, atau flex-1 di desktop */}
         <div className="relative flex-1 w-full">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -71,7 +92,11 @@ export function PTKToolbar({
           />
         </div>
 
-        <FilterDialog onApplyFilter={onApplyFilter} activeFilters={activeFilters} />
+        <FilterDialog 
+            onApplyFilter={onApplyFilter} 
+            activeFilters={activeFilters} 
+            filterCount={filterCount} 
+        />
       </div>
     </div>
   );

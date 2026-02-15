@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Calendar, Users, ChevronUp, ChevronDown } from "lucide-react";
+import { Calendar, Users, ChevronUp, ChevronDown, UserPlus } from "lucide-react";
 
 export default function DiklatCardHeader({
   data,
@@ -12,11 +12,15 @@ export default function DiklatCardHeader({
 }) {
   return (
     <div
-      className="p-5 cursor-pointer"
+      className="p-5 cursor-pointer group"
       onClick={() => !isEditing && setExpanded(!expanded)}
     >
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
-        <div className="flex-1 min-w-0 space-y-2">
+        
+        {/* === KONTEN KIRI === */}
+        <div className="flex-1 min-w-0 space-y-3">
+          
+          {/* BADGES (Topik & Moda) */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="secondary"
@@ -40,44 +44,50 @@ export default function DiklatCardHeader({
             </Badge>
           </div>
 
+          {/* JUDUL */}
           <h3 className="font-bold text-slate-900 text-lg leading-tight group-hover:text-blue-700 transition-colors">
             {data.title}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
-            <div className="flex items-center gap-1.5">
+          {/* META INFO (Tanggal, Peserta, Kandidat) */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 font-medium">
+            
+            {/* 1. TANGGAL */}
+            <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <span>
-                {formatDate(data.start_date)} -{" "}
-                {formatDate(data.end_date)}
+              <span className="font-normal">
+                {formatDate(data.start_date)} - {formatDate(data.end_date)}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            {/* 2. TOTAL PESERTA (Style Sama) */}
+            <div className="flex items-center gap-2" title="Peserta Definitif">
               <Users
                 className={cn(
                   "w-4 h-4",
-                  data.total_peserta > 0
-                    ? "text-green-500"
-                    : "text-slate-400"
+                  data.total_peserta > 0 ? "text-green-600" : "text-slate-400"
                 )}
               />
-              <span
-                className={
-                  data.total_peserta > 0
-                    ? "text-slate-700 font-medium"
-                    : ""
-                }
-              >
-                {data.total_peserta > 0
-                  ? `${data.total_peserta} Peserta`
-                  : "Belum ada peserta"}
+              <span className={cn(data.total_peserta > 0 ? "text-slate-700" : "text-slate-400 font-normal")}>
+                {data.total_peserta || 0} Peserta
               </span>
             </div>
+
+            {/* 3. TOTAL KANDIDAT (Style Sama) */}
+            {data.total_kandidat > 0 && (
+                <div className="flex items-center gap-2" title="Kandidat / Calon Peserta">
+                    <UserPlus className="w-4 h-4 text-orange-500" />
+                    <span className="text-slate-700">
+                        {data.total_kandidat} Kandidat
+                    </span>
+                </div>
+            )}
+
           </div>
         </div>
 
-        <div className="flex items-center justify-end pl-4 border-l border-slate-100">
+        {/* === CHEVRON KANAN === */}
+        <div className="flex items-center justify-end pl-4 md:border-l border-slate-100">
           <Button
             variant="ghost"
             size="icon"
