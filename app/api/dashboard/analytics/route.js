@@ -14,10 +14,10 @@ export async function GET(req) {
       kec: searchParams.get("kec"),
       year: searchParams.get("year"),
       jenjang: searchParams.get("jenjang"),
-    }
+    },
   });
 
-  console.log("Executing query:", query.sql, "with values:", query.values);
+  // console.log("Executing query:", query.sql, "with values:", query.values);
 
   const result = await pool.query(query.sql, query.values);
 
