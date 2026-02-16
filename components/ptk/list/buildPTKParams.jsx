@@ -10,16 +10,13 @@ export function buildPTKParams({
 }) {
   const params = new URLSearchParams();
 
-  // === Pagination (optional) ===
   if (withPagination && page && limit) {
     params.append("page", String(page));
     params.append("limit", String(limit));
   }
 
-  // === Search ===
   if (search) params.append("search", search);
 
-  // === ARRAY FILTERS ===
   if (activeFilters.kabupaten?.length)
     params.append("kabupaten", activeFilters.kabupaten.join(","));
 
@@ -32,33 +29,27 @@ export function buildPTKParams({
   if (activeFilters.judul_diklat?.length)
     params.append("judul_diklat", activeFilters.judul_diklat.join(","));
 
-  // === STRING FILTERS (KRITERIA PTK) ===
   if (activeFilters.jenis_kelamin) params.append("jenis_kelamin", activeFilters.jenis_kelamin);
   if (activeFilters.jenjang) params.append("jenjang", activeFilters.jenjang);
   if (activeFilters.mapel) params.append("mapel", activeFilters.mapel);
   
-  // --- TAMBAHAN FILTER BARU DI SINI ---
   if (activeFilters.status_kepegawaian) params.append("status_kepegawaian", activeFilters.status_kepegawaian);
   if (activeFilters.jenis_ptk) params.append("jenis_ptk", activeFilters.jenis_ptk);
   if (activeFilters.pendidikan_terakhir) params.append("pendidikan_terakhir", activeFilters.pendidikan_terakhir);
   if (activeFilters.pendidikan_bidang) params.append("pendidikan_bidang", activeFilters.pendidikan_bidang);
   if (activeFilters.pangkat_golongan) params.append("pangkat_golongan", activeFilters.pangkat_golongan);
-  
-  // Khusus Kepala Sekolah (Boolean/String)
+
   if (activeFilters.kepala_sekolah && activeFilters.kepala_sekolah !== "ALL") {
       params.append("kepala_sekolah", activeFilters.kepala_sekolah);
   }
 
-  // --- FILTER LAMA ---
   if (activeFilters.usia_min && activeFilters.usia_max) {
     params.append("usia_min", activeFilters.usia_min);
     params.append("usia_max", activeFilters.usia_max);
   }
-  
-  // Filter Status Pelatihan (Sudah/Belum)
+
   if (activeFilters.status) params.append("status", activeFilters.status);
 
-  // Filter Master Diklat
   if (activeFilters.kategori) params.append("kategori", activeFilters.kategori);
   if (activeFilters.jenis) params.append("jenis", activeFilters.jenis);
   if (activeFilters.program) params.append("program", activeFilters.program);
@@ -69,11 +60,9 @@ export function buildPTKParams({
   if (activeFilters.sub_rumpun && activeFilters.sub_rumpun !== "ALL")
     params.append("sub_rumpun", activeFilters.sub_rumpun);
 
-  // === Mode Filter ===
   if (activeFilters.mode_filter)
     params.append("mode_filter", activeFilters.mode_filter);
 
-  // === Date Range ===
   if (activeFilters.dateRange?.from) {
     const start = format(activeFilters.dateRange.from, "yyyy-MM-dd");
     const end = activeFilters.dateRange.to
@@ -84,23 +73,22 @@ export function buildPTKParams({
     params.append("end_date", end);
   }
 
-  // === SORTING ===
   if (sorting && sorting.length > 0) {
-    const sortMapping = {
-      "nama_ptk": "nama",
-      "nama_sekolah": "sekolah",
-      "usia_tahun": "usia",
-      "status_kepegawaian": "status", // Mapping ID tabel ke Key API
-      "is_sudah_pelatihan": "is_sudah_pelatihan"
-    };
+      const sortMapping = {
+        "nama_ptk": "nama",
+        "nama_sekolah": "sekolah",
+        "usia_tahun": "usia",
+        "status_kepegawaian": "status",
+        "is_sudah_pelatihan": "is_sudah_pelatihan"
+      };
 
-    const sortString = sorting.map(s => {
-       const key = sortMapping[s.id] || s.id;
-       const dir = s.desc ? 'desc' : 'asc';
-       return `${key}:${dir}`;
-    }).join(',');
+      const sortString = sorting.map(s => {
+        const key = sortMapping[s.id] || s.id;
+        const dir = s.desc ? 'desc' : 'asc';
+        return `${key}:${dir}`;
+      }).join(',');
 
-    params.append("sort", sortString); 
+      params.set("sort", sortString); 
   }
 
   return params;

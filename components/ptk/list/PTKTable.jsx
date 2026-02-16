@@ -5,9 +5,8 @@ import { useMemo } from "react";
 export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting, setSorting, isCandidateMode, enableRowClick }) {
   const filteredColumns = useMemo(() => {
     if (isCandidateMode) {
-        return columns; // Tampilkan semua (termasuk checkbox)
+        return columns;
     } else {
-        // Hapus kolom dengan id 'select' (asumsi id checkbox di columns.js adalah 'select')
         return columns.filter(col => col.id !== 'select');
     }
   }, [isCandidateMode]);
@@ -18,7 +17,6 @@ export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting
   return (
     <div className="relative max-h-[60vh] w-full overflow-auto">
       {loading ? (
-        // Skeleton Loader Sederhana
         <div className="p-8 space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div

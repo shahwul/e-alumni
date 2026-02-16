@@ -13,9 +13,23 @@ export function usePTKList(searchParams) {
   const search = searchParams.get("search") || "";
 
   const sortParam = searchParams.get("sort");
+
+  const reverseSortMapping = {
+    "nama": "nama_ptk",
+    "sekolah": "nama_sekolah",
+    "usia": "usia_tahun",
+    "status": "status_kepegawaian"
+  };
+
   const sorting = sortParam 
-    ? [{ id: sortParam.split(":")[0], desc: sortParam.split(":")[1] === "desc" }] 
-    : [{ id: "nama", desc: false }];
+    ? sortParam.split(',').map(item => {
+        const [field, dir] = item.split(':');
+        return {
+          id: reverseSortMapping[field] || field,
+          desc: dir === "desc"
+        };
+      })
+    : [{ id: "nama_ptk", desc: false }];
 
   const activeFilters = {
     kabupaten: searchParams.getAll("kabupaten"),

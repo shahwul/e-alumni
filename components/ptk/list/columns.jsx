@@ -6,15 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"; // Icon Lengkap
 import { cn } from "@/lib/utils";
 
-// Import Cell Custom
 import { ActionCell } from "./cells/ActionCell";
 import { CopyButton } from "./cells/Copybutton";
 
-// --- HELPER: SMART SORTABLE HEADER ---
 const sortableHeader = (column, title) => {
-  // 1. Cek Status Sorting
-  const isSorted = column.getIsSorted(); // "asc" | "desc" | false
-  const sortIndex = column.getSortIndex(); // Urutan sort (0, 1, 2...) jika multi-sort
+  const isSorted = column.getIsSorted(); 
+  const sortIndex = column.getSortIndex();
 
   return (
     <Button
@@ -22,17 +19,13 @@ const sortableHeader = (column, title) => {
       size="sm"
       className={cn(
         "-ml-3 h-8 font-semibold transition-all duration-200",
-        // 2. STYLING JIKA AKTIF (Warna Biru)
         isSorted
           ? "text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-100"
           : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
       )}
       onClick={(e) => {
-        // 3. LOGIC CLICK HANDLER (DENGAN SHIFT KEY)
-        // column.toggleSorting(desc?, multi?)
-        // desc?  : true jika ingin DESC, false jika ASC. Kita toggle logicnya: isSorted === "asc" (jika asc, jadi desc)
-        // multi? : true jika user menahan tombol Shift
         column.toggleSorting(isSorted === "asc", !!e.shiftKey);
+        console.log("Sorting:", column.id, "Direction:", column.getIsSorted(), "Multi-Sort:", !!e.shiftKey);
       }}
     >
       <span>{title}</span>

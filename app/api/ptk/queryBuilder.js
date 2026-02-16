@@ -125,10 +125,10 @@ export async function buildPrismaQuery(searchParams, prisma) {
     }
   }
 
-  let orderBy = [];
+ let orderBy = [];
+
   if (p.sort) {
-    const [field, direction] = p.sort.split(":");
-    const dir = direction === "desc" ? "desc" : "asc";
+    const sortPairs = p.sort.split(",");
 
     const sortMap = {
       nama: "nama_ptk",
@@ -139,10 +139,17 @@ export async function buildPrismaQuery(searchParams, prisma) {
       tanggal: "start_date"
     };
 
-    if (sortMap[field]) {
-      orderBy.push({ [sortMap[field]]: dir });
-    }
-  } else {
+    sortPairs.forEach(pair => {
+      const [field, direction] = pair.split(":");
+      const dir = direction === "desc" ? "desc" : "asc";
+
+      if (sortMap[field]) {
+        orderBy.push({ [sortMap[field]]: dir });
+      }
+    });
+  }
+
+  if (orderBy.length === 0) {
     orderBy.push({ nama_ptk: "asc" });
   }
   orderBy.push({ nik: "asc" });
