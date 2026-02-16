@@ -101,7 +101,7 @@ export function SekolahFilter() {
                         "mr-3 flex h-4 w-4 items-center justify-center border rounded transition-all",
                         isSelected ? "bg-blue-600 border-blue-600 text-white" : "opacity-50 border-slate-300"
                       )}>
-                        <Check className={cn("h-3 w-3", isSelected ? "opacity-100" : "opacity-0")} />
+                        <Check className={cn("h-3 w-3 text-white transition-opacity", isSelected ? "opacity-100" : "opacity-0")} />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-slate-900">{item.nama_sekolah}</span>

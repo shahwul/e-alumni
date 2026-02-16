@@ -111,25 +111,31 @@ export async function buildPrismaQuery(searchParams, prisma) {
     });
   }
 
-  const hasDiklatFilter =
-    p.judulDiklat.length > 0 || p.kategoriParam || p.jenisParam || p.programParam;
+const dateCriteria = p.startDate && p.endDate ? {
+    gte: new Date(p.startDate),
+    lte: new Date(p.endDate + "T23:59:59")
+  } : undefined;
+
+  // Parsing ID Diklat ke Integer (karena URL mengirim string)
+  const diklatIds = p.judulDiklat.map(id => parseInt(id)).filter(id => !isNaN(id));
+
+  // 2. Cek apakah ada filter diklat yang aktif
+  const hasDiklatFilter = !!(diklatIds.length > 0 || p.kategoriParam || p.jenisParam || p.programParam || dateCriteria);
 
   if (hasDiklatFilter) {
-    const diklatCriteria = {
-      master_diklat: {
-        category_id: p.kategoriParam ? { equals: parseInt(p.kategoriParam) } : undefined,
-        jenis_kegiatan: p.jenisParam ? { equals: p.jenisParam } : undefined,
-        jenis_program: p.programParam ? { equals: p.programParam } : undefined,
-        title: p.judulDiklat.length > 0 ? { in: p.judulDiklat } : undefined,
-        start_date:
-          p.startDate && p.endDate
-            ? { gte: new Date(p.startDate), lte: new Date(p.endDate) }
-            : undefined,
-      },
-      status_kelulusan: "Lulus",
-    };
-
     if (p.modeFilter === "eligible") {
+      // --- MODE ELIGIBLE (Cari orang yang BELUM PERNAH lulus diklat tersebut) ---
+      const diklatCriteria = {
+        master_diklat: {
+          id: diklatIds.length > 0 ? { in: diklatIds } : undefined, // Sekarang pakai ID
+          category_id: p.kategoriParam ? { equals: parseInt(p.kategoriParam) } : undefined,
+          jenis_kegiatan: p.jenisParam ? { equals: p.jenisParam } : undefined,
+          jenis_program: p.programParam ? { equals: p.programParam } : undefined,
+          start_date: dateCriteria,
+        },
+        status_kelulusan: "Lulus",
+      };
+
       const excludedAlumni = await prisma.data_alumni.findMany({
         where: diklatCriteria,
         select: { nik: true },
@@ -144,11 +150,26 @@ export async function buildPrismaQuery(searchParams, prisma) {
         });
       }
     } else {
-      if(p.judulDiklat.length > 0) {
-          where.AND.push({ judul_diklat: { in: p.judulDiklat } });
+      // --- MODE HISTORY (Cari orang yang SUDAH ikut/lulus) ---
+      if (dateCriteria) {
+        where.AND.push({ start_date: dateCriteria });
       }
-      if(p.kategoriParam) {
-          where.AND.push({ category_id: parseInt(p.kategoriParam) }); 
+      
+      if (diklatIds.length > 0) {
+        // Langsung filter berdasarkan diklat_id di tabel history/alumni
+        where.AND.push({
+          diklat_id: { in: diklatIds }
+        });
+      }
+
+      if (p.kategoriParam) {
+        where.AND.push({ category_id: parseInt(p.kategoriParam) });
+      }
+      if (p.jenisParam) {
+        where.AND.push({ jenis_kegiatan: p.jenisParam });
+      }
+      if (p.programParam) {
+        where.AND.push({ jenis_program: p.programParam });
       }
       where.AND.push({ status_kelulusan: 'Lulus' });
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { id } from 'zod/v4/locales';
 
 export async function GET(request) {
   try {
@@ -8,32 +9,52 @@ export async function GET(request) {
     const topicId = searchParams.get('topic_id');
     const subTopicId = searchParams.get('sub_topic_id');
 
-    if (!query) return NextResponse.json([]);
+    const startDate = searchParams.get('start_date');
+    const endDate = searchParams.get('end_date');
+
+    if (!query && !startDate) return NextResponse.json([]);
 
     const whereClause = {
-      title: { contains: query, mode: 'insensitive' }
+      AND: []
     };
 
+    if (query) {
+      whereClause.AND.push({
+        title: { contains: query, mode: 'insensitive' }
+      });
+    }
+
     if (topicId && topicId !== 'ALL') {
-      whereClause.ref_sub_topik = {
-        topic_id: parseInt(topicId)
-      };
+      whereClause.AND.push({
+        ref_sub_topik: { topic_id: parseInt(topicId) }
+      });
     }
 
     if (subTopicId && subTopicId !== 'ALL') {
-      whereClause.sub_topic_id = parseInt(subTopicId);
+      whereClause.AND.push({
+        sub_topic_id: parseInt(subTopicId)
+      });
+    }
+
+    if (startDate && endDate) {
+      whereClause.AND.push({
+        start_date: { gte: new Date(startDate) },
+        end_date: { lte: new Date(endDate + "T23:59:59") }
+      });
     }
 
     const results = await prisma.master_diklat.findMany({
       where: whereClause,
       select: {
-        title: true 
+        id: true,
+        title: true,
+        start_date: true, 
+        end_date: true,
       },
-      distinct: ['title'], 
       orderBy: {
-        title: 'asc'
+        start_date: 'desc' 
       },
-      take: 10 
+      take: 15
     });
 
     return NextResponse.json(results);

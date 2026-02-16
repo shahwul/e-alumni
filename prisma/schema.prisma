@@ -234,6 +234,7 @@ view mv_dashboard_analitik {
   kabupaten             String?
   is_sudah_pelatihan    Boolean?
   is_kepala_sekolah     Boolean?
+  diklat_id             Int?
   judul_diklat          String?
   total_jp              Int?
   start_date            DateTime? @db.Date
