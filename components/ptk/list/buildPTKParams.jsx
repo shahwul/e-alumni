@@ -43,6 +43,10 @@ export function buildPTKParams({
       params.append("kepala_sekolah", activeFilters.kepala_sekolah);
   }
 
+  if (activeFilters.sekolah?.length) {
+    params.append("sekolah", activeFilters.sekolah.join(",")); 
+  }
+
   if (activeFilters.usia_min && activeFilters.usia_max) {
     params.append("usia_min", activeFilters.usia_min);
     params.append("usia_max", activeFilters.usia_max);

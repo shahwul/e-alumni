@@ -78,7 +78,12 @@ export function usePTKList(searchParams) {
         const res = await fetch(`/api/ptk?${params.toString()}`);
         const json = await res.json();
 
-        setData(json.data || []);
+        const mappedData = (json.data || []).map(item => ({
+        ...item,
+        mapel: item.riwayat_sertifikasi
+      }));
+
+        setData(mappedData);
         setTotalData(json.meta?.totalData || 0);
       } catch (err) {
         console.error("Gagal fetch PTK", err);

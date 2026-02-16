@@ -19,6 +19,7 @@ export async function GET(request) {
       },
       select: {
         nama_sekolah: true,
+        npsn_sekolah: true,
       },
       distinct: ['nama_sekolah'], 
       orderBy: {

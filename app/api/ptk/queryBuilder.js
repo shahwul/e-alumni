@@ -9,6 +9,9 @@ export async function buildPrismaQuery(searchParams, prisma) {
     statusKepegawaian: searchParams.get("status_kepegawaian"),
     jenisPTK: searchParams.get("jenis_ptk"),
     mapel: searchParams.get("mapel"),
+    bidangPendidikan: searchParams.get("pendidikan_bidang"),
+    pendidikanTerakhir: searchParams.get("pendidikan_terakhir"),
+    jenisKelamin: searchParams.get("jenis_kelamin"),
     usiaMin: searchParams.get("usia_min"),
     usiaMax: searchParams.get("usia_max"),
     kepalaSekolah: searchParams.get("kepala_sekolah"),
@@ -19,6 +22,7 @@ export async function buildPrismaQuery(searchParams, prisma) {
     judulDiklat: searchParams.get("judul_diklat")?.split("||") || [],
     startDate: searchParams.get("start_date"),
     endDate: searchParams.get("end_date"),
+    npsnList: searchParams.get("sekolah")?.split(",") || [],
     sort: searchParams.get("sort"),
   };
 
@@ -56,10 +60,27 @@ export async function buildPrismaQuery(searchParams, prisma) {
   if (p.jenisPTK) {
     where.AND.push({ jenis_ptk: p.jenisPTK });
   }
+  
   if (p.mapel) {
     where.AND.push({
       riwayat_sertifikasi: { contains: p.mapel, mode: "insensitive" },
     });
+  }
+
+  if (p.bidangPendidikan) {
+    where.AND.push({
+      riwayat_pend_bidang: { contains: p.bidangPendidikan, mode: "insensitive" },
+    });
+  }
+
+  if (p.pendidikanTerakhir) {
+    where.AND.push({
+      riwayat_pend_jenjang: { contains: p.pendidikanTerakhir, mode: "insensitive" },
+    });
+  }
+
+  if (p.jenisKelamin) {
+    where.AND.push({ jenis_kelamin: p.jenisKelamin });
   }
 
   if (p.usiaMin || p.usiaMax) {
@@ -81,6 +102,12 @@ export async function buildPrismaQuery(searchParams, prisma) {
     where.AND.push({ is_sudah_pelatihan: true });
   } else if (p.statusPelatihan === "belum") {
     where.AND.push({ is_sudah_pelatihan: false });
+  }
+
+  if (p.npsnList.length > 0) {
+    where.AND.push({
+      npsn_sekolah: { in: p.npsnList }
+    });
   }
 
   const hasDiklatFilter =
