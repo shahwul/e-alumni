@@ -58,6 +58,10 @@ export async function POST(request) {
     const generatedShortTitle = `${course_code}-${rumpunName.substring(0, 3).toUpperCase()}-${subRumpunName.substring(0, 3).toUpperCase()}-${year}-${semester}`;
     const generatedChainCode = `0${data.education_level_id}0${data.topic_id}${data.sub_topic_id}`;
 
+    const generatedSlug = data.title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') 
+      .replace(/^-+|-+$/g, '');
+
     const newDiklat = await prisma.master_diklat.create({
       data: {
         title: data.title,
@@ -76,9 +80,10 @@ export async function POST(request) {
         occupation_id: data.occupation_id ? parseInt(data.occupation_id) : null,
         topic_id: topicId,
         sub_topic_id: subTopicId,
-        jenis_kegiatan: data.jenis_kegiatan, // Pastikan value sesuai Enum di schema ('Pelatihan' / 'Non_Pelatihan')
-        jenis_program: data.jenis_program,   // Pastikan value sesuai Enum ('Nasional' / 'BBGTK_DIY')
-        jenis_perekrutan: data.jenis_perekrutan
+        jenis_kegiatan: data.jenis_kegiatan,
+        jenis_program: data.jenis_program,  
+        jenis_perekrutan: data.jenis_perekrutan,
+        slug: generatedSlug,
       }
     });
 

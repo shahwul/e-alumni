@@ -25,7 +25,6 @@ const sortableHeader = (column, title) => {
       )}
       onClick={(e) => {
         column.toggleSorting(isSorted === "asc", !!e.shiftKey);
-        console.log("Sorting:", column.id, "Direction:", column.getIsSorted(), "Multi-Sort:", !!e.shiftKey);
       }}
     >
       <span>{title}</span>
@@ -84,7 +83,7 @@ export const columns = [
   {
     accessorKey: "nama_ptk",
     meta: {
-      className: "min-w-[280px] sm:w-[350px]", 
+      className: "min-w-[280px] sm:w-[350px] pl-4", 
     },
     header: ({ column }) => sortableHeader(column, "Nama PTK"),
     cell: ({ row }) => (

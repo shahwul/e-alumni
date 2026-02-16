@@ -54,7 +54,7 @@ export default function InputDataPage() {
   }
 
   return (
-    <div className="container py-8 space-y-6">
+    <div className="space-y-6 relative p-1">
       {/* Header Utama */}
       <InputDataHeader onAdd={() => setIsAdding(true)} />
       

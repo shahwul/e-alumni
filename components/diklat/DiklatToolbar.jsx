@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export function DiklatToolbar({ search, onSearchChange, onFilterClick, activeCount }) {
   return (
     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
-      <div className="relative w-full max-w-md">
+      <div className="relative flex-1 w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <Input 
           placeholder="Cari judul diklat..." 

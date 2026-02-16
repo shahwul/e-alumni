@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
 
 export function useDiklat() {
   const [data, setData] = useState([]);
@@ -7,13 +9,14 @@ export function useDiklat() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [sorting, setSorting] = useState([]); 
   
   const [activeFilters, setActiveFilters] = useState({
     startDate: "", endDate: "", rumpun: "", sub_rumpun: "",
     moda: [], kategori: [], program: [], jenjang: [], jabatan: []
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -21,6 +24,13 @@ export function useDiklat() {
         page: page.toString(),
         limit: limit.toString(),
       });
+
+      if (sorting && sorting.length > 0) {
+        const sortString = sorting
+            .map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`)
+            .join(",");
+        params.append("sort", sortString);
+      }
 
       Object.keys(activeFilters).forEach(key => {
         const val = activeFilters[key];
@@ -38,18 +48,20 @@ export function useDiklat() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, page, limit, sorting, activeFilters]); 
 
   useEffect(() => {
     const timer = setTimeout(fetchData, 500);
     return () => clearTimeout(timer);
-  }, [search, activeFilters, page, limit]);
+  }, [fetchData]);
 
   return {
     data, totalData, loading, 
     search, setSearch, 
     page, setPage, 
     limit, setLimit,
-    activeFilters, setActiveFilters
+    sorting, setSorting, 
+    activeFilters, setActiveFilters,
+    fetchData
   };
 }

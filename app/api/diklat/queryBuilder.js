@@ -20,8 +20,37 @@ export function buildDiklatQuery(searchParams) {
   const jenjangArray = searchParams.get('jenjang')?.split(',') || [];
   const jabatanArray = searchParams.get('jabatan')?.split(',') || [];
 
-  // 3. Construct Where Clause
   const where = { AND: [] };
+
+  const sortParam = searchParams.get('sort'); 
+
+  let orderBy = [];
+
+  if (sortParam) {
+    const sortPairs = sortParam.split(','); 
+    
+    sortPairs.forEach(pair => {
+      const [field, direction] = pair.split(':');
+      const dir = direction === 'desc' ? 'desc' : 'asc';
+      const validFields = ['title', 'start_date', 'total_jp', 'total_peserta', 'moda'];
+
+      if (validFields.includes(field)) {
+        if (field === 'moda') {
+          orderBy.push({ ref_mode: { mode_name: dir } });
+        } 
+        else if (field === 'total_peserta') {
+          orderBy.push({ data_alumni: { _count: dir } });
+        } 
+        else {
+          orderBy.push({ [field]: dir });
+        }
+      }
+    });
+  }
+
+  if (orderBy.length === 0) {
+    orderBy = [{ start_date: 'desc' }];
+  }
 
   if (search) {
     where.AND.push({
@@ -55,7 +84,6 @@ export function buildDiklatQuery(searchParams) {
      where.AND.push({ jenis_program: { in: programArray } });
   }
 
-  // Text Array Filters (OR Condition)
   if (jenjangArray.length > 0) {
     where.AND.push({
       OR: jenjangArray.map(j => ({
@@ -76,6 +104,6 @@ export function buildDiklatQuery(searchParams) {
     page,
     limit,
     skip,
-    orderBy: { start_date: 'desc' }
+    orderBy
   };
 }

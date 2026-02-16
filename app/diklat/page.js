@@ -16,7 +16,7 @@ export default function DataDiklatPage() {
   const { 
     data, totalData, loading, search, setSearch, 
     page, setPage, limit, setLimit, 
-    activeFilters, setActiveFilters 
+    activeFilters, setActiveFilters, sorting, setSorting
   } = useDiklat();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -44,6 +44,8 @@ export default function DataDiklatPage() {
           columns={columns((d) => { setSelectedDiklat(d); setOpenDialog(true); })} 
           data={data} 
           loading={loading}
+          sorting={sorting}
+          onSortingChange={setSorting}
         />
         <PTKPagination 
           page={page}
