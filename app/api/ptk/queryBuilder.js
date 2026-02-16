@@ -18,6 +18,7 @@ export async function buildPrismaQuery(searchParams, prisma) {
     statusPelatihan: searchParams.get("status"),
     modeFilter: searchParams.get("mode_filter") || "eligible",
     kategoriParam: searchParams.get("kategori"),
+    jenisParam: searchParams.get("jenis"),
     programParam: searchParams.get("program"),
     judulDiklat: searchParams.get("judul_diklat")?.split("||") || [],
     startDate: searchParams.get("start_date"),
@@ -60,7 +61,7 @@ export async function buildPrismaQuery(searchParams, prisma) {
   if (p.jenisPTK) {
     where.AND.push({ jenis_ptk: p.jenisPTK });
   }
-  
+
   if (p.mapel) {
     where.AND.push({
       riwayat_sertifikasi: { contains: p.mapel, mode: "insensitive" },
@@ -111,12 +112,13 @@ export async function buildPrismaQuery(searchParams, prisma) {
   }
 
   const hasDiklatFilter =
-    p.judulDiklat.length > 0 || p.kategoriParam || p.programParam;
+    p.judulDiklat.length > 0 || p.kategoriParam || p.jenisParam || p.programParam;
 
   if (hasDiklatFilter) {
     const diklatCriteria = {
       master_diklat: {
-        jenis_kegiatan: p.kategoriParam ? { equals: p.kategoriParam } : undefined,
+        category_id: p.kategoriParam ? { equals: parseInt(p.kategoriParam) } : undefined,
+        jenis_kegiatan: p.jenisParam ? { equals: p.jenisParam } : undefined,
         jenis_program: p.programParam ? { equals: p.programParam } : undefined,
         title: p.judulDiklat.length > 0 ? { in: p.judulDiklat } : undefined,
         start_date:
@@ -146,7 +148,7 @@ export async function buildPrismaQuery(searchParams, prisma) {
           where.AND.push({ judul_diklat: { in: p.judulDiklat } });
       }
       if(p.kategoriParam) {
-          where.AND.push({ jenis_kegiatan: p.kategoriParam }); 
+          where.AND.push({ category_id: parseInt(p.kategoriParam) }); 
       }
       where.AND.push({ status_kelulusan: 'Lulus' });
     }
