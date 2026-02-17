@@ -44,6 +44,8 @@ export default function DashboardClient() {
           wilayahData={wilayahData}
           selectedKab={selectedKab}
           selectedKec={selectedKec}
+          selectedYear={selectedYear}
+          selectedDiklat={selectedDiklat}
           onSelect={(kab, kec) => {
             setSelectedKab(kab);
             setSelectedKec(kec);

@@ -7,6 +7,10 @@ import {
   YOGYA_BOUNDS,
 } from "../../lib/constants";
 import "leaflet/dist/leaflet.css";
+import { useMemo, useState } from "react";
+
+import { useAnalytics } from "@/hooks/useAnalytics";
+
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false },
@@ -20,12 +24,66 @@ export default function MapPanel({
   geoJsonData,
   selectedKab,
   selectedKec,
+  selectedYear,
+  selectedDiklat,
   wilayahData,
+  heatmapEnable = true,
   onSelect,
 }) {
+  const { data, loading, error } = useAnalytics({
+    metric: "alumni",
+    kab: selectedKab,
+    year: selectedYear,
+    diklat: selectedDiklat,
+    groupBy: "Kecamatan",
+  });
+
+  const valueMap = useMemo(() => {
+    if (!data) return {};
+
+    const map = {};
+    data.forEach((kec) => {
+      map[kec.name.toUpperCase()] = kec.value;
+    });
+    console.log("Valuemap", map)
+    return map;
+  }, [data]);
+
+
+
+  const maxValue = useMemo(() => {
+    if (!data?.length) return 0;
+    return Math.max(...data.map((d) => d.value));
+  }, [data]);
+  console.log("MaxValue", maxValue)
+
+  function getHeatColor(value, max) {
+    if (!value || max === 0) return "#e2e8f0";
+
+    const intensity = value / max; // 0–1
+
+    if (intensity > 0.8) return "#1e3a8a";
+    if (intensity > 0.6) return "#2563eb";
+    if (intensity > 0.4) return "#3b82f6";
+    if (intensity > 0.2) return "#93c5fd";
+    return "#dbeafe";
+  }
+
   const mapStyle = (feature) => {
     const kabCode = feature.properties.code.substring(0, 5);
     const kecName = feature.properties.name;
+    const upperKec = kecName.toUpperCase();
+
+    if (heatmapEnable) {
+      const value = valueMap?.[upperKec] || 0;
+
+      return {
+        fillColor: getHeatColor(value, maxValue),
+        fillOpacity: 0.85,
+        weight: 1,
+        color: "#fff",
+      };
+    }
 
     const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
     const isSameKab = kabCode === selectedKab;
@@ -127,7 +185,14 @@ export default function MapPanel({
           className="h-full"
         >
           <GeoJSON
-            key={selectedKab + selectedKec + wilayahData.length}
+            key={
+              selectedKab +
+              selectedKec +
+              selectedYear +
+              selectedDiklat +
+              wilayahData.length +
+              heatmapEnable
+            }
             data={geoJsonData}
             style={mapStyle}
             onEachFeature={onEachFeature}
