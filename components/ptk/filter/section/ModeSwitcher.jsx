@@ -1,6 +1,6 @@
 "use client";
+
 import { useFilterContext } from "../FilterContext";
-// UI Components
 import { cn } from "@/lib/utils";
 import { Info } from "lucide-react";
 import { format } from "date-fns";
@@ -8,11 +8,7 @@ import { id } from "date-fns/locale";
 
 export function ModeSwitcher() {
   const { filters } = useFilterContext();
-
-  // Cek mode saat ini (default 'eligible' jika undefined)
   const isCandidateMode = (filters.mode_filter || 'eligible') === 'eligible';
-  
-  // Helper untuk format tanggal aman
   const formatDate = (date) => date ? format(date, "dd MMM yyyy", { locale: id }) : "...";
 
   return (
@@ -24,13 +20,13 @@ export function ModeSwitcher() {
         </h4>
       </div>
 
-      {/* Info Box - Sinkron dengan Date Range */}
+      {/* Info Box */}
       <div
         className={cn(
           "p-3 rounded-md text-xs border flex items-start gap-2 transition-colors duration-300",
           isCandidateMode
-            ? "bg-green-50 border-green-200 text-green-800" // Warna Kandidat
-            : "bg-blue-50 border-blue-200 text-blue-800" // Warna Riwayat
+            ? "bg-green-50 border-green-200 text-green-800"
+            : "bg-blue-50 border-blue-200 text-blue-800"
         )}
       >
         <Info size={16} className="shrink-0 mt-0.5" />

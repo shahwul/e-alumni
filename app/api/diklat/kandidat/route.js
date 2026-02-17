@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // 1. Pakai Prisma Singleton
+import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {

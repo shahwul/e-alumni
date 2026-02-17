@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // 1. Pakai Prisma Singleton
-import { buildPrismaQuery } from '@/app/api/ptk/queryBuilder'; // 2. Pakai Builder Baru
+import prisma from '@/lib/prisma';
+import { buildPrismaQuery } from '@/app/api/ptk/queryBuilder';
 import ExcelJS from 'exceljs';
 
-// Helper Serialize BigInt (Penting karena MV pakai BigInt)
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };

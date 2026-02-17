@@ -39,7 +39,6 @@ export function DataTablePagination({ page, limit, totalData, setPage, setLimit,
   return (
     <div className={cn(
       "bg-white p-4 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-sm",
-      // Jika tidak ada className yang dikirim, defaultnya pakai border-t
       className || "border-t border-slate-100", 
     )}>
       

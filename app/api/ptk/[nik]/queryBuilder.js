@@ -1,5 +1,3 @@
-// api/ptk/[nik]/ptkQueryBuilder.js
-
 export const PTK_QUERY_TYPE = {
   PROFIL: "profil",
   RIWAYAT: "riwayat",

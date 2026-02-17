@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useFilterContext } from "../FilterContext";
 import { useDebounceSearch } from "../useDebounceSearch";
 
-// UI Components
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput, CommandItem, CommandList, CommandGroup, CommandEmpty } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { Check, XCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function SekolahFilter() {
-  // 1. Ambil state mapping dari Context (bukan useState lokal lagi)
   const { filters, setFilters, schoolMapping, setSchoolMapping } = useFilterContext();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -24,13 +22,11 @@ export function SekolahFilter() {
     query: search,
   });
 
-  // 2. Simpan mapping NPSN -> Nama ke Global Context setiap kali search berhasil
   useEffect(() => {
     if (results?.length > 0) {
       setSchoolMapping(prev => {
         const newMap = { ...prev };
         results.forEach(item => {
-          // Sesuaikan dengan key API kamu: npsn_sekolah
           newMap[item.npsn_sekolah] = item.nama_sekolah;
         });
         return newMap;
@@ -39,7 +35,6 @@ export function SekolahFilter() {
   }, [results, setSchoolMapping]);
 
   const toggleSekolah = (npsn, nama) => {
-    // Jika dipilih dari list, pastikan namanya masuk ke mapping global
     if (nama) {
       setSchoolMapping(prev => ({ ...prev, [npsn]: nama }));
     }
@@ -116,7 +111,7 @@ export function SekolahFilter() {
         </PopoverContent>
       </Popover>
 
-      {/* RENDER BADGES MENGGUNAKAN GLOBAL MAPPING */}
+      {/* RENDER BADGES */}
       {filters.sekolah.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           {filters.sekolah.map((npsn) => (
@@ -126,7 +121,7 @@ export function SekolahFilter() {
               className="group text-[10px] bg-blue-50 text-blue-700 border-blue-100"
             >
               <span className="max-w-[150px] truncate">
-                {/* AMBIL DARI CONTEXT schoolMapping */}
+                {/* SchoolMapping */}
                 {schoolMapping[npsn] || `NPSN: ${npsn}`}
               </span>
               <button

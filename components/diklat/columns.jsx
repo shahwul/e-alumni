@@ -129,7 +129,7 @@ export const columns = (onViewPeserta) => [
   {
     id: "actions",
     meta: {
-      className: "text-right pr-4", // Padding kanan untuk kolom terakhir
+      className: "text-right pr-4", 
     },
     cell: ({ row }) => {
       return (

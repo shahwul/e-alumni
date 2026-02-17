@@ -20,7 +20,7 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning # Simpan data ke disk tiap 60 detik jika ada 1 perubahan
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
 

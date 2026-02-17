@@ -1,5 +1,3 @@
-// api/ptk/queryBuilder.js
-
 export async function buildPrismaQuery(searchParams, prisma) {
   const p = {
     search: searchParams.get("search"),
@@ -116,18 +114,15 @@ const dateCriteria = p.startDate && p.endDate ? {
     lte: new Date(p.endDate + "T23:59:59")
   } : undefined;
 
-  // Parsing ID Diklat ke Integer (karena URL mengirim string)
   const diklatIds = p.judulDiklat.map(id => parseInt(id)).filter(id => !isNaN(id));
 
-  // 2. Cek apakah ada filter diklat yang aktif
   const hasDiklatFilter = !!(diklatIds.length > 0 || p.kategoriParam || p.jenisParam || p.programParam || dateCriteria);
 
   if (hasDiklatFilter) {
     if (p.modeFilter === "eligible") {
-      // --- MODE ELIGIBLE (Cari orang yang BELUM PERNAH lulus diklat tersebut) ---
       const diklatCriteria = {
         master_diklat: {
-          id: diklatIds.length > 0 ? { in: diklatIds } : undefined, // Sekarang pakai ID
+          id: diklatIds.length > 0 ? { in: diklatIds } : undefined,
           category_id: p.kategoriParam ? { equals: parseInt(p.kategoriParam) } : undefined,
           jenis_kegiatan: p.jenisParam ? { equals: p.jenisParam } : undefined,
           jenis_program: p.programParam ? { equals: p.programParam } : undefined,
@@ -150,13 +145,11 @@ const dateCriteria = p.startDate && p.endDate ? {
         });
       }
     } else {
-      // --- MODE HISTORY (Cari orang yang SUDAH ikut/lulus) ---
       if (dateCriteria) {
         where.AND.push({ start_date: dateCriteria });
       }
       
       if (diklatIds.length > 0) {
-        // Langsung filter berdasarkan diklat_id di tabel history/alumni
         where.AND.push({
           diklat_id: { in: diklatIds }
         });

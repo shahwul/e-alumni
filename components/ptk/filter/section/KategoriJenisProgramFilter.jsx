@@ -85,7 +85,7 @@ export function KategoriJenisProgramFilter() {
           onValueChange={(val) =>
             setFilters((p) => ({
               ...p,
-              jenis: val === "ALL" ? "" : val, // val sudah mengandung underscore dari <SelectItem />
+              jenis: val === "ALL" ? "" : val,
             }))
           }
         >
@@ -110,7 +110,6 @@ export function KategoriJenisProgramFilter() {
           <SelectContent>
             <SelectItem value="ALL">Semua</SelectItem>
             {JENIS_OPTIONS.map((opt) => (
-              // Value dikirim dengan underscore, Label tampil dengan spasi
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>

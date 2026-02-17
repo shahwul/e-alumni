@@ -107,7 +107,7 @@ export function DiklatFilter() {
                         onSelect={() => toggleDiklat(item.id, item.title)}
                         className="flex items-center gap-3 py-3 px-3 cursor-pointer group"
                       >
-                        {/* Checkbox Kiri Tengah: dibungkus div shrink-0 agar tidak gepeng */}
+                        {/* Checkbox Kiri Tengah */}
                         <div className="flex shrink-0">
                           <div className={cn(
                             "flex h-5 w-5 items-center justify-center border rounded transition-colors",
@@ -149,7 +149,7 @@ export function DiklatFilter() {
           </PopoverContent>
         </Popover>
 
-        {/* Render Badges dari ID -> Nama (Global Mapping) */}
+        {/* Render Badges dari ID */}
         {filters.judul_diklat.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
             {filters.judul_diklat.map((id) => (

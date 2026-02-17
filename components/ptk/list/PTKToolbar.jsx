@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Tambah useEffect
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, History } from "lucide-react"; 
 import { FilterDialog } from "@/components/ptk/filter/FilterDialog";

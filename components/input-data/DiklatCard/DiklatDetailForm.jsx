@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { cn } from "@/lib/utils"; // Pastikan util ini ada
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,6 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
   const [refs, setRefs] = useState({ topics: [], categories: [], levels: [], jobs: [] });
   const [subTopics, setSubTopics] = useState([]);
 
-  // Fetch Global Refs
   useEffect(() => {
     const fetchAll = async () => {
       const endpoints = ["rumpun", "kategori", "jenjang", "jabatan"];
@@ -44,7 +43,6 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
     fetchAll();
   }, []);
 
-  // Fetch Sub-Topics (Reactive)
   const fetchSub = useCallback(async (id) => {
     if (!id) return setSubTopics([]);
     const res = await fetch(`/api/ref/sub-rumpun?topic_id=${id}`);
@@ -55,7 +53,6 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
     fetchSub(isEditing ? editData.topic_id : data.topic_id);
   }, [isEditing, editData.topic_id, data.topic_id, fetchSub]);
 
-  // Helpers
   const findLabel = (arr, id, key) => arr.find(i => i.id === id)?.[key] || "-";
   const updateEdit = (key, val) => setEditData(prev => ({ ...prev, [key]: val }));
   const fmtDate = (d) => d ? format(new Date(d), "dd MMM yyyy", { locale: localeId }) : "-";
@@ -94,7 +91,7 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
           </DataField>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* MULAI - Calendar Shadcn */}
+            {/* Calendar */}
             <DataField label="Mulai" icon={CalendarIcon} isEditing={isEditing} viewValue={fmtDate(data.start_date)}>
               <Popover>
                 <PopoverTrigger asChild>
@@ -117,7 +114,7 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
               </Popover>
             </DataField>
 
-            {/* SELESAI - Calendar Shadcn */}
+            {/* Calendar */}
             <DataField label="Selesai" icon={CalendarIcon} isEditing={isEditing} viewValue={fmtDate(data.end_date)}>
               <Popover>
                 <PopoverTrigger asChild>

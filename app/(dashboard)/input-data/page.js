@@ -11,7 +11,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 export default function InputDataPage() {
   const [isAdding, setIsAdding] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // State untuk modal filter jika diperlukan
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { 
     data, 
@@ -23,8 +23,8 @@ export default function InputDataPage() {
     setPage, 
     limit, 
     setLimit,
-    activeFilters, // Objek filter aktif dari hook
-    setActiveFilters, // Fungsi untuk mengubah filter aktif
+    activeFilters,
+    setActiveFilters,
     fetchData 
   } = useDiklat();
 
@@ -107,10 +107,10 @@ export default function InputDataPage() {
         </div>
       )}
 
-      {/* Spacer agar card paling bawah tidak tertutup oleh pagination yang melayang */}
+      {/* Spacer */}
       <div className="h-20" />
 
-      {/* TODO: Tambahkan Sheet/Modal Filter di sini jika setIsFilterOpen dipicu */}
+      {/* Filter Dialog */}
       <FilterDialogDiklat 
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}

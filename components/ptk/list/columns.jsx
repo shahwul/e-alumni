@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"; // Icon Lengkap
+import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { ActionCell } from "./cells/ActionCell";
@@ -38,7 +38,7 @@ const sortableHeader = (column, title) => {
         <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100" />
       )}
 
-      {/* 5. BADGE URUTAN (Hanya muncul jika Multi-Sort aktif / sort lebih dari 1 kolom) */}
+      {/* 5. BADGE URUTAN */}
       {isSorted && sortIndex > -1 && (
         <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">
           {sortIndex + 1}
@@ -54,7 +54,7 @@ export const columns = [
   {
     id: "select",
     meta: {
-      className: "w-[50px] text-center", // Fixed 50px & Tengah
+      className: "w-[50px] text-center",
     },
     header: ({ table }) => (
       <Checkbox

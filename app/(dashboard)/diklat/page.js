@@ -8,9 +8,6 @@ import { PesertaDialog } from "@/components/diklat/PesertaDialog";
 import { PTKPagination } from "@/components/ptk/list/PTKPagination";
 import { DiklatToolbar } from "@/components/diklat/DiklatToolbar";
 import FilterDialogDiklat from "@/components/diklat/FilterDialogDiklat";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 export default function DataDiklatPage() {
   const { 

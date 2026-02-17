@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [step, setStep] = useState(1); // 1: Form, 2: OTP
+  const [step, setStep] = useState(1); 
   const [form, setForm] = useState({ username: "", password: "", email: "", nama: "" });
   const [otp, setOtp] = useState("");
   const router = useRouter();

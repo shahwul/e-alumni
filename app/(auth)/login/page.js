@@ -17,7 +17,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        router.push("/ptk"); // Mentalin ke dashboard setelah login
+        router.push("/ptk");
       } else {
         alert(data.message);
       }

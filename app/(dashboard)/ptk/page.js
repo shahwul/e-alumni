@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { PTKHeader } from "@/components/ptk/list/PTKHeader";
 import { PTKToolbar } from "@/components/ptk/list/PTKToolbar";
 import { PTKTable } from "@/components/ptk/list/PTKTable";
@@ -12,8 +12,6 @@ import { PTKSelectedActionsBar } from "@/components/ptk/list/PTKSelectedActionsB
 import { usePTKList } from "@/components/ptk/list/usePTKList";
 import { usePTKNavigation } from "@/components/ptk/list/hooks/usePTKNavigation";
 import { AddToDiklatModal } from "@/components/ptk/AddToDiklatModal";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 function PTKListContent() {
   const searchParams = useSearchParams();

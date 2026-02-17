@@ -2,7 +2,6 @@
 
 import { useFilterContext } from "../FilterContext";
 
-// UI Components
 import { XCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

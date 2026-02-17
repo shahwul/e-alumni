@@ -1,4 +1,4 @@
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function DashboardTopbar({ user, setMobileOpen, pathname, getInitials }) {
