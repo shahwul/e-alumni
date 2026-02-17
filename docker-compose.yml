@@ -14,6 +14,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning # Simpan data ke disk tiap 60 detik jika ada 1 perubahan
+    volumes:
+      - redis_data:/data
+
   app:
     build:
       context: .
@@ -24,8 +34,13 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: "postgresql://postgres:123@db:5432/e_alumni?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "9051786d0b985f9c3408bd193b3d0c077794696483bab79e9287d288e330d95f" 
+      EMAIL_USER: "syahrulfara3@gmail.com"
+      EMAIL_PASS: "qjju pusb zqek qrrc" 
     depends_on:
       - db
 
 volumes:
   postgres_data:
+  redis_data:

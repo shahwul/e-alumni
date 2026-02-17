@@ -35,7 +35,11 @@ export function DetailPTKDialog({ open, onOpenChange, nik }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl bg-white p-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent 
+      className="sm:max-w-4xl bg-white p-0 overflow-hidden border-none shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      >
         {/* Header Sederhana */}
         <DialogHeader className="p-6 bg-slate-50 border-b border-slate-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

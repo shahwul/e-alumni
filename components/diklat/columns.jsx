@@ -84,7 +84,7 @@ export const columns = (onViewPeserta) => [
                     </span>
                 </div>
                 {end && (
-                    <div className="text-[11px] text-slate-400 ml-6 italic">
+                    <div className="text-[11px] text-slate-400 ml-6">
                         s.d {format(end, "dd MMM yyyy", {locale:id})}
                     </div>
                 )}

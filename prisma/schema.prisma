@@ -1,12 +1,21 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["views"] 
+  previewFeatures = ["views"]
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model audit_logs {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  action     String    @db.VarChar(100)
+  details    String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 }
 
 model data_alumni {
@@ -66,7 +75,7 @@ model data_ptk {
   @@index([riwayat_pend_jenjang], map: "idx_ptk_jenjang")
   @@index([nama_ptk], map: "idx_ptk_nama")
   @@index([npsn], map: "idx_ptk_npsn")
-  @@index([status_kepegawaian], map: "idx_ptk_status")
+  @@index([status_kepegawaian, jenis_ptk], map: "idx_ptk_status_jenis")
   @@index([tanggal_lahir], map: "idx_ptk_tgl_lahir")
 }
 
@@ -207,7 +216,21 @@ model satuan_pendidikan {
   data_ptk              data_ptk[]
   ref_wilayah           ref_wilayah?  @relation(fields: [kode_kecamatan], references: [kode_kecamatan], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([kode_kecamatan], map: "idx_sekolah_kecamatan")
+  @@index([kode_kecamatan], map: "idx_sekolah_kode_kec")
+  @@index([nama], map: "idx_sekolah_nama")
+}
+
+model users {
+  id         String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username   String       @unique @db.VarChar(50)
+  password   String
+  nama       String       @db.VarChar(100)
+  email      String?      @unique @db.VarChar(100)
+  role       user_role?   @default(SUPERADMIN)
+  last_login DateTime?    @db.Timestamptz(6)
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?    @default(now()) @db.Timestamptz(6)
+  audit_logs audit_logs[]
 }
 
 view mv_dashboard_analitik {
@@ -258,4 +281,8 @@ enum sumber_program {
 enum tipe_kegiatan {
   Pelatihan
   Non_Pelatihan @map("Non Pelatihan")
+}
+
+enum user_role {
+  SUPERADMIN
 }
