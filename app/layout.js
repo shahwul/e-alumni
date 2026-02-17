@@ -1,6 +1,5 @@
 import { Montserrat, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import "leaflet/dist/leaflet.css";
 
 const source_sans_3 = Source_Sans_3({
