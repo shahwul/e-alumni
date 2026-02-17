@@ -12,6 +12,7 @@ export function useAnalytics(params) {
 
     setLoading(true);
     setError(null);
+    setData([]);
 
     fetchAnalytics(params, controller.signal)
       .then(setData)
