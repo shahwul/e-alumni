@@ -26,7 +26,7 @@ import { METRIC_OPTIONS } from "@/lib/constants";
 
 import QuerySelector from "../QuerySelector";
 
-export default function TabelViewData({ kab, kec, year }) {
+export default function TabelViewData({ kab, kec, year, diklat }) {
   const [jenjang, setJenjang] = useState("");
   const [groupBy, setGroupBy] = useState("");
   const [metric, setMetric] = useState("alumni");
@@ -46,6 +46,7 @@ export default function TabelViewData({ kab, kec, year }) {
     kab,
     kec,
     year,
+    diklat,
     groupBy,
     jenjang,
   });

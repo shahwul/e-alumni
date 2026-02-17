@@ -5,6 +5,14 @@ import { buildQuery } from "./queryBuilder.js";
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
 
+  //Parse string
+  const diklatRaw = searchParams.get("diklat");
+  const diklat = diklatRaw
+    ? diklatRaw.includes(",")
+      ? diklatRaw.split(",")
+      : [diklatRaw]
+    : [];
+
   const query = buildQuery({
     metric: searchParams.get("metric"),
     groupBy: searchParams.get("groupBy"),
@@ -14,6 +22,7 @@ export async function GET(req) {
       kec: searchParams.get("kec"),
       year: searchParams.get("year"),
       jenjang: searchParams.get("jenjang"),
+      diklat: diklat,
     },
   });
 

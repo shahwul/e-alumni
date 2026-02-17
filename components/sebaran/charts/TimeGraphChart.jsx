@@ -19,6 +19,7 @@ export default function TimeGraphChart({
   kab,
   kec,
   year,
+  diklat,
   height = 300,
   onExpand,
 }) {
@@ -28,10 +29,11 @@ export default function TimeGraphChart({
     kab,
     kec,
     year,
+    diklat,
     timeGrain,
   });
 
-  console.log(data);
+  // console.log(data);
 
   if (loading) {
     return (

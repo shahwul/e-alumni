@@ -20,7 +20,7 @@ export function useAnalytics(params) {
       })
       .finally(() => setLoading(false));
 
-      console.log("useAnalytics data:", data);
+      // console.log("useAnalytics data:", data);
 
     return () => controller.abort();
   }, [JSON.stringify(params)]); 

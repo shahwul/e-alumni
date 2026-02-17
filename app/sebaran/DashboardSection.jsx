@@ -76,6 +76,7 @@ export default function DashboardClient() {
         selectedKab={selectedKab}
         selectedKec={selectedKec}
         selectedYear={selectedYear}
+        selectedDiklat={selectedDiklat}
       />
     </div>
   );

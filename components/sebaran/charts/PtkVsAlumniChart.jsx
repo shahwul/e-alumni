@@ -9,7 +9,7 @@ import { CustomTooltip }  from "../CustomTooltip";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function PtkVsAlumniChart({ kab, kec, year, height = 300, onExpand }) {
+export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300, onExpand }) {
   const [ metric1, setMetric1 ] = useState("ptk");
   const [ metric2, setMetric2 ] = useState("alumni");
 
@@ -18,6 +18,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, height = 300, onExpan
     kab,
     kec,
     year,
+    diklat,
   });
 
   const untrained = useAnalytics({

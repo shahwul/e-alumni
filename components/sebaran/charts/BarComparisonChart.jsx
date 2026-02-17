@@ -17,7 +17,7 @@ import { METRIC_OPTIONS } from "@/lib/constants";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
-export default function BarComparisonChart({ kab, kec, year, height = 400, onExpand }) {
+export default function BarComparisonChart({ kab, kec, year, diklat, height = 400,  onExpand }) {
   const [metric, setMetric] = useState("alumni");
 
   const groupBy = useMemo(() => {
@@ -32,6 +32,7 @@ export default function BarComparisonChart({ kab, kec, year, height = 400, onExp
     kab,
     kec,
     year,
+    diklat,
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);

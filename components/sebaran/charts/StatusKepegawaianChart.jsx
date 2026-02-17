@@ -9,6 +9,7 @@ export default function StatusKepegawaianChart({
   kab,
   kec,
   year,
+  diklat,
   height = 300,
   onExpand
 }) {
@@ -17,6 +18,7 @@ export default function StatusKepegawaianChart({
     groupBy: "status_kepegawaian",
     kab,
     kec,
+    diklat,
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);

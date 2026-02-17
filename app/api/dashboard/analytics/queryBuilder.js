@@ -35,7 +35,7 @@ export function timeSelect(grain) {
   }
 }
 
-export function buildContext({ kab, kec, year, jenjang }) {
+export function buildContext({ kab, kec, year, jenjang, diklat }) {
   const where = [];
   const values = [];
   let i = 1;
@@ -59,6 +59,20 @@ export function buildContext({ kab, kec, year, jenjang }) {
     where.push(`UPPER(bentuk_pendidikan) LIKE $${i++}`);
     values.push(`%${jenjang.toUpperCase()}%`);
   }
+
+if (diklat && Array.isArray(diklat) && diklat.length > 0) {
+  const placeholders = diklat
+    .map((_, idx) => `$${i + idx}`)
+    .join(",");
+
+  where.push(`judul_diklat = ANY(ARRAY[${placeholders}])`);
+
+  diklat.forEach((title) => {
+    values.push(title.trim());
+  });
+
+  i += diklat.length;
+}
 
   return {
     where: where.length ? `WHERE ${where.join(" AND ")}` : "",

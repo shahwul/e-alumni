@@ -8,7 +8,7 @@ import { processData, injectTotal } from "../helpers/utils";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function JenjangPtkChart({ kab, kec, year, height = 300, onExpand }) {
+export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, onExpand }) {
   const [metric, setMetric] = useState("alumni");
 
   const { data, loading } = useAnalytics({
@@ -17,6 +17,7 @@ export default function JenjangPtkChart({ kab, kec, year, height = 300, onExpand
     kab,
     kec,
     year,
+    diklat,
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);

@@ -37,6 +37,7 @@ export default function DataSection({
   selectedKab,
   selectedKec,
   selectedYear,
+  selectedDiklat,
 }) {
   const [data, setData] = useState(null);
   const [activeChart, setActiveChart] = useState(null);
@@ -78,6 +79,7 @@ export default function DataSection({
     ),
   };
 
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -88,6 +90,7 @@ export default function DataSection({
         if (selectedKab) params.append("kab", selectedKab);
         if (selectedKec) params.append("kec", selectedKec);
         if (selectedYear) params.append("year", selectedYear);
+        if (selectedDiklat) params.append("diklat", selectedDiklat);
 
         const res = await fetch(`/api/dashboard/stats?${params.toString()}`, {
           signal: controller.signal,
@@ -108,6 +111,7 @@ export default function DataSection({
       selectedKab,
       selectedKec,
       selectedYear,
+      selectedDiklat
     });
     console.log("Data fetched:", data);
     return () => controller.abort();
@@ -160,6 +164,7 @@ export default function DataSection({
           kab={selectedKab}
           kec={selectedKec}
           year={selectedYear}
+          diklat={selectedDiklat}
         />
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -167,6 +172,7 @@ export default function DataSection({
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
+            diklat={selectedDiklat}
             onExpand={() => setActiveChart("jenjang")}
           />
 
@@ -174,6 +180,7 @@ export default function DataSection({
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
+            diklat={selectedDiklat}
             onExpand={() => setActiveChart("ptkVsAlumni")}
           />
 
@@ -182,6 +189,7 @@ export default function DataSection({
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
+              diklat={selectedDiklat}
               height={400}
               onExpand={() => setActiveChart("barComparison")}
             />
@@ -193,6 +201,7 @@ export default function DataSection({
               kec={selectedKec}
               timeGrain="year"
               year={selectedYear}
+              diklat={selectedDiklat}
               onExpand={() => setActiveChart("timeGraph")}
             />
           </div>
