@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, FileSpreadsheet, Loader2, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { generateAndDownloadExcel } from "./utils/export-excel";
+import { set } from "date-fns";
 
 export default function ListKandidat({ diklatId, diklatTitle }) {
   const [data, setData] = useState([]);
@@ -45,6 +46,7 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
         if (res.ok) {
             toast.success(json.message);
             fetchData();
+            // Opsional: Redirect ke tab Alumni atau refresh data
         } else {
             toast.error(json.error || "Gagal menyimpan");
         }

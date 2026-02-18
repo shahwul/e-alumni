@@ -34,11 +34,10 @@ const FilterContext = createContext(null);
 
 export function FilterProvider({ children }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [schoolMapping, setSchoolMapping] = useState({});
   const resetFilters = () => setFilters(DEFAULT_FILTERS);
   const value = useMemo(
-    () => ({ filters, setFilters, resetFilters, schoolMapping, setSchoolMapping }),
-    [filters, schoolMapping],
+    () => ({ filters, setFilters, resetFilters }),
+    [filters],
   );
   return (
     <FilterContext.Provider value={value}>{children}</FilterContext.Provider>

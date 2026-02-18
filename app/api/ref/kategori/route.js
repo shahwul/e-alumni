@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; 
+import pool from "@/lib/db";
 
 export async function GET() {
   try {
-    const kategori = await prisma.ref_kategori.findMany({
-      select: {
-        id: true,
-        origin_id: true,
-        category_name: true,
-      },
-      orderBy: {
-        id: 'asc',
-      },
-    });
+    const query = `
+      SELECT id, origin_id, category_name 
+      FROM ref_kategori 
+      ORDER BY id ASC
+    `;
 
-    return NextResponse.json(kategori);
+    const res = await pool.query(query);
+    return NextResponse.json(res.rows);
   } catch (error) {
     console.error("Error API Kategori:", error);
     return NextResponse.json(

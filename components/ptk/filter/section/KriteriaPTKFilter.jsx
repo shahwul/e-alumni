@@ -245,7 +245,7 @@ export function KriteriaPTK() {
             />
         </div>
 
-        {/* ================= 8. STATUS KEPALA SEKOLAH ================= */}
+        {/* ================= 8. STATUS KEPALA SEKOLAH (HARDCODE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Kepala Sekolah?</Label>
           <Select
@@ -266,7 +266,7 @@ export function KriteriaPTK() {
           </Select>
         </div>
 
-        {/* ================= 9. STATUS PELATIHAN ================= */}
+        {/* ================= 9. STATUS PELATIHAN (FULL WIDTH) ================= */}
         <div className="space-y-1.5 col-span-2">
           <Label className="text-xs text-slate-500">Status Pelatihan</Label>
           <Select
@@ -287,7 +287,7 @@ export function KriteriaPTK() {
           </Select>
         </div>
 
-        {/* JENIS KELAMIN */}
+        {/* JENIS KELAMIN (FULL WIDTH) */}
         <div className="space-y-1.5 col-span-2">
           <Label className="text-xs text-slate-500">Jenis Kelamin</Label>
           <Select

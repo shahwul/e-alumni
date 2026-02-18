@@ -8,7 +8,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { useFilterContext } from "../FilterContext";
 import { useFilterData } from "../useFilterData";

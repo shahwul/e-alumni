@@ -1,55 +1,65 @@
-import {
-  PieChart,
-  Pie,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from "recharts";
+import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { processData, injectTotal } from "../helpers/utils";
 
-export default function StatusKepegawaianChart({ kab, kec, year }) {
+import ChartCard from "../ChartCard";
+
+export default function StatusKepegawaianChart({
+  kab,
+  kec,
+  year,
+  diklat,
+  height = 300,
+  onExpand
+}) {
   const { data, loading } = useAnalytics({
     metric: "ptk",
     groupBy: "status_kepegawaian",
     kab,
-    kec
+    kec,
+    diklat,
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);
-  
+
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400">
-        Loading…
-      </div>
+      <ChartCard height={height}>
+        <div className="h-full flex items-center justify-center text-slate-400">
+          Loading…
+        </div>
+      </ChartCard>
     );
   }
 
   if (!data.length) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400">
-        Data Kosong
-      </div>
+      <ChartCard height={height}>
+        <div className="h-full flex items-center justify-center text-slate-400">
+          Data Kosong
+        </div>
+      </ChartCard>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={processedData}
-          dataKey="value"
-          nameKey="name"
-          innerRadius={60}
-          outerRadius={80}
-          paddingAngle={5}
-          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-        />
-        <Tooltip />
-        <Legend verticalAlign="bottom" height={36} iconType="circle" />
-      </PieChart>
-    </ResponsiveContainer>
+    <ChartCard height={height} onExpand={onExpand}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={processedData}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={5}
+            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+          />
+          <Tooltip />
+          <Legend verticalAlign="bottom" height={36} iconType="circle" />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartCard>
   );
 }

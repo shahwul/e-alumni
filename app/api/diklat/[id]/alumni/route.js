@@ -1,60 +1,66 @@
+// app/api/diklat/[id]/kandidat/route.js
+
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import pool from '@/lib/db';
 
 export async function POST(request, { params }) {
+  const { id } = await params; // ID Diklat
+
+  const client = await pool.connect();
+  
   try {
-    const { id } = await params;
-    const diklatId = parseInt(id);
+    await client.query('BEGIN');
 
-    if (!diklatId) {
-        return NextResponse.json({ error: 'ID Diklat Invalid' }, { status: 400 });
+    // 1. Ambil semua kandidat untuk diklat ini
+    const getCandidatesQuery = `
+      SELECT dk.nik, dp.nama_ptk, dp.npsn as npsn_sekolah, dp.jabatan_ptk, dp.pangkat_golongan
+      FROM diklat_kandidat dk
+      JOIN data_ptk dp ON dk.nik = dp.nik
+      JOIN satuan_pendidikan sp ON dp.npsn = sp.npsn
+      WHERE diklat_id = $1
+    `;
+    const candidates = await client.query(getCandidatesQuery, [id]);
+
+    if (candidates.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'Tidak ada kandidat untuk disimpan' }, { status: 400 });
     }
-    const result = await prisma.$transaction(async (tx) => {
-        const candidates = await tx.diklat_kandidat.findMany({
-            where: { diklat_id: diklatId },
-            include: {
-                data_ptk: true 
-            }
-        });
 
-        if (candidates.length === 0) {
-            throw new Error("NO_CANDIDATES");
-        }
+    // 2. Insert ke tabel data_alumni (Bulk Insert)
+    // Kita gunakan ON CONFLICT DO NOTHING biar kalau user klik simpan 2x, data gak dobel
+    const insertQuery = `
+      INSERT INTO data_alumni (
+        id_diklat, nik, nama_peserta, npsn, snapshot_jabatan, snapshot_pangkat, status_kelulusan
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'Lulus')
+      ON CONFLICT (id_diklat, nik) DO NOTHING
+    `;
 
-        const alumniData = candidates.map(c => ({
-            id_diklat: diklatId,
-            nik: c.nik,
-            nama_peserta: c.data_ptk?.nama_ptk || '-',
-            npsn: c.data_ptk?.npsn || null,
-            snapshot_jabatan: c.data_ptk?.jabatan_ptk,
-            snapshot_pangkat: c.data_ptk?.pangkat_golongan,
-            status_kelulusan: 'Lulus' 
-        }));
+    for (const cand of candidates.rows) {
+      await client.query(insertQuery, [
+        id, 
+        cand.nik, 
+        cand.nama_ptk, 
+        cand.npsn_sekolah, 
+        cand.jabatan_ptk, 
+        cand.pangkat_golongan
+      ]);
+    }
 
-        const insertResult = await tx.data_alumni.createMany({
-            data: alumniData,
-            skipDuplicates: true 
-        });
-        await tx.diklat_kandidat.deleteMany({
-            where: { diklat_id: diklatId }
-        });
+    // 3. Opsional: Hapus dari tabel kandidat setelah dipindah (Biar bersih)
+    await client.query('DELETE FROM diklat_kandidat WHERE diklat_id = $1', [id]);
 
-        return insertResult;
-    });
-
-    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+    await client.query('COMMIT');
 
     return NextResponse.json({ 
         success: true, 
-        message: `Berhasil memindahkan ${result.count} kandidat ke daftar alumni.` 
+        message: `Berhasil memindahkan ${candidates.rowCount} kandidat ke daftar alumni.` 
     });
 
   } catch (error) {
-    if (error.message === "NO_CANDIDATES") {
-        return NextResponse.json({ error: 'Tidak ada kandidat untuk diproses' }, { status: 400 });
-    }
-
-    console.error("Error Finalisasi Kandidat:", error);
-    return NextResponse.json({ error: 'Gagal memproses data' }, { status: 500 });
+    await client.query('ROLLBACK');
+    console.error("Error Simpan Kandidat:", error);
+    return NextResponse.json({ error: 'Gagal menyimpan data' }, { status: 500 });
+  } finally {
+    client.release();
   }
 }

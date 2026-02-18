@@ -1,55 +1,54 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { buildPrismaQuery } from '@/app/api/ptk/queryBuilder';
+import pool from '@/lib/db';
+import { buildPTKQueryParts } from '@/app/api/ptk/queryBuilder'; // Sesuaikan path ini
 import ExcelJS from 'exceljs';
-
-BigInt.prototype.toJSON = function () {
-  return this.toString();
-};
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // 1. PANGGIL QUERY BUILDER (Single Source of Truth)
+    // Otomatis handle semua filter, mode eligible/history, dan logic tanggal
     const { 
-        where, 
-        orderBy, 
-        hasDiklatFilter, 
-        modeFilter 
-    } = await buildPrismaQuery(searchParams, prisma);
+        whereClause, 
+        values, 
+        orderByClause, 
+        shouldAbort, // Guard Clause dari builder
+        modeFilter   // 'eligible' atau 'history'
+    } = buildPTKQueryParts(searchParams);
 
     const isHistoryMode = modeFilter === 'history';
 
-    if (!hasDiklatFilter && isHistoryMode) {
+    // 2. CEK ABORT: Kalau builder bilang abort (History tanpa filter), return kosong
+    if (shouldAbort) {
+        // Return Excel Kosong (Header doang) biar gak error di client
         return generateExcel([], isHistoryMode); 
     }
 
-    const rows = await prisma.mv_dashboard_analitik.findMany({
-        where: where,
-        orderBy: orderBy,
-        distinct: ['nik'], 
-        select: {
-            nama_ptk: true,
-            nik: true,
-            nuptk: true,
-            nip: true,
-            nama_sekolah: true,
-            npsn_sekolah: true,
-            bentuk_pendidikan: true,
-            kecamatan: true,
-            kabupaten: true,
-            no_hp: true,
-            jenis_ptk: true,
-            jabatan_ptk: true,
-            status_kepegawaian: true,
-            pangkat_golongan: true,
-            judul_diklat: true,
-            total_jp: true,
-            start_date: true,
-            end_date: true,
-            moda_diklat: true
-        }
-    });
+    // 3. QUERY UTAMA (Tanpa Limit/Offset)
+    // Kolom disesuaikan dengan kebutuhan Excel yang kamu minta
+    const mainQuery = `
+      SELECT * FROM (
+          SELECT DISTINCT ON (mv.nik)
+            -- Data Identitas
+            mv.nama_ptk, mv.nik, mv.nuptk, mv.nip, mv.jenis_kelamin, 
+            mv.nama_sekolah, mv.npsn_sekolah, mv.bentuk_pendidikan as jenjang,
+            mv.kecamatan, mv.kabupaten, mv.no_hp,
+            mv.jenis_ptk, mv.jabatan_ptk, mv.status_kepegawaian, mv.pangkat_golongan,
+            
+            -- Data History Diklat (Hanya terisi jika ada join/filter diklat)
+            mv.judul_diklat, mv.total_jp, mv.start_date, mv.end_date, mv.moda_diklat
+          FROM mv_dashboard_analitik mv 
+          ${whereClause}
+          ORDER BY mv.nik, mv.start_date DESC NULLS LAST
+      ) as sub
+      ${orderByClause}
+    `;
+    
+    const res = await pool.query(mainQuery, values);
+    const rows = res.rows;
 
+    // 4. GENERATE EXCEL (Panggil Helper Bawah)
     return await generateExcel(rows, isHistoryMode);
 
   } catch (error) {
@@ -58,11 +57,15 @@ export async function GET(request) {
   }
 }
 
+// ==========================================
+// HELPER: GENERATE EXCEL FILE
+// ==========================================
 async function generateExcel(rows, isHistoryMode) {
     const workbook = new ExcelJS.Workbook();
     const sheetName = isHistoryMode ? 'Riwayat Diklat' : 'Kandidat Peserta';
     const worksheet = workbook.addWorksheet(sheetName);
 
+    // A. DEFINISI KOLOM (Sesuai Request Kamu)
     const columns = [
         { header: 'No', key: 'no', width: 5 },
         { header: 'Nama Lengkap', key: 'nama_ptk', width: 30 },
@@ -79,6 +82,7 @@ async function generateExcel(rows, isHistoryMode) {
         { header: 'No HP', key: 'no_hp', width: 15 },
     ];
 
+    // Kolom Tambahan Khusus History
     if (isHistoryMode) {
         columns.push(
             { header: 'Judul Diklat Terakhir', key: 'judul_diklat', width: 40 },
@@ -91,6 +95,7 @@ async function generateExcel(rows, isHistoryMode) {
 
     worksheet.columns = columns;
 
+    // B. ISI DATA
     rows.forEach((row, index) => {
         const rowData = {
             no: index + 1,
@@ -99,7 +104,7 @@ async function generateExcel(rows, isHistoryMode) {
             nuptk: row.nuptk || '-',
             nama_sekolah: row.nama_sekolah,
             npsn_sekolah: row.npsn_sekolah,
-            jenjang: row.bentuk_pendidikan, 
+            jenjang: row.jenjang,
             kecamatan: row.kecamatan,
             kabupaten: row.kabupaten,
             jabatan_ptk: row.jabatan_ptk || '-',
@@ -119,10 +124,13 @@ async function generateExcel(rows, isHistoryMode) {
         worksheet.addRow(rowData);
     });
 
+    // C. STYLING HEADER (Warna Warni Sesuai Mode)
     const headerRow = worksheet.getRow(1);
+    
+    // Warna: Biru (History) / Hijau (Eligible/Kandidat)
     const headerColor = isHistoryMode ? 'FF1F4E78' : 'FF2E7D32'; 
     
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; 
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // Text Putih
     headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -130,11 +138,13 @@ async function generateExcel(rows, isHistoryMode) {
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
+    // D. AUTO FILTER
     worksheet.autoFilter = {
         from: { row: 1, column: 1 },
         to: { row: 1, column: columns.length }
     };
 
+    // E. RESPONSE FILE
     const buffer = await workbook.xlsx.writeBuffer();
     const filename = isHistoryMode 
         ? `Riwayat_Diklat_${new Date().toISOString().slice(0,10)}.xlsx` 

@@ -1,8 +1,9 @@
+// components/UploadPeserta/PesertaTable.jsx
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, RefreshCw, Trash2 } from "lucide-react";
+import { AlertCircle, Copy, RefreshCw, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ export function PesertaTable({ data, onCellChange, onSync, onDelete, onScrollTo,
                             {row.isValid ? (
                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 whitespace-nowrap">Valid</Badge>
                             ) : row.status_msg.includes("Sudah Terdaftar") ? (
+                                // BADGE KHUSUS SUDAH TERDAFTAR (WARNA BIRU/ORANGE)
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
                                     Terdaftar
                                 </Badge>

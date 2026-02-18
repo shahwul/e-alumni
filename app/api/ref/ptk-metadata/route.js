@@ -1,65 +1,52 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; 
+import pool from "@/lib/db"; 
 
-export const revalidate = 3600;
+export const revalidate = 3600; 
 
 export async function GET() {
   try {
-    const [jenisPtkRes, statusRes, mapelRes, jurusanRes] = await Promise.all([
-      prisma.data_ptk.findMany({
-        where: {
-          NOT: [
-            { jenis_ptk: null },
-            { jenis_ptk: "" }
-          ]
-        },
-        distinct: ['jenis_ptk'],
-        select: { jenis_ptk: true },
-        orderBy: { jenis_ptk: 'asc' }
-      }),
+    const [jenisPtkResult, statusResult, mapelResult, jurusanResult] = await Promise.all([
+      
+      // 1. Ambil Jenis PTK Unik
+      pool.query(`
+        SELECT DISTINCT jenis_ptk 
+        FROM data_ptk 
+        WHERE jenis_ptk IS NOT NULL AND jenis_ptk != '' 
+        ORDER BY jenis_ptk ASC
+      `),
 
-      prisma.data_ptk.findMany({
-        where: {
-          NOT: [
-            { status_kepegawaian: null },
-            { status_kepegawaian: "" }
-          ]
-        },
-        distinct: ['status_kepegawaian'],
-        select: { status_kepegawaian: true },
-        orderBy: { status_kepegawaian: 'asc' }
-      }),
+      // 2. Ambil Status Kepegawaian Unik
+      pool.query(`
+        SELECT DISTINCT status_kepegawaian 
+        FROM data_ptk 
+        WHERE status_kepegawaian IS NOT NULL AND status_kepegawaian != '' 
+        ORDER BY status_kepegawaian ASC
+      `),
 
-      prisma.data_ptk.findMany({
-        where: {
-          NOT: [
-            { riwayat_sertifikasi: null },
-            { riwayat_sertifikasi: "" }
-          ]
-        },
-        distinct: ['riwayat_sertifikasi'],
-        select: { riwayat_sertifikasi: true },
-        orderBy: { riwayat_sertifikasi: 'asc' }
-      }),
+      // 3. Ambil Mapel Unik
+      pool.query(`
+        SELECT DISTINCT riwayat_sertifikasi
+        FROM data_ptk 
+        WHERE riwayat_sertifikasi IS NOT NULL AND riwayat_sertifikasi != '' 
+        ORDER BY riwayat_sertifikasi ASC
+      `),
 
-      prisma.data_ptk.findMany({
-        where: {
-          NOT: [
-            { riwayat_pend_bidang: null },
-            { riwayat_pend_bidang: "" }
-          ]
-        },
-        distinct: ['riwayat_pend_bidang'],
-        select: { riwayat_pend_bidang: true },
-        orderBy: { riwayat_pend_bidang: 'asc' }
-      })
+      // 4. Ambil Jurusan/Bidang Unik
+      pool.query(`
+        SELECT DISTINCT riwayat_pend_bidang
+        FROM data_ptk 
+        WHERE riwayat_pend_bidang IS NOT NULL AND riwayat_pend_bidang != '' 
+        ORDER BY riwayat_pend_bidang ASC
+      `)
     ]);
 
+    // Format hasil query menjadi array string sederhana
+    // Sesuaikan '.rows' tergantung library pool yang dipakai (pg biasanya return .rows)
     const responseData = {
-      jenisPtk: jenisPtkRes.map(item => item.jenis_ptk),
-      statusKepegawaian: statusRes.map(item => item.status_kepegawaian),
-      mapel: mapelRes.map(item => item.riwayat_sertifikasi),
-      jurusan: jurusanRes.map(item => item.riwayat_pend_bidang),
+      jenisPtk: jenisPtkResult.rows.map(row => row.jenis_ptk),
+      statusKepegawaian: statusResult.rows.map(row => row.status_kepegawaian),
+      mapel: mapelResult.rows.map(row => row.riwayat_sertifikasi),
+      jurusan: jurusanResult.rows.map(row => row.riwayat_pend_bidang),
     };
 
     return NextResponse.json(responseData);
