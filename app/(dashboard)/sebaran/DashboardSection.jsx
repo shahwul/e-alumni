@@ -14,6 +14,7 @@ export default function DashboardClient() {
   const [selectedKec, setSelectedKec] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDiklat, setSelectedDiklat] = useState("");
+  const [heatmapEnable, setHeatmapEnable] = useState(false);
   const [loadingWilayah, setLoadingWilayah] = useState(true);
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function DashboardClient() {
   }, [wilayahData, selectedKab]);
 
   return (
-    <div className="flex flex-col h-full gap-4 p-4 bg-white overflow-hidden">
+    <div className="flex flex-col gap-4 p-4 bg-white">
       <div className="flex flex-col lg:flex-row gap-4 h-[60%] shrink-0">
         <MapPanel
           geoJsonData={geoJsonData}
@@ -56,6 +57,7 @@ export default function DashboardClient() {
           selectedYear={selectedYear}
           selectedDiklat={selectedDiklat}
           heatmapData={heatmapData}
+          heatmapEnable={heatmapEnable}
           loadingHeatmap={loadingHeatmap}
           onSelect={(kab, kec) => {
             setSelectedKab(kab);
@@ -78,6 +80,7 @@ export default function DashboardClient() {
           onKecChange={setSelectedKec}
           onYearChange={setSelectedYear}
           onDiklatChange={setSelectedDiklat}
+          onHeatmapToggle={setHeatmapEnable}
           onReset={() => {
             setSelectedKab("");
             setSelectedKec("");
