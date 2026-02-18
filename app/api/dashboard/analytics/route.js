@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { fetchAnalyticsData } from "./queryBuilder.js";
+import { fetchQuery } from "./queryBuilder";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const data = await fetchAnalyticsData(prisma, {
+
+    // ---- Parse diklat (same logic as old implementation)
+    const diklatRaw = searchParams.get("diklat");
+
+    const diklat = diklatRaw
+      ? diklatRaw.includes(",")
+        ? diklatRaw.split(",")
+        : [diklatRaw]
+      : [];
+
+    // ---- Execute analytics query through Prisma
+    const data = await fetchQuery(prisma, {
       metric: searchParams.get("metric"),
       groupBy: searchParams.get("groupBy"),
       timeGrain: searchParams.get("timeGrain"),
@@ -14,6 +25,7 @@ export async function GET(req) {
         kec: searchParams.get("kec"),
         year: searchParams.get("year"),
         jenjang: searchParams.get("jenjang"),
+        diklat, // ← keep this, your new example removed it
       },
     });
 
@@ -23,7 +35,7 @@ export async function GET(req) {
     console.error("Dashboard Analytics Error:", error);
 
     return NextResponse.json(
-      { error: error.message || "Gagal memuat data analitik" }, 
+      { error: error.message || "Gagal memuat data analitik" },
       { status: 500 }
     );
   }

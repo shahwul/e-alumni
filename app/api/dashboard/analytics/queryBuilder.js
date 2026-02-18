@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { KAB_CODE_TO_NAME } from "@/lib/constants";
 
 export const METRIC = {
@@ -22,91 +23,125 @@ export const GROUP_BY = {
   JENJANG: "bentuk_pendidikan",
 };
 
-function buildWhereClause(filters, metric) {
-  const conditions = ["1=1"]; 
-  const params = [];
-  let paramCounter = 1;
-
-  if (metric === METRIC.ALUMNI) {
-    conditions.push(`is_sudah_pelatihan = true`);
-  } else if (metric === METRIC.UNTRAINED) {
-    conditions.push(`(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)`);
+export function timeSelect(grain) {
+  switch (grain) {
+    case TIME_GRAIN.YEAR:
+      return `CAST(EXTRACT(YEAR FROM end_date) AS VARCHAR)`;
+    case TIME_GRAIN.QUARTER:
+      return `'Q' || EXTRACT(QUARTER FROM end_date)`;
+    case TIME_GRAIN.MONTH:
+      return `TO_CHAR(end_date, 'YYYY-MM')`;
+    default:
+      return null;
   }
+}
 
-  const { kab, kec, year, jenjang } = filters;
+export function buildContext({ kab, kec, year, jenjang, diklat }) {
+  const where = [];
+  const values = [];
+  let i = 1;
 
   if (kab && KAB_CODE_TO_NAME[kab]) {
-    conditions.push(`UPPER(kabupaten) LIKE $${paramCounter++}`);
-    params.push(`%${KAB_CODE_TO_NAME[kab]}%`);
+    where.push(`UPPER(kabupaten) LIKE $${i++}`);
+    values.push(`%${KAB_CODE_TO_NAME[kab]}%`);
   }
 
   if (kec) {
-    conditions.push(`UPPER(kecamatan) LIKE $${paramCounter++}`);
-    params.push(`%${kec.toUpperCase()}%`);
+    where.push(`UPPER(kecamatan) LIKE $${i++}`);
+    values.push(`%${kec.toUpperCase()}%`);
   }
 
   if (year) {
-    conditions.push(`EXTRACT(YEAR FROM end_date) = $${paramCounter++}`);
-    params.push(parseInt(year));
+    where.push(`EXTRACT(YEAR FROM end_date) = $${i++}`);
+    values.push(Number(year));
   }
 
   if (jenjang) {
-    conditions.push(`UPPER(bentuk_pendidikan) LIKE $${paramCounter++}`);
-    params.push(`%${jenjang.toUpperCase()}%`);
+    where.push(`UPPER(bentuk_pendidikan) LIKE $${i++}`);
+    values.push(`%${jenjang.toUpperCase()}%`);
+  }
+
+  if (diklat?.length) {
+    const placeholders = diklat.map((_, idx) => `$${i + idx}`).join(",");
+    where.push(`judul_diklat = ANY(ARRAY[${placeholders}])`);
+    diklat.forEach((d) => values.push(d.trim()));
+    i += diklat.length;
   }
 
   return {
-    clause: `WHERE ${conditions.join(" AND ")}`,
-    params,
-    nextIndex: paramCounter
+    where: where.length ? `WHERE ${where.join(" AND ")}` : "",
+    values,
   };
 }
-export async function fetchAnalyticsData(prisma, { metric, groupBy, timeGrain, filters }) {
-  const { clause: whereClause, params } = buildWhereClause(filters, metric);
-  const selectParts = [`COUNT(DISTINCT nik)::int AS value`];
+
+
+export function buildQuery({
+  metric,
+  groupBy,
+  timeGrain = TIME_GRAIN.NONE,
+  filters = {},
+}) {
+  const context = buildContext(filters);
+
+  let where = context.where;
+  const values = context.values;
+
+  const selectParts = [];
   const groupParts = [];
 
-  if (timeGrain) {
-    let timeExpr = "";
-    switch (timeGrain) {
-      case TIME_GRAIN.YEAR:
-        timeExpr = `CAST(EXTRACT(YEAR FROM end_date) AS VARCHAR)`;
-        break;
-      case TIME_GRAIN.QUARTER:
-        timeExpr = `'Q' || EXTRACT(QUARTER FROM end_date)`;
-        break;
-      case TIME_GRAIN.MONTH:
-        timeExpr = `TO_CHAR(end_date, 'YYYY-MM')`;
-        break;
-    }
-    
-    if (timeExpr) {
-      selectParts.unshift(`${timeExpr} AS time`);
-      groupParts.push(`time`); 
-    }
+  // ---- metric condition
+  const addCondition = (cond) => {
+    where += where ? " AND " : "WHERE ";
+    where += cond;
+  };
+
+  switch (metric) {
+    case METRIC.PTK:
+      break;
+    case METRIC.ALUMNI:
+      addCondition(`is_sudah_pelatihan = true`);
+      break;
+    case METRIC.UNTRAINED:
+      addCondition(`(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)`);
+      break;
+    default:
+      throw new Error("Invalid metric");
   }
 
-  if (groupBy) {
-    const column = GROUP_BY[groupBy.toUpperCase()];
-    if (!column) throw new Error("Unsupported groupBy");
+  selectParts.push(`COUNT(DISTINCT nik)::int AS value`);
 
-    const groupExpr = `COALESCE(${column}, 'Lainnya')`;
-    
+  // ---- time grain
+  const timeExpr = timeSelect(timeGrain);
+  if (timeExpr) {
+    selectParts.unshift(`${timeExpr} AS time`);
+    groupParts.push(`time`);
+  }
+
+  // ---- group by
+  if (groupBy) {
+    const groupColumn = GROUP_BY[groupBy.toUpperCase()];
+    if (!groupColumn) throw new Error("Unsupported groupBy");
+
+    const groupExpr = `COALESCE(${groupColumn}, 'Lainnya')`;
+
     selectParts.unshift(`${groupExpr} AS name`);
     groupParts.push(`name`);
   }
 
-  const groupByClause = groupParts.length > 0 ? `GROUP BY ${groupParts.join(", ")}` : "";
-  const orderByClause = timeGrain ? `ORDER BY time ASC` : `ORDER BY value DESC`;
+  return {
+    sql: `
+      SELECT
+        ${selectParts.join(",\n        ")}
+      FROM mv_dashboard_analitik
+      ${where}
+      ${groupParts.length ? `GROUP BY ${groupParts.join(", ")}` : ""}
+    `,
+    values,
+  };
+}
 
-  const query = `
-    SELECT 
-      ${selectParts.join(", ")}
-    FROM mv_dashboard_analitik
-    ${whereClause}
-    ${groupByClause}
-    ${orderByClause}
-  `;
+export async function fetchQuery(prisma, args) {
+  const { sql: query, values: params } = buildQuery(args);
 
   try {
     const results = await prisma.$queryRawUnsafe(query, ...params);
@@ -116,3 +151,4 @@ export async function fetchAnalyticsData(prisma, { metric, groupBy, timeGrain, f
     throw new Error("Gagal mengambil data analitik");
   }
 }
+
