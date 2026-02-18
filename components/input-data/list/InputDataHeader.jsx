@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -7,8 +5,8 @@ export default function InputDataHeader({ onAdd }) {
   return (
     <div className="flex justify-between">
       <div>
-        <h1 className="text-3xl font-bold">Input Data Diklat</h1>
-        <p className="text-slate-500">Kelola jadwal dan peserta.</p>
+        <h1 className="text-2xl font-bold">Input Data Diklat</h1>
+        <p className="text-slate-500 text-sm mt-1">Kelola jadwal dan peserta.</p>
       </div>
 
       <Button onClick={onAdd}>

@@ -19,30 +19,32 @@ import {
 export function DataTable({
   columns,
   data,
-  rowSelection = {}, 
-  setRowSelection, 
-  sorting = [],        // Default array kosong
-  onSortingChange,     // Handler dari parent
+  rowSelection = {},
+  setRowSelection,
+  sorting = [],        
+  onSortingChange,     
   enableRowClick = true,
 }) {
   const table = useReactTable({
-    data, 
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true, 
+    enableMultiSort: true,
 
-    // --- SETUP SORTING SERVER-SIDE ---
-    manualSorting: true,          // Wajib true agar tabel tidak sort lokal
-    onSortingChange: onSortingChange, 
-    
-    // --- SETUP SELEKSI ---
+    onSortingChange: (updater) => {
+      const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
+      if (onSortingChange) {
+        onSortingChange(nextSorting);
+      }
+    },
+
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    getRowId: (row) => row.nik || row.id, // ID Unik Row
-
-    // --- STATE ---
+    getRowId: (row) => row.nik || row.id,
     state: {
       rowSelection,
-      sorting, // Masukkan state sorting ke sini
+      sorting,
     },
   })
 
@@ -79,26 +81,18 @@ export function DataTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                
-                // 1. TAMBAHKAN CLASS INTERAKTIF
                 className={`hover:bg-slate-50 transition-colors ${enableRowClick ? 'cursor-pointer' : ''}`}
-
-                // 2. LOGIC KLIK BARIS (CLICK-TO-SELECT)
                 onClick={(e) => {
                   if (!enableRowClick) return;
                   const target = e.target;
-                  
-                  // PENGAMAN: Jangan select row jika yang diklik adalah elemen interaktif lain
                   if (
-                    target.closest("button") ||           // Tombol (Action/Copy)
-                    target.closest("[role='checkbox']") || // Checkbox bawaan
-                    target.closest("a") ||                // Link (jika ada)
-                    target.closest("input")               // Input field (jika ada)
+                    target.closest("button") ||   
+                    target.closest("[role='checkbox']") ||
+                    target.closest("a") ||                
+                    target.closest("input")               
                   ) {
                     return;
                   }
-
-                  // Toggle seleksi baris ini
                   row.toggleSelected(!row.getIsSelected());
                 }}
               >

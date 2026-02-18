@@ -3,18 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"; // Icon Lengkap
+import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import Cell Custom
 import { ActionCell } from "./cells/ActionCell";
 import { CopyButton } from "./cells/Copybutton";
 
-// --- HELPER: SMART SORTABLE HEADER ---
 const sortableHeader = (column, title) => {
-  // 1. Cek Status Sorting
-  const isSorted = column.getIsSorted(); // "asc" | "desc" | false
-  const sortIndex = column.getSortIndex(); // Urutan sort (0, 1, 2...) jika multi-sort
+  const isSorted = column.getIsSorted(); 
+  const sortIndex = column.getSortIndex();
 
   return (
     <Button
@@ -22,16 +19,11 @@ const sortableHeader = (column, title) => {
       size="sm"
       className={cn(
         "-ml-3 h-8 font-semibold transition-all duration-200",
-        // 2. STYLING JIKA AKTIF (Warna Biru)
         isSorted
           ? "text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-100"
           : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
       )}
       onClick={(e) => {
-        // 3. LOGIC CLICK HANDLER (DENGAN SHIFT KEY)
-        // column.toggleSorting(desc?, multi?)
-        // desc?  : true jika ingin DESC, false jika ASC. Kita toggle logicnya: isSorted === "asc" (jika asc, jadi desc)
-        // multi? : true jika user menahan tombol Shift
         column.toggleSorting(isSorted === "asc", !!e.shiftKey);
       }}
     >
@@ -46,7 +38,7 @@ const sortableHeader = (column, title) => {
         <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100" />
       )}
 
-      {/* 5. BADGE URUTAN (Hanya muncul jika Multi-Sort aktif / sort lebih dari 1 kolom) */}
+      {/* 5. BADGE URUTAN */}
       {isSorted && sortIndex > -1 && (
         <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">
           {sortIndex + 1}
@@ -62,7 +54,7 @@ export const columns = [
   {
     id: "select",
     meta: {
-      className: "w-[50px] text-center", // Fixed 50px & Tengah
+      className: "w-[50px] text-center",
     },
     header: ({ table }) => (
       <Checkbox
@@ -91,7 +83,7 @@ export const columns = [
   {
     accessorKey: "nama_ptk",
     meta: {
-      className: "min-w-[280px] sm:w-[350px]", 
+      className: "min-w-[280px] sm:w-[350px] pl-4", 
     },
     header: ({ column }) => sortableHeader(column, "Nama PTK"),
     cell: ({ row }) => (

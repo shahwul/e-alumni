@@ -1,6 +1,5 @@
 import { Montserrat, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import "leaflet/dist/leaflet.css";
 
 const source_sans_3 = Source_Sans_3({
@@ -23,10 +22,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${montserrat.variable} ${source_sans_3.variable} antialiased`}
-      >
-        <DashboardLayout>{children}</DashboardLayout>
+      <body className={`${montserrat.variable} ${source_sans_3.variable} antialiased`}>
+        {children}
       </body>
     </html>
   );

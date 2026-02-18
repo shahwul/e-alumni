@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
+<<<<<<< HEAD
 import pool from '@/lib/db';
 import { buildPTKQueryParts } from '@/app/api/ptk/queryBuilder'; // Sesuaikan path ini
 import ExcelJS from 'exceljs';
 
+=======
+import prisma from '@/lib/prisma';
+import { buildPrismaQuery } from '@/app/api/ptk/queryBuilder';
+import ExcelJS from 'exceljs';
+
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
+>>>>>>> 039b2f2c290143746972999032bb8270416ff878
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);

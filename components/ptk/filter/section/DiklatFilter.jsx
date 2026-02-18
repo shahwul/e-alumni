@@ -2,172 +2,176 @@
 
 import { useState } from "react";
 import { useFilterContext } from "../FilterContext";
+<<<<<<< HEAD
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
+=======
+import { useDebounceSearch } from "../useDebounceSearch";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
+>>>>>>> 039b2f2c290143746972999032bb8270416ff878
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandGroup,
-  CommandEmpty,
-} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandItem, CommandList, CommandGroup, CommandEmpty } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Check, XCircle } from "lucide-react";
+import { Check, XCircle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function DiklatFilter() {
-  const { filters, setFilters } = useFilterContext();
+  const { filters, setFilters, schoolMapping, setSchoolMapping } = useFilterContext();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+
+  const dateFrom = filters.dateRange?.from ? format(filters.dateRange.from, "yyyy-MM-dd") : "";
+  const dateTo = filters.dateRange?.to ? format(filters.dateRange.to, "yyyy-MM-dd") : "";
 
   const { results, loading } = useDebounceSearch({
     endpoint: "/api/diklat/search",
     query: search,
+    extraParams: { 
+      start_date: dateFrom,
+      end_date: dateTo 
+    },
   });
 
   const isDateSelected = !!filters.dateRange?.from;
 
-  const toggleDiklat = (title) => {
+  const toggleDiklat = (id, title) => {
+    if (title) {
+      setSchoolMapping(prev => ({ ...prev, [id]: title }));
+    }
+
     setFilters((p) => ({
       ...p,
-      judul_diklat: p.judul_diklat.includes(title)
-        ? p.judul_diklat.filter((j) => j !== title)
-        : [...p.judul_diklat, title],
+      judul_diklat: p.judul_diklat.includes(id)
+        ? p.judul_diklat.filter((item) => item !== id)
+        : [...p.judul_diklat, id],
     }));
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-2 sm:col-span-2">
-        {/* Label */}
         <div className="flex justify-between items-center">
-          <Label
-            className={cn(
-              "text-xs",
-              isDateSelected ? "text-slate-400" : "text-slate-500",
-            )}
-          >
+          <Label className="text-xs text-slate-500 font-medium">
             Judul Diklat (Multi Select)
           </Label>
           {isDateSelected && (
-            <span className="text-[10px] text-red-500 italic">
-              Reset tanggal untuk memilih judul
-            </span>
+            <Badge variant="outline" className="text-[10px] text-blue-600 border-blue-200 bg-blue-50 py-0 h-5">
+              <Calendar size={10} className="mr-1" /> Terfilter tanggal
+            </Badge>
           )}
         </div>
 
-        {/* Popover */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
-              disabled={isDateSelected}
               variant="outline"
               role="combobox"
-              className={cn(
-                "w-full justify-between px-3 h-auto min-h-10 font-normal text-left",
-                isDateSelected && "bg-slate-100 text-slate-400",
-              )}
+              className="w-full justify-between px-3 h-auto min-h-10 font-normal text-left border-slate-200 hover:bg-slate-50"
             >
               <span className="truncate whitespace-normal">
                 {filters.judul_diklat.length === 0
-                  ? isDateSelected
-                    ? "Terkunci (Mode Tanggal Aktif)"
-                    : "Ketik judul..."
+                  ? "Ketik atau cari judul diklat..."
                   : `${filters.judul_diklat.length} Judul Terpilih`}
               </span>
             </Button>
           </PopoverTrigger>
 
-          <PopoverContent className="w-100 p-0" align="start">
+          <PopoverContent className="w-[450px] p-0 shadow-md border-slate-200" align="start">
             <Command shouldFilter={false}>
               <CommandInput
-                placeholder="Ketik min 3 huruf..."
+                placeholder="Cari judul diklat..."
                 value={search}
                 onValueChange={setSearch}
+                className="text-sm"
               />
-              <CommandList
-                className="max-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar"
+              <CommandList 
+                className="max-h-[300px] overflow-y-auto custom-scrollbar"
                 onWheel={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
               >
-                {loading && (
-                  <div className="p-4 text-xs text-center text-slate-500">
-                    Mencari...
-                  </div>
-                )}
-
-                {!loading && results.length === 0 && search.length > 2 && (
-                  <CommandEmpty>Diklat tidak ditemukan.</CommandEmpty>
+                {loading && <div className="p-4 text-xs text-center text-slate-500">Mencari data...</div>}
+                {!loading && results.length === 0 && (
+                  <CommandEmpty className="p-4 text-xs text-center text-slate-500">
+                    {isDateSelected 
+                      ? "Tidak ada diklat di rentang tanggal ini." 
+                      : "Judul diklat tidak ditemukan."}
+                  </CommandEmpty>
                 )}
 
                 <CommandGroup>
-                  {results.map((item, idx) => (
-                    <CommandItem
-                      key={idx}
-                      value={item.title}
-                      onSelect={() => toggleDiklat(item.title)}
-                    >
-                      <div
-                        className={cn(
-                          "mr-2 flex h-4 w-4 items-center justify-center border rounded-sm",
-                          filters.judul_diklat.includes(item.title)
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "opacity-50 border-slate-400",
-                        )}
+                  {results.map((item) => {
+                    const isSelected = filters.judul_diklat.includes(item.id);
+                    return (
+                      <CommandItem
+                        key={item.id}
+                        value={String(item.id)}
+                        onSelect={() => toggleDiklat(item.id, item.title)}
+                        className="flex items-center gap-3 py-3 px-3 cursor-pointer group"
                       >
-                        <Check
-                          className={cn(
-                            "h-3 w-3",
-                            filters.judul_diklat.includes(item.title)
-                              ? "opacity-100"
-                              : "opacity-0",
-                          )}
-                        />
-                      </div>
-                      {item.title}
-                    </CommandItem>
-                  ))}
+                        {/* Checkbox Kiri Tengah */}
+                        <div className="flex shrink-0">
+                          <div className={cn(
+                            "flex h-5 w-5 items-center justify-center border rounded transition-colors",
+                            isSelected
+                              ? "bg-blue-600 border-blue-600 shadow-sm"
+                              : "border-slate-300 bg-white group-hover:border-blue-400",
+                          )}>
+                            <Check className={cn(
+                              "h-3.5 w-3.5 text-white stroke-[3px] transition-opacity", 
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )} />
+                          </div>
+                        </div>
+
+                        {/* Kontainer Teks */}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className={cn(
+                            "font-medium text-sm leading-snug mb-1", 
+                            isSelected ? "text-blue-700" : "text-slate-900"
+                          )}>
+                            {item.title}
+                          </span>
+                          
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                            <Calendar size={11} className="shrink-0 text-slate-400" /> 
+                            <span>
+                              {item.start_date ? format(new Date(item.start_date), "dd MMM yyyy", { locale: localeId }) : '-'}
+                              {" s/d "}
+                              {item.end_date ? format(new Date(item.end_date), "dd MMM yyyy", { locale: localeId }) : '-'}
+                            </span>
+                          </div>
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
 
-        {/* Badge terpilih */}
+        {/* Render Badges dari ID */}
         {filters.judul_diklat.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
-            {filters.judul_diklat.map((t, i) => (
-              <Badge
-                key={i}
-                variant="secondary"
+            {filters.judul_diklat.map((id) => (
+              <Badge 
+                key={id} 
+                variant="secondary" 
                 className="text-[10px] bg-white border border-slate-200 pr-1 py-1 h-auto whitespace-normal"
               >
-                <span className="mr-1">{t}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleDiklat(t);
-                  }}
-                >
-                  <XCircle
-                    size={14}
-                    className="text-slate-400 hover:text-red-500"
-                  />
+                <span className="mr-1">{schoolMapping[id] || `ID: ${id}`}</span>
+                <button onClick={(e) => { e.stopPropagation(); toggleDiklat(id); }}>
+                  <XCircle size={14} className="text-slate-400 hover:text-red-500 transition-colors" />
                 </button>
               </Badge>
             ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px] text-red-500"
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 px-2 text-[10px] text-red-500 hover:bg-red-50" 
               onClick={() => setFilters((p) => ({ ...p, judul_diklat: [] }))}
             >
               Reset Judul

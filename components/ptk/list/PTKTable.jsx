@@ -5,31 +5,37 @@ import { useMemo } from "react";
 export function PTKTable({ data, loading, rowSelection, setRowSelection, sorting, setSorting, isCandidateMode, enableRowClick }) {
   const filteredColumns = useMemo(() => {
     if (isCandidateMode) {
-        return columns; // Tampilkan semua (termasuk checkbox)
+      return columns;
     } else {
-        // Hapus kolom dengan id 'select' (asumsi id checkbox di columns.js adalah 'select')
-        return columns.filter(col => col.id !== 'select');
+      return columns.filter(col => col.id !== 'select');
     }
   }, [isCandidateMode]);
 
-  if (loading) {
-    return <div className="p-12 text-center text-slate-500 bg-slate-50/50 rounded-lg animate-pulse">Sedang memuat data...</div>;
-  }
   return (
-    <div className="relative max-h-[60vh] w-full overflow-auto">
-      {loading ? (
-        // Skeleton Loader Sederhana
-        <div className="p-8 space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-12 bg-slate-50 animate-pulse rounded-md w-full"
-            />
-          ))}
+    <div className="flex-1 min-h-0 w-full overflow-auto relative">
+      {/* Overlay Loading */}
+      {loading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 backdrop-blur-[1px] transition-all">
+          <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-lg border border-slate-100">
+            <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+              Memperbarui...
+            </span>
+          </div>
         </div>
-      ) : (
-        <DataTable columns={filteredColumns} data={data} rowSelection={rowSelection} setRowSelection={setRowSelection} sorting={sorting} onSortingChange={setSorting} enableRowClick={enableRowClick} />
       )}
+
+      <div className={loading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
+        <DataTable 
+          columns={filteredColumns} 
+          data={data} 
+          rowSelection={rowSelection} 
+          setRowSelection={setRowSelection} 
+          sorting={sorting} 
+          onSortingChange={setSorting} 
+          enableRowClick={enableRowClick} 
+        />
+      </div>
     </div>
   );
 }
