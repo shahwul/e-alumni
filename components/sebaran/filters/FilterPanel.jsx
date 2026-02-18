@@ -3,7 +3,6 @@
 import KabupatenFilter from "./KabupatenFilter";
 import KecamatanFilter from "./KecamatanFilter";
 import TahunFilter from "./TahunFilter";
-import DiklatFilter from "./DiklatFilter";
 
 export default function FilterPanel({
   wilayahData,
@@ -11,12 +10,10 @@ export default function FilterPanel({
   selectedKab,
   selectedKec,
   selectedYear,
-  selectedDiklat,
   loadingWilayah,
   onKabChange,
   onKecChange,
   onYearChange,
-  onDiklatChange,
 }) {
   return (
     <div className="space-y-6">
@@ -26,14 +23,18 @@ export default function FilterPanel({
         loadingWilayah={loadingWilayah}
         onChange={onKabChange}
       />
+
       <KecamatanFilter
         listKecamatan={listKecamatan}
         selectedKab={selectedKab}
         selectedKec={selectedKec}
         onChange={onKecChange}
       />
-      <TahunFilter selectedYear={selectedYear} onChange={onYearChange} />
-      <DiklatFilter selectedDiklat={selectedDiklat} onChange={onDiklatChange} />
+
+      <TahunFilter
+        selectedYear={selectedYear}
+        onChange={onYearChange}
+      />
     </div>
   );
 }

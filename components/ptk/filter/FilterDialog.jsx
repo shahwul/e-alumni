@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import { DateRangeFilter } from "./section/DateRange";
 import { ModeSwitcher } from "./section/ModeSwitcher";
 import { KategoriJenisProgramFilter } from "./section/KategoriJenisProgramFilter";
 
-function FilterDialogContent({ onApplyFilter, activeFilters }) {
+function FilterDialogContent({ onApplyFilter, activeFilters, onClose }) {
   const { filters, setFilters, resetFilters } = useFilterContext();
 
   useEffect(() => {
@@ -67,7 +67,7 @@ function FilterDialogContent({ onApplyFilter, activeFilters }) {
         >
           Reset Semua
         </Button>
-
+        <Button variant="outline" onClick={onClose} className="border-slate-200">Batal</Button>
         <Button
           onClick={handleApply}
           className="bg-blue-600 hover:bg-blue-700 text-white min-w-30"
@@ -98,15 +98,22 @@ function FilterDialogTrigger({ filterCount }) {
   );
 }
 
-export function FilterDialog({ onApplyFilter, activeFilters, filterCount }) {
+export function FilterDialog({ onApplyFilter, activeFilters, filterCount, onClose }) {
+  const [open, setOpen] = useState(false);
+  const handleApplyAndClose = (filters) => {
+    onApplyFilter(filters);
+    setOpen(false);
+    if (onClose) onClose();
+  };
   return (
     <FilterProvider>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <FilterDialogTrigger filterCount={filterCount} />
 
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto pb-0">
           <FilterDialogContent 
-            onApplyFilter={onApplyFilter} 
+            onClose={() => setOpen(false)}
+            onApplyFilter={handleApplyAndClose} 
             activeFilters={activeFilters} 
           />
         </DialogContent>

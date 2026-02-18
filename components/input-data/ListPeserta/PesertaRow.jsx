@@ -15,8 +15,7 @@ export function PesertaRow({
     validationStatus, validatingField, isSaving, 
     onEditClick, onCancelEdit, onSaveEdit, onDelete 
 }) {
-    
-  // Helper untuk update form
+
   const handleChange = (field, value) => {
       setEditForm(prev => ({ ...prev, [field]: value }));
   };

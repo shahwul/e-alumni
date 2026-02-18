@@ -1,45 +1,79 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma'; 
 
 export async function GET(request, { params }) {
-  const { id } = await params; // ID Diklat
-
   try {
-    const query = `
-      SELECT 
-        k.id as kandidat_id,
-        k.nik,
-        p.*,
-        rw.kabupaten,
-        rw.kecamatan,
-        s.nama as nama_sekolah,
-        k.status
-      FROM diklat_kandidat k
-      JOIN data_ptk p ON k.nik = p.nik
-      JOIN satuan_pendidikan s ON p.npsn = s.npsn
-      JOIN ref_wilayah rw ON s.kode_kecamatan = rw.kode_kecamatan
-      WHERE k.diklat_id = $1
-      ORDER BY p.nama_ptk ASC
-    `;
+    const { id } = await params; 
 
-    const res = await pool.query(query, [id]);
-    return NextResponse.json({ data: res.rows });
+    if (!id) {
+        return NextResponse.json({ data: [] });
+    }
+
+    const rawData = await prisma.diklat_kandidat.findMany({
+        where: {
+            diklat_id: parseInt(id)
+        },
+        orderBy: {
+            data_ptk: { nama_ptk: 'asc' }
+        },
+        include: {
+            data_ptk: {
+                include: {
+                    satuan_pendidikan: {
+                        include: {
+                            ref_wilayah: true 
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const flatData = rawData.map(item => {
+        const ptk = item.data_ptk || {};
+        const sekolah = ptk.satuan_pendidikan || {};
+        const wilayah = sekolah.ref_wilayah || {};
+
+        return {
+            kandidat_id: item.id, 
+            diklat_id: item.diklat_id,
+            status: item.status,
+            ...ptk, 
+            nama_sekolah: sekolah.nama || '-',
+            kabupaten: wilayah.kabupaten || '-',
+            kecamatan: wilayah.kecamatan || '-',
+
+            satuan_pendidikan: undefined 
+        };
+    });
+
+    return NextResponse.json({ data: flatData });
+
   } catch (error) {
     console.error("Error fetch kandidat:", error);
     return NextResponse.json({ error: 'Gagal mengambil data' }, { status: 500 });
   }
 }
 
-// DELETE: Hapus kandidat (Batalkan pengajuan)
 export async function DELETE(request, { params }) {
-    const { id } = params; // Ini ID Diklat
-    const { searchParams } = new URL(request.url);
-    const kandidatId = searchParams.get('kandidat_id');
-
     try {
-        await pool.query('DELETE FROM diklat_kandidat WHERE id = $1', [kandidatId]);
+        const { searchParams } = new URL(request.url);
+        const kandidatId = searchParams.get('kandidat_id');
+
+        if (!kandidatId) {
+            return NextResponse.json({ error: 'ID Kandidat diperlukan' }, { status: 400 });
+        }
+
+        await prisma.diklat_kandidat.delete({
+            where: {
+                id: parseInt(kandidatId) 
+            }
+        });
+
         return NextResponse.json({ message: 'Kandidat dihapus' });
+
     } catch (error) {
+        console.error("Error delete kandidat:", error);
         return NextResponse.json({ error: 'Gagal menghapus' }, { status: 500 });
     }
 }

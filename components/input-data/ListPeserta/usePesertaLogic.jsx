@@ -6,20 +6,17 @@ export function usePesertaLogic(diklatId) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  
-  // State Editing
+
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  
-  // State Validasi Live
+
   const [validatingField, setValidatingField] = useState(null);
   const [validationStatus, setValidationStatus] = useState({
     nik: { isValid: true, msg: "" },
     npsn: { isValid: true, msg: "" }
   });
 
-  // --- FETCH DATA ---
   const fetchPeserta = useCallback(async () => {
     setLoading(true);
     try {
@@ -39,7 +36,6 @@ export function usePesertaLogic(diklatId) {
     return () => clearTimeout(timer);
   }, [fetchPeserta]);
 
-  // --- VALIDATION LOGIC ---
   const validateToServer = async (field, value) => {
     setValidatingField(field);
     const payload = {
@@ -83,7 +79,6 @@ export function usePesertaLogic(diklatId) {
     }
   };
 
-  // Debounce Effects
   useEffect(() => {
     if (!editingId || !editForm.nik) return;
     if (editForm.nik.length < 16) {
@@ -105,7 +100,6 @@ export function usePesertaLogic(diklatId) {
     return () => clearTimeout(timer);
   }, [editForm.npsn, editingId]);
 
-  // --- ACTIONS ---
   const handleEditClick = (peserta) => {
     setEditingId(peserta.id);
     setEditForm({ ...peserta });

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import prisma from "@/lib/prisma";
 import {
-  buildPtkQuery,
+  fetchPtkData,
   PTK_QUERY_TYPE,
-} from "@/app/api/ptk/[nik]/queryBuilder";
+} from "./queryBuilder";
 
 export async function GET(request, { params }) {
   try {
@@ -13,16 +13,9 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "NIK wajib diisi" }, { status: 400 });
     }
 
-    const { sql, values } = buildPtkQuery({
-      type: PTK_QUERY_TYPE.PROFIL,
-      nik: nik,
-    });
+    const profilData = await fetchPtkData(prisma, PTK_QUERY_TYPE.PROFIL, nik);
 
-    // 3. Eksekusi Query ke Database
-    // Gunakan sql dan values yang dihasilkan builder
-    const profilRes = await pool.query(sql, values);
-
-    if (profilRes.rows.length === 0) {
+    if (!profilData) {
       return NextResponse.json(
         { error: "PTK tidak ditemukan" },
         { status: 404 },
@@ -30,8 +23,9 @@ export async function GET(request, { params }) {
     }
 
     return NextResponse.json({
-      profil: profilRes.rows[0],
+      profil: profilData,
     });
+
   } catch (error) {
     console.error("Error Detail PTK:", error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });

@@ -1,33 +1,24 @@
 import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { processData, injectTotal } from "../helpers/utils";
-import { METRIC_OPTIONS } from "@/lib/constants";
 
-import { CustomTooltip }  from "../CustomTooltip";
-import ChartCard from "../ChartCard";
-import QuerySelector from "../QuerySelector";
+import { CustomTooltip } from "../CustomTooltip";
 
-export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300, onExpand }) {
-  const [ metric1, setMetric1 ] = useState("ptk");
-  const [ metric2, setMetric2 ] = useState("alumni");
-
+export default function PtkVsAlumniChart({ kab, kec, year }) {
   const alumni = useAnalytics({
-    metric: metric2,
+    metric: "alumni",
     kab,
     kec,
     year,
-    diklat,
-       caller: "VS CHART 1"
   });
 
   const untrained = useAnalytics({
-    metric: metric1,
+    metric: "untrained",
     kab,
     kec,
     year,
-       caller: "VS CHART 2"
   });
 
   const loading = alumni.loading || untrained.loading;
@@ -49,50 +40,40 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     [loading, alumni.data, untrained.data], // Updated dependencies
   );
 
+  console.log("PTK vs Alumni Data:", data);
 
   if (loading) {
     return (
-      <ChartCard title="PTK vs Alumni" height={height}>
-        <div className="h-full flex items-center justify-center text-slate-400">
-          Loading…
-        </div>
-      </ChartCard>
+      <div className="h-full flex items-center justify-center text-slate-400">
+        Loading…
+      </div>
     );
   }
 
   if (!data.length || data.every((item) => item.value === 0)) {
     return (
-      <ChartCard title="PTK vs Alumni" height={height}>
-        <div className="h-full flex items-center justify-center text-slate-400">
-          Data Kosong
-        </div>
-      </ChartCard>
+      <div className="h-full flex items-center justify-center text-slate-400">
+        Data Kosong
+      </div>
     );
   }
 
   return (
-    <ChartCard height={height} onExpand={onExpand}>
-            <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <h5 className="text-sm font-semibold text-slate-600">
-          Ptk vs Alumni
-        </h5>
-        </div>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={0}
-            outerRadius={80}
-            dataKey="value"
-            nameKey="name"
-            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend verticalAlign="bottom" height={36} iconType="circle" />
-        </PieChart>
-      </ResponsiveContainer>
-    </ChartCard>
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={0}
+          outerRadius={80}
+          dataKey="value"
+          nameKey="name"
+          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+      </PieChart>
+    </ResponsiveContainer>
   );
 }
