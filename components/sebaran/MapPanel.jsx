@@ -32,7 +32,6 @@ export default function MapPanel({
 }) {
   const geoJsonRef = useRef(null);
 
-
   const { data, loading } = useAnalytics({
     metric: "alumni",
     kab: selectedKab || undefined,
@@ -42,22 +41,28 @@ export default function MapPanel({
     caller: "Mapper",
   });
 
-
   const valueMap = useMemo(() => {
     if (!data?.length) return {};
+
     const map = {};
+
     data.forEach((item) => {
-      if (item.name)
-        map[item.name.toUpperCase()] = Number(item.value);
+      if (!item.name) return;
+
+      const kecUpper = item.name.toUpperCase();
+
+      const key = selectedKab ? `${selectedKab}|${kecUpper}` : kecUpper;
+
+      map[key] = Number(item.value);
     });
+
     return map;
-  }, [data]);
+  }, [data, selectedKab]);
 
   const maxValue = useMemo(() => {
     if (!data?.length) return 0;
     return Math.max(...data.map((d) => Number(d.value)), 1);
   }, [data]);
-
 
   function getHeatColor(value, max) {
     if (!value || max === 0) return "#e2e8f0";
@@ -71,93 +76,80 @@ export default function MapPanel({
     return "#dbeafe";
   }
 
+  const mapStyle = useCallback(
+    (feature) => {
+      const props = feature.properties;
+      const kabCode = props.code.substring(0, 5);
+      const kecName = props.name?.toUpperCase();
+      const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
 
- const mapStyle = useCallback(
-  (feature) => {
-    const props = feature.properties;
-    const kabCode = props.code.substring(0, 5);
-    const kecName = props.name?.toUpperCase();
-    const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
+      const isSameKab = kabCode === selectedKab;
+      const isSameKec = selectedKec && kecName === selectedKec.toUpperCase();
 
-    const isSameKab = kabCode === selectedKab;
-    const isSameKec =
-      selectedKec &&
-      kecName === selectedKec.toUpperCase();
+      // -------------------------------
+      // HEATMAP MODE (exclusive)
+      // -------------------------------
+      if (heatmapEnable) {
+        if (!loading && maxValue > 0) {
+          const key = selectedKab ? `${kabCode}|${kecName}` : kecName;
 
-    // -------------------------------
-    // HEATMAP MODE (exclusive)
-    // -------------------------------
-    if (heatmapEnable) {
-      if (!loading && maxValue > 0) {
-        const value = valueMap[kecName] || 0;
+          const value = valueMap[key] || 0;
+
+          return {
+            fillColor: getHeatColor(value, maxValue),
+            fillOpacity: isSameKec ? 1 : 0.85,
+            weight: isSameKec ? 3 : 1,
+            color: isSameKec ? "#4f46e5" : "#fff",
+          };
+        }
 
         return {
-          fillColor: getHeatColor(value, maxValue),
-          fillOpacity: 0.85,
-          weight: isSameKec ? 3 : 1,
+          fillColor: "#f8fafc",
+          fillOpacity: 0.6,
+          weight: 1,
+          color: "#e2e8f0",
+        };
+      }
+
+      // -------------------------------
+      // NORMAL MODE
+      // -------------------------------
+      if (isSameKab && isSameKec) {
+        return {
+          fillColor: "#4f46e5",
+          fillOpacity: 1,
+          weight: 3,
           color: "#fff",
         };
       }
 
-      // While loading → neutral heat background
-      return {
-        fillColor: "#f8fafc",
-        fillOpacity: 0.6,
-        weight: 1,
-        color: "#e2e8f0",
-      };
-    }
+      if (isSameKab) {
+        return {
+          fillColor: baseColor,
+          fillOpacity: 0.8,
+          weight: 1,
+          color: "#fff",
+        };
+      }
 
-    // -------------------------------
-    // NORMAL MODE
-    // -------------------------------
-    if (isSameKab && isSameKec) {
-      return {
-        fillColor: "#4f46e5",
-        fillOpacity: 1,
-        weight: 3,
-        color: "#fff",
-      };
-    }
+      if (selectedKab) {
+        return {
+          fillColor: "#94a3b8",
+          fillOpacity: 0.2,
+          weight: 0.5,
+          color: "#fff",
+        };
+      }
 
-    if (isSameKab) {
       return {
         fillColor: baseColor,
-        fillOpacity: 0.8,
+        fillOpacity: 0.6,
         weight: 1,
         color: "#fff",
       };
-    }
-
-    if (selectedKab) {
-      return {
-        fillColor: "#94a3b8",
-        fillOpacity: 0.2,
-        weight: 0.5,
-        color: "#fff",
-      };
-    }
-
-    return {
-      fillColor: baseColor,
-      fillOpacity: 0.6,
-      weight: 1,
-      color: "#fff",
-    };
-  },
-  [
-    heatmapEnable,
-    loading,
-    maxValue,
-    valueMap,
-    selectedKab,
-    selectedKec,
-  ],
-);
-
- 
-
-
+    },
+    [heatmapEnable, loading, maxValue, valueMap, selectedKab, selectedKec],
+  );
 
   const onEachFeature = (feature, layer) => {
     const kabCode = feature.properties.code.substring(0, 5);
@@ -170,23 +162,21 @@ export default function MapPanel({
     layer.on({
       click: () => {
         const kecNameGeo = feature.properties.name;
-        const targetKabName =
-          KAB_CODE_TO_NAME[kabCode];
-
-        const kabData = wilayahData.find(
-          (w) => w.kabupaten === targetKabName,
-        );
+        const kabCode = feature.properties.code.substring(0, 5);
+        const targetKabName = KAB_CODE_TO_NAME[kabCode];
 
         let finalKecName = kecNameGeo;
 
+        const kabData = wilayahData.find((w) => w.kabupaten === targetKabName);
+
         if (kabData?.kecamatan) {
-          const match =
-            kabData.kecamatan.find(
-              (k) =>
-                k.toUpperCase() ===
-                kecNameGeo.toUpperCase(),
-            );
-          if (match) finalKecName = match;
+          const match = kabData.kecamatan.find(
+            (k) => k.toUpperCase() === kecNameGeo.toUpperCase(),
+          );
+
+          if (match) {
+            finalKecName = match; // canonical casing
+          }
         }
 
         onSelect(kabCode, finalKecName);
@@ -197,23 +187,20 @@ export default function MapPanel({
           weight: 3,
           fillOpacity: 0.95,
         });
-        if (!navigator.maxTouchPoints)
-          e.target.bringToFront();
+        if (!navigator.maxTouchPoints) e.target.bringToFront();
       },
 
-mouseout: (e) => {
-  e.target.setStyle(
-    latestStyleRef.current(e.target.feature)
-  );
-},
+      mouseout: (e) => {
+        e.target.setStyle(latestStyleRef.current(e.target.feature));
+      },
     });
   };
 
-    const latestStyleRef = useRef(mapStyle);
+  const latestStyleRef = useRef(mapStyle);
 
-useEffect(() => {
-  latestStyleRef.current = mapStyle;
-}, [mapStyle]);
+  useEffect(() => {
+    latestStyleRef.current = mapStyle;
+  }, [mapStyle]);
 
   return (
     <div className="flex-1 bg-slate-100 rounded-xl border relative">
