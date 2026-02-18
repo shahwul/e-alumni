@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { createAuditLog } from '@/lib/audit';
 
 export async function POST(request, { params }) {
   try {
+    const user = await getSession(request);
     const { id } = await params;
     const diklatId = parseInt(id);
 
     if (!diklatId) {
         return NextResponse.json({ error: 'ID Diklat Invalid' }, { status: 400 });
     }
+
     const result = await prisma.$transaction(async (tx) => {
         const candidates = await tx.diklat_kandidat.findMany({
             where: { diklat_id: diklatId },
-            include: {
-                data_ptk: true 
-            }
+            include: { data_ptk: true }
         });
 
         if (candidates.length === 0) {
@@ -31,18 +33,36 @@ export async function POST(request, { params }) {
             status_kelulusan: 'Lulus' 
         }));
 
+        // 2. Insert ke tabel alumni
         const insertResult = await tx.data_alumni.createMany({
             data: alumniData,
             skipDuplicates: true 
         });
+
         await tx.diklat_kandidat.deleteMany({
             where: { diklat_id: diklatId }
         });
 
-        return insertResult;
+        return { 
+            count: insertResult.count, 
+            sample: alumniData.slice(0, 3).map(a => a.nama_peserta) 
+        };
     });
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+
+    createAuditLog({
+      req: request,
+      userId: user?.id,
+      action: "FINALISASI_KANDIDAT",
+      resource: "DIKLAT",
+      resourceId: diklatId.toString(),
+      newData: {
+        total_finalized: result.count,
+        message: "Kandidat dipindahkan ke alumni",
+        sample_peserta: result.sample
+      }
+    });
 
     return NextResponse.json({ 
         success: true, 

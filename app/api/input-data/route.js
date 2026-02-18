@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma"; 
+import { getSession } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -39,7 +41,9 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const user = await getSession(request);
     const data = await request.json();
+    
     const topicId = parseInt(data.topic_id);
     const subTopicId = parseInt(data.sub_topic_id);
 
@@ -85,6 +89,15 @@ export async function POST(request) {
         jenis_perekrutan: data.jenis_perekrutan,
         slug: generatedSlug,
       }
+    });
+
+    createAuditLog({
+      req: request,
+      userId: user?.id || "system",
+      action: "CREATE",
+      resource: "DIKLAT",
+      resourceId: newDiklat.id.toString(),
+      newData: newDiklat
     });
 
     return NextResponse.json(

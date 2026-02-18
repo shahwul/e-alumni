@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; 
+import { getSession } from '@/lib/auth';
+import { createAuditLog } from '@/lib/audit';
 
 export async function GET(request, { params }) {
   try {
@@ -55,8 +57,9 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request) {
     try {
+        const user = await getSession(request);
         const { searchParams } = new URL(request.url);
         const kandidatId = searchParams.get('kandidat_id');
 
@@ -64,16 +67,41 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'ID Kandidat diperlukan' }, { status: 400 });
         }
 
-        await prisma.diklat_kandidat.delete({
-            where: {
-                id: parseInt(kandidatId) 
+        const targetKandidat = await prisma.diklat_kandidat.findUnique({
+            where: { id: parseInt(kandidatId) },
+            include: {
+                data_ptk: {
+                    select: { nama_ptk: true }
+                }
             }
         });
 
-        return NextResponse.json({ message: 'Kandidat dihapus' });
+        if (!targetKandidat) {
+            return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 });
+        }
+
+        await prisma.diklat_kandidat.delete({
+            where: { id: parseInt(kandidatId) }
+        });
+
+        createAuditLog({
+            req: request,
+            userId: user?.id,
+            action: "DELETE_KANDIDAT",
+            resource: "DIKLAT_KANDIDAT",
+            resourceId: kandidatId,
+            oldData: {
+                id: targetKandidat.id,
+                nik: targetKandidat.nik,
+                nama: targetKandidat.data_ptk?.nama_ptk || "Unknown",
+                diklat_id: targetKandidat.diklat_id
+            }
+        });
+
+        return NextResponse.json({ message: 'Kandidat berhasil dihapus dari daftar mapping' });
 
     } catch (error) {
         console.error("Error delete kandidat:", error);
-        return NextResponse.json({ error: 'Gagal menghapus' }, { status: 500 });
+        return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 500 });
     }
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; 
+import { getSession } from '@/lib/auth';
+import { createAuditLog } from '@/lib/audit';
 
 export async function GET(request) {
   try {
@@ -49,36 +51,36 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
+    const user = await getSession(request);
     const body = await request.json();
-    const { 
-      id, 
-      nama_peserta, 
-      nik, 
-      npsn, 
-      snapshot_nama_sekolah, 
-      snapshot_jabatan, 
-      snapshot_pangkat 
-    } = body;
+    const { id, ...updateData } = body;
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
-    await prisma.data_alumni.update({
-      where: { id: parseInt(id) },
-      data: {
-        nama_peserta,
-        nik,
-        npsn,
-        snapshot_nama_sekolah,
-        snapshot_jabatan,
-        snapshot_pangkat
+    const oldData = await prisma.data_alumni.findUnique({
+      where: { id: parseInt(id) }
+    });
 
-      }
+    if (!oldData) return NextResponse.json({ error: 'Data not found' }, { status: 404 });
+
+    const updatedData = await prisma.data_alumni.update({
+      where: { id: parseInt(id) },
+      data: updateData
     });
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
 
-    return NextResponse.json({ success: true });
+    createAuditLog({
+      req: request,
+      userId: user?.id,
+      action: "UPDATE",
+      resource: "PESERTA_DIKLAT",
+      resourceId: id.toString(),
+      oldData: oldData,
+      newData: updatedData 
+    });
 
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error PUT Peserta:", error);
     return NextResponse.json({ error: 'Gagal update data' }, { status: 500 });
@@ -87,10 +89,17 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
+    const user = await getSession(request);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+
+    const dataToDelete = await prisma.data_alumni.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!dataToDelete) return NextResponse.json({ error: 'Data already gone' }, { status: 404 });
 
     await prisma.data_alumni.delete({
       where: { id: parseInt(id) }
@@ -98,8 +107,16 @@ export async function DELETE(request) {
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
 
-    return NextResponse.json({ success: true });
+    createAuditLog({
+      req: request,
+      userId: user?.id || "system",
+      action: "DELETE",
+      resource: "PESERTA_DIKLAT",
+      resourceId: id,
+      oldData: dataToDelete
+    });
 
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error DELETE Peserta:", error);
     return NextResponse.json({ error: 'Gagal hapus data' }, { status: 500 });

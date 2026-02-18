@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { buildDiklatQuery } from './queryBuilder';
+import { createAuditLog } from '@/lib/audit';
+import { getSession } from '@/lib/auth';
 
 export async function PUT(request) {
   try {
+    const user = await getSession(request);
     const data = await request.json();
     const { id, ...body } = data;
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+
+    const oldDiklat = await prisma.master_diklat.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!oldDiklat) {
+      return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 });
+    }
 
     const updateData = {
       title: body.title,
@@ -33,6 +44,16 @@ export async function PUT(request) {
     const result = await prisma.master_diklat.update({
       where: { id: parseInt(id) },
       data: updateData,
+    });
+
+    createAuditLog({
+      req: request,
+      userId: user?.id,
+      action: "UPDATE",
+      resource: "DIKLAT",
+      resourceId: id.toString(),
+      oldData: oldDiklat,
+      newData: result
     });
 
     return NextResponse.json({ message: 'Diklat updated successfully', data: result });
