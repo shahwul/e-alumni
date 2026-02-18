@@ -14,7 +14,6 @@ export function CopyButton({ row }) {
   const ptk = row.original;
 
   const [copied, setCopied] = useState(false);
-  console.log("niknya adalah:", ptk.nik);
   const handleCopy = () => {
     if (!ptk.nik) return;
     navigator.clipboard.writeText(ptk.nik);

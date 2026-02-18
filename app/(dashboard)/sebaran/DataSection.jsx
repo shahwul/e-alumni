@@ -17,26 +17,71 @@ import {
   Legend,
 } from "recharts";
 
-import { KAB_CODE_TO_NAME } from "../../../lib/constants";
-import {
-  processData,
-  injectTotal,
-} from "../../../components/sebaran/helpers/utils";
-import { CustomTooltip } from "../../../components/sebaran/CustomTooltip";
-import ChartCard from "../../../components/sebaran/ChartCard";
+import { KAB_CODE_TO_NAME } from "@/lib/constants";
+// import {
+//   processData,
+//   injectTotal,
+// } from "../../components/sebaran/helpers/utils";
+// import { CustomTooltip } from "../../components/sebaran/CustomTooltip";
+// import ChartCard from "../../components/sebaran/ChartCard";
+import PopupModal from "@/components/sebaran/PopupModal";
+
 import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
-import JenjangAlumniChart from "@/components/sebaran/charts/JenjangAlumniChart";
+import JenjangPtkChart from "@/components/sebaran/charts/JenjangPtkChart";
+import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
 
 export default function DataSection({
   selectedKab,
   selectedKec,
   selectedYear,
+  selectedDiklat,
 }) {
   const [data, setData] = useState(null);
+  const [activeChart, setActiveChart] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const chartMap = {
+    jenjang: (
+      <JenjangPtkChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        diklat={selectedDiklat}
+        height={500}
+      />
+    ),
+    ptkVsAlumni: (
+      <PtkVsAlumniChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        height={500}
+      />
+    ),
+    barComparison: (
+      <BarComparisonChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        diklat={selectedDiklat}
+        height={500}
+      />
+    ),
+    timeGraph: (
+      <TimeGraphChart
+        kab={selectedKab}
+        kec={selectedKec}
+        year={selectedYear}
+        diklat={selectedDiklat}
+        timeGrain="year"
+        height={500}
+      />
+    ),
+  };
+
 
   useEffect(() => {
     const controller = new AbortController();
@@ -48,6 +93,7 @@ export default function DataSection({
         if (selectedKab) params.append("kab", selectedKab);
         if (selectedKec) params.append("kec", selectedKec);
         if (selectedYear) params.append("year", selectedYear);
+        if (selectedDiklat) params.append("diklat", selectedDiklat);
 
         const res = await fetch(`/api/dashboard/stats?${params.toString()}`, {
           signal: controller.signal,
@@ -68,35 +114,11 @@ export default function DataSection({
       selectedKab,
       selectedKec,
       selectedYear,
+      selectedDiklat
     });
     console.log("Data fetched:", data);
     return () => controller.abort();
   }, [selectedKab, selectedKec, selectedYear]);
-
-  const statusData = useMemo(
-    () => processData(data?.statusKepegawaian),
-    [data],
-  );
-  const ptkAlumniData = useMemo(
-    () => processData(data?.ptkVsAlumni, ["#82ca9d", "#8884d8"]),
-    [data],
-  );
-  const kepsekData = useMemo(
-    () => processData(data?.kepsekVsGuru, ["#8884d8", "#00C49F"]),
-    [data],
-  );
-  const jabatanData = useMemo(() => processData(data?.jabatan), [data]);
-  const triwulanData = useMemo(
-    () =>
-      data?.trenTriwulan?.map((d) => ({ ...d, alumni: Number(d.alumni) })) ||
-      [],
-    [data],
-  );
-  const tahunanData = useMemo(
-    () =>
-      data?.trenTahunan?.map((d) => ({ ...d, alumni: Number(d.alumni) })) || [],
-    [data],
-  );
 
   if (loading)
     return (
@@ -112,6 +134,12 @@ export default function DataSection({
 
   return (
     <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 overflow-y-auto min-h-0">
+      <PopupModal
+        isOpen={activeChart !== null}
+        onClose={() => setActiveChart(null)}
+      >
+        {chartMap[activeChart] || null}
+      </PopupModal>
       <div className="mb-6">
         <h3 className="text-xl font-bold text-slate-800">
           {selectedKec
@@ -135,121 +163,51 @@ export default function DataSection({
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-4">
         {/* Tabel View */}
-        <div className="lg:col-span-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 h-full flex flex-col">
-          <h4 className="font-semibold text-slate-700 mb-4 mt-2 text-sm tracking-wide border-b pl-2 pb-2 ">
-            Data Tersedia
-          </h4>
-          <TabelViewData
+        <TabelViewData
+          kab={selectedKab}
+          kec={selectedKec}
+          year={selectedYear}
+          diklat={selectedDiklat}
+        />
+        {/* Chart Cards */}
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <JenjangPtkChart
             kab={selectedKab}
             kec={selectedKec}
             year={selectedYear}
+            diklat={selectedDiklat}
+            onExpand={() => setActiveChart("jenjang")}
           />
-        </div>
 
-        {/* Chart Cards */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ChartCard title="Jenjang Pendidikan" height={300}>
-            <JenjangAlumniChart
+          <PtkVsAlumniChart
+            kab={selectedKab}
+            kec={selectedKec}
+            year={selectedYear}
+            diklat={selectedDiklat}
+            onExpand={() => setActiveChart("ptkVsAlumni")}
+          />
+
+          <div className="md:col-span-2">
+            <BarComparisonChart
               kab={selectedKab}
               kec={selectedKec}
               year={selectedYear}
+              diklat={selectedDiklat}
+              height={400}
+              onExpand={() => setActiveChart("barComparison")}
             />
-          </ChartCard>
+          </div>
 
-          <ChartCard title="PTK vs Alumni" height={300}>
-            <PtkVsAlumniChart
-              kab={selectedKab}
-              kec={selectedKec}
-              year={selectedYear}
-            />
-          </ChartCard>
-
-          {/* <div className="md:col-span-2">
-            <ChartCard title="Persebaran Jabatan (Top 5)">
-              {jabatanData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={jabatanData}
-                    layout="vertical"
-                    margin={{ left: 20, right: 20 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={true}
-                      vertical={false}
-                    />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={120}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <Tooltip
-                      formatter={(val) =>
-                        new Intl.NumberFormat("id-ID").format(val)
-                      }
-                    />
-                    <Bar
-                      dataKey="value"
-                      fill="#3b82f6"
-                      radius={[0, 4, 4, 0]}
-                      barSize={20}
-                      label={{
-                        position: "right",
-                        fill: "#666",
-                        fontSize: 11,
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-slate-400">
-                  Data Kosong
-                </div>
-              )}
-            </ChartCard>
-          </div> */}
-
-          <ChartCard title={`Tren Alumni per Triwulan (${selectedYear})`}>
-            {triwulanData.some((d) => d.alumni > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={triwulanData}
-                  margin={{ top: 10, right: 10, bottom: 0, left: -10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    formatter={(val) =>
-                      new Intl.NumberFormat("id-ID").format(val)
-                    }
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="alumni"
-                    stroke="#ff7300"
-                    strokeWidth={2}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Belum ada data tren
-              </div>
-            )}
-          </ChartCard>
-
-          <ChartCard title="Tren Alumni (5 Tahun Terakhir)" height={300}>
+          <div className="md:col-span-2">
             <TimeGraphChart
               kab={selectedKab}
               kec={selectedKec}
               timeGrain="year"
               year={selectedYear}
+              diklat={selectedDiklat}
+              onExpand={() => setActiveChart("timeGraph")}
             />
-          </ChartCard>
+          </div>
         </div>
       </div>
     </div>

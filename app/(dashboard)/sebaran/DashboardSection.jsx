@@ -5,6 +5,7 @@ import MapPanel from "@/components/sebaran/MapPanel";
 import FilterPanel from "@/components/sebaran/filters/FilterPanel";
 import DataSection from "./DataSection";
 import { KAB_CODE_TO_NAME, YEAR_LIST } from "@/lib/constants";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function DashboardClient() {
   const [geoJsonData, setGeoJsonData] = useState(null);
@@ -12,6 +13,7 @@ export default function DashboardClient() {
   const [selectedKab, setSelectedKab] = useState("");
   const [selectedKec, setSelectedKec] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedDiklat, setSelectedDiklat] = useState("");
   const [loadingWilayah, setLoadingWilayah] = useState(true);
 
   useEffect(() => {
@@ -29,6 +31,14 @@ export default function DashboardClient() {
       .catch(console.error);
   }, []);
 
+  const { data: heatmapData, loading: loadingHeatmap } = useAnalytics({
+    metric: "alumni",
+    kab: selectedKab || undefined,
+    year: selectedYear,
+    diklat: selectedDiklat,
+    groupBy: selectedKab ? "Kecamatan" : "Kabupaten",
+  });
+
   const listKecamatan = useMemo(() => {
     if (!selectedKab) return [];
     const kabName = KAB_CODE_TO_NAME[selectedKab];
@@ -43,6 +53,10 @@ export default function DashboardClient() {
           wilayahData={wilayahData}
           selectedKab={selectedKab}
           selectedKec={selectedKec}
+          selectedYear={selectedYear}
+          selectedDiklat={selectedDiklat}
+          heatmapData={heatmapData}
+          loadingHeatmap={loadingHeatmap}
           onSelect={(kab, kec) => {
             setSelectedKab(kab);
             setSelectedKec(kec);
@@ -55,6 +69,7 @@ export default function DashboardClient() {
           selectedKab={selectedKab}
           selectedKec={selectedKec}
           selectedYear={selectedYear}
+          selectedDiklat={selectedDiklat}
           loadingWilayah={loadingWilayah}
           onKabChange={(v) => {
             setSelectedKab(v);
@@ -62,6 +77,7 @@ export default function DashboardClient() {
           }}
           onKecChange={setSelectedKec}
           onYearChange={setSelectedYear}
+          onDiklatChange={setSelectedDiklat}
           onReset={() => {
             setSelectedKab("");
             setSelectedKec("");
@@ -73,6 +89,7 @@ export default function DashboardClient() {
         selectedKab={selectedKab}
         selectedKec={selectedKec}
         selectedYear={selectedYear}
+        selectedDiklat={selectedDiklat}
       />
     </div>
   );
