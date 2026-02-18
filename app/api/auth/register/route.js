@@ -2,13 +2,35 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import redis from "@/lib/redis";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req) {
   try {
-    const { username, password, email, nama } = await req.json();
+    const body = await req.json();
+    const { username, password, email, nama } = body;
 
+    // --- CEK DATABASE DULU (Bahkan sebelum validasi data lengkap) ---
+    const existingUser = await prisma.users.findFirst({
+      where: {
+        OR: [
+          username ? { username } : null,
+          email ? { email } : null
+        ].filter(Boolean)
+      }
+    });
+
+    if (existingUser) {
+      const isUsernameMatch = username && existingUser.username === username;
+      return NextResponse.json(
+        { message: `${isUsernameMatch ? "Username" : "Email"} sudah digunakan` }, 
+        { status: 400 }
+      );
+    }
+
+    // Baru di sini cek data lengkap untuk kirim OTP
     if (!username || !password || !email) {
-      return NextResponse.json({ message: "Data tidak lengkap" }, { status: 400 });
+       // Jika cuma kirim salah satu (buat check), jangan error 400 dulu, kasih info "Aman"
+       return NextResponse.json({ message: "Data belum lengkap tapi tersedia" }, { status: 200 });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

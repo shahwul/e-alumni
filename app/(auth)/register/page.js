@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { SignupForm } from "@/components/auth/register-form"
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1); 
@@ -31,30 +30,37 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
-        {step === 1 ? (
-          <form onSubmit={handleRegister} className="space-y-4">
-            <h1 className="text-2xl font-bold text-slate-800">Daftar Admin</h1>
-            <input placeholder="Nama Lengkap" className="w-full p-3 border rounded-xl" onChange={(e)=>setForm({...form, nama: e.target.value})} />
-            <input placeholder="Username" className="w-full p-3 border rounded-xl" onChange={(e)=>setForm({...form, username: e.target.value})} />
-            <input placeholder="Email" type="email" className="w-full p-3 border rounded-xl" onChange={(e)=>setForm({...form, email: e.target.value})} />
-            <input placeholder="Password" type="password" className="w-full p-3 border rounded-xl" onChange={(e)=>setForm({...form, password: e.target.value})} />
-            <button className="w-full bg-blue-600 text-white p-3 rounded-xl font-bold">Kirim OTP</button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerify} className="space-y-4 text-center">
-            <h1 className="text-2xl font-bold text-slate-800">Verifikasi OTP</h1>
-            <p className="text-sm text-slate-500">Cek email: {form.email}</p>
-            <input 
-              placeholder="Masukkan 6 Digit OTP" 
-              className="w-full p-3 border rounded-xl text-center tracking-widest text-xl font-bold" 
-              onChange={(e) => setOtp(e.target.value)} 
-            />
-            <button className="w-full bg-green-600 text-white p-3 rounded-xl font-bold">Verifikasi</button>
-          </form>
-        )}
+    <div className="flex min-h-svh items-center justify-center bg-slate-50 p-4 md:p-10"> 
+      <div className="grid w-sm overflow-hidden rounded-[26px] bg-white shadow-sm lg:grid-cols-1">
+        <div className="flex flex-col gap-4 p-6 md:p-5">
+          <div className="flex justify-center gap-2 md:justify-center">
+            <a href="#" className="flex items-center gap-2 font-medium item-center text-center">
+              <div className=" flex size-15 items-center justify-center">     
+                  <img
+                    src="favicon.ico"
+                    alt="Image"
+                  />
+              </div>
+              <div className="grid col-2 justify-items-start gap-y-0">
+                <div className="hidden text-xl font-bold sm:block leading-none m-0">
+                E-alumni
+                </div>
+                <div className="hidden text-l sm:block  m-0">
+                BBGTK DIY
+                </div>
+              </div>
+            </a>    
+          </div>
+          <hr className="mx-auto border-t border-gray-300 mb-0 max-w-xs w-full" />
+        
+          <div className="flex flex-1 items-center justify-center">
+            <div className="w-full">
+              <SignupForm />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
   );
 }
