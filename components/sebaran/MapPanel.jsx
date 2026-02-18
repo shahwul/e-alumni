@@ -38,6 +38,7 @@ export default function MapPanel({
     year: selectedYear,
     diklat: selectedDiklat,
     groupBy: "Kecamatan",
+    caller: "Mapper",
   });
 
   const valueMap = useMemo(() => {
@@ -74,15 +75,16 @@ export default function MapPanel({
     const kecName = feature.properties.name;
     const upperKec = kecName.toUpperCase();
 
-    if (heatmapEnable) {
-      const value = valueMap?.[upperKec] || 0;
-      return {
-        fillColor: getHeatColor(value, maxValue),
-        fillOpacity: 0.85,
-        weight: 1,
-        color: "#fff",
-      };
-    }
+if (heatmapEnable && !loading && maxValue > 0) {
+  const value = Number(valueMap?.[upperKec] || 0);
+
+  return {
+    fillColor: getHeatColor(value, maxValue),
+    fillOpacity: 0.85,
+    weight: 1,
+    color: "#fff",
+  };
+}
 
     const baseColor = KAB_COLORS[kabCode] || "#cbd5e1";
     const isSameKab = kabCode === selectedKab;
@@ -172,13 +174,13 @@ export default function MapPanel({
     });
   };
 
-  useEffect(() => {
-    if (!geoJsonRef.current) return;
+useEffect(() => {
+  if (!geoJsonRef.current) return;
+  if (!heatmapEnable) return;
+  if (!data?.length) return;
 
-    geoJsonRef.current.eachLayer((layer) => {
-      geoJsonRef.current.resetStyle(layer);
-    });
-  }, [valueMap, maxValue, heatmapEnable]);
+  geoJsonRef.current.setStyle(mapStyle);
+}, [mapStyle, heatmapEnable, data]);
 
   return (
     <div className="flex-1 bg-slate-100 rounded-xl border relative">

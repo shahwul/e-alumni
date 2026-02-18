@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 
 import { fetchAnalytics } from "@/lib/analyticsClient";
 
-export function useAnalytics(params) {
+export function useAnalytics({
+  metric,
+  kab,
+  kec,
+  year,
+  diklat,
+  groupBy,
+  jenjang,
+  caller,
+  timeGrain,
+}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,19 +22,21 @@ export function useAnalytics(params) {
 
     setLoading(true);
     setError(null);
-    setData([]);
 
-    fetchAnalytics(params, controller.signal)
-      .then(setData)
+    fetchAnalytics(
+      { metric, kab, kec, year, diklat, groupBy, jenjang, caller, timeGrain },
+      controller.signal
+    )
+      .then(result => {
+        setData(result);
+      })
       .catch(err => {
         if (err.name !== "AbortError") setError(err);
       })
       .finally(() => setLoading(false));
 
-      // console.log("useAnalytics data:", data);
-
     return () => controller.abort();
-  }, [JSON.stringify(params)]); 
+  }, [metric, kab, kec, year, diklat, groupBy, jenjang, caller, timeGrain]);
 
   return { data, loading, error };
 }
