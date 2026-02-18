@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { KAB_CODE_TO_NAME } from "@/lib/constants";
 
 export const METRIC = {
@@ -20,15 +21,15 @@ export const GROUP_BY = {
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
   JENJANG: "bentuk_pendidikan",
-}; 
+};
 
 export function timeSelect(grain) {
   switch (grain) {
-    case "year":
-      return `EXTRACT(YEAR FROM end_date)`;
-    case "quarter": 
+    case TIME_GRAIN.YEAR:
+      return `CAST(EXTRACT(YEAR FROM end_date) AS VARCHAR)`;
+    case TIME_GRAIN.QUARTER:
       return `'Q' || EXTRACT(QUARTER FROM end_date)`;
-    case "month":
+    case TIME_GRAIN.MONTH:
       return `TO_CHAR(end_date, 'YYYY-MM')`;
     default:
       return null;
@@ -60,19 +61,12 @@ export function buildContext({ kab, kec, year, jenjang, diklat }) {
     values.push(`%${jenjang.toUpperCase()}%`);
   }
 
-if (diklat && Array.isArray(diklat) && diklat.length > 0) {
-  const placeholders = diklat
-    .map((_, idx) => `$${i + idx}`)
-    .join(",");
-
-  where.push(`judul_diklat = ANY(ARRAY[${placeholders}])`);
-
-  diklat.forEach((title) => {
-    values.push(title.trim());
-  });
-
-  i += diklat.length;
-}
+  if (diklat?.length) {
+    const placeholders = diklat.map((_, idx) => `$${i + idx}`).join(",");
+    where.push(`judul_diklat = ANY(ARRAY[${placeholders}])`);
+    diklat.forEach((d) => values.push(d.trim()));
+    i += diklat.length;
+  }
 
   return {
     where: where.length ? `WHERE ${where.join(" AND ")}` : "",
@@ -80,91 +74,81 @@ if (diklat && Array.isArray(diklat) && diklat.length > 0) {
   };
 }
 
+
 export function buildQuery({
   metric,
   groupBy,
   timeGrain = TIME_GRAIN.NONE,
   filters = {},
-  ranking = null,
 }) {
   const context = buildContext(filters);
 
   let where = context.where;
-  let values = context.values;
+  const values = context.values;
 
   const selectParts = [];
   const groupParts = [];
 
+  // ---- metric condition
+  const addCondition = (cond) => {
+    where += where ? " AND " : "WHERE ";
+    where += cond;
+  };
+
   switch (metric) {
     case METRIC.PTK:
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
       break;
     case METRIC.ALUMNI:
-      where += where ? " AND " : "WHERE ";
-      where += "is_sudah_pelatihan = true";
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
+      addCondition(`is_sudah_pelatihan = true`);
       break;
     case METRIC.UNTRAINED:
-      where += where ? " AND " : "WHERE ";
-      where += "(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)";
-      selectParts.push(`COUNT(DISTINCT nik) AS value`);
+      addCondition(`(is_sudah_pelatihan = false OR is_sudah_pelatihan IS NULL)`);
       break;
     default:
       throw new Error("Invalid metric");
   }
 
-  const timeSelectPart = timeSelect(timeGrain);
-  if (timeSelectPart) {
-    selectParts.unshift(`${timeSelectPart} AS time`);
-    groupParts.push("time");
+  selectParts.push(`COUNT(DISTINCT nik)::int AS value`);
 
-    where += where ? " AND " : "WHERE ";
-    where += "is_sudah_pelatihan = true";
+  // ---- time grain
+  const timeExpr = timeSelect(timeGrain);
+  if (timeExpr) {
+    selectParts.unshift(`${timeExpr} AS time`);
+    groupParts.push(`time`);
   }
 
+  // ---- group by
   if (groupBy) {
-    if (!Object.values(GROUP_BY).includes(GROUP_BY[groupBy.toUpperCase()])) {
-      throw new Error("Unsupported groupBy");
-    }
+    const groupColumn = GROUP_BY[groupBy.toUpperCase()];
+    if (!groupColumn) throw new Error("Unsupported groupBy");
 
-    const groupExpr =
-      groupBy === GROUP_BY.STATUS_KEPEGAWAIAN
-        ? `COALESCE(${groupBy}, 'Lainnya')`
-        : GROUP_BY[groupBy.toUpperCase()];
+    const groupExpr = `COALESCE(${groupColumn}, 'Lainnya')`;
 
     selectParts.unshift(`${groupExpr} AS name`);
-    groupParts.push("name");
+    groupParts.push(`name`);
   }
-
-  // if (ranking) {
-  //   let orderBy;
-  //   if (ranking.by === "time") {
-  //     orderBy = timeGrain ? "time" : null;
-  //   } else if (ranking.by === "value") {
-  //     orderBy = "value";
-  //   } else {
-  //     throw new Error("Invalid ranking.by value");
-  //   }
-
-  //   if (!orderBy) {
-  //     throw new Error("Invalid ranking configuration");
-  //   }
-
-  //   orderClause = `ORDER BY ${orderBy} ${ranking.order || "DESC"}`;
-
-  //   if (ranking.limit) {
-  //     limitClause = `LIMIT ${Number(ranking.limit)}`;
-  //   }
-  // }
 
   return {
     sql: `
-    SELECT
-      ${selectParts.join(",\n        ")}
-    FROM mv_dashboard_analitik
-    ${where}
-    ${groupParts.length ? `GROUP BY ${groupParts.join(", ")}` : ""}
-  `,
+      SELECT
+        ${selectParts.join(",\n        ")}
+      FROM mv_dashboard_analitik
+      ${where}
+      ${groupParts.length ? `GROUP BY ${groupParts.join(", ")}` : ""}
+    `,
     values,
   };
 }
+
+export async function fetchQuery(prisma, args) {
+  const { sql: query, values: params } = buildQuery(args);
+
+  try {
+    const results = await prisma.$queryRawUnsafe(query, ...params);
+    return results;
+  } catch (error) {
+    console.error("Analytics Error:", error);
+    throw new Error("Gagal mengambil data analitik");
+  }
+}
+

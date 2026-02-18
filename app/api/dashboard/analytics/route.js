@@ -1,34 +1,42 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
-import { buildQuery } from "./queryBuilder.js";
+import prisma from "@/lib/prisma";
+import { fetchQuery } from "./queryBuilder";
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
+  try {
+    const { searchParams } = new URL(req.url);
 
-  //Parse string
-  const diklatRaw = searchParams.get("diklat");
-  const diklat = diklatRaw
-    ? diklatRaw.includes(",")
-      ? diklatRaw.split(",")
-      : [diklatRaw]
-    : [];
+    // ---- Parse diklat (same logic as old implementation)
+    const diklatRaw = searchParams.get("diklat");
 
-  const query = buildQuery({
-    metric: searchParams.get("metric"),
-    groupBy: searchParams.get("groupBy"),
-    timeGrain: searchParams.get("timeGrain"),
-    filters: {
-      kab: searchParams.get("kab"),
-      kec: searchParams.get("kec"),
-      year: searchParams.get("year"),
-      jenjang: searchParams.get("jenjang"),
-      diklat: diklat,
-    },
-  });
+    const diklat = diklatRaw
+      ? diklatRaw.includes(",")
+        ? diklatRaw.split(",")
+        : [diklatRaw]
+      : [];
 
-  // console.log("Executing query:", query.sql, "with values:", query.values);
+    // ---- Execute analytics query through Prisma
+    const data = await fetchQuery(prisma, {
+      metric: searchParams.get("metric"),
+      groupBy: searchParams.get("groupBy"),
+      timeGrain: searchParams.get("timeGrain"),
+      filters: {
+        kab: searchParams.get("kab"),
+        kec: searchParams.get("kec"),
+        year: searchParams.get("year"),
+        jenjang: searchParams.get("jenjang"),
+        diklat, // ← keep this, your new example removed it
+      },
+    });
 
-  const result = await pool.query(query.sql, query.values);
+    return NextResponse.json(data);
 
-  return NextResponse.json(result.rows);
+  } catch (error) {
+    console.error("Dashboard Analytics Error:", error);
+
+    return NextResponse.json(
+      { error: error.message || "Gagal memuat data analitik" },
+      { status: 500 }
+    );
+  }
 }
