@@ -18,6 +18,7 @@ export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, 
     kec,
     year,
     diklat,
+       caller: "JENJANG CHART"
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);

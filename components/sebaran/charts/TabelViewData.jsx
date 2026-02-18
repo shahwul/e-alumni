@@ -49,6 +49,7 @@ export default function TabelViewData({ kab, kec, year, diklat }) {
     diklat,
     groupBy,
     jenjang,
+       caller: "TABEL VIEW"
   });
 
   return (

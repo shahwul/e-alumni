@@ -7,7 +7,7 @@ import {
   YOGYA_BOUNDS,
 } from "../../lib/constants";
 import "leaflet/dist/leaflet.css";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useEffect } from "react";
 
 import { useAnalytics } from "@/hooks/useAnalytics";
 
@@ -30,6 +30,8 @@ export default function MapPanel({
   heatmapEnable = true,
   onSelect,
 }) {
+  const geoJsonRef = useRef();
+  
   const { data, loading, error } = useAnalytics({
     metric: "alumni",
     kab: selectedKab,
@@ -45,17 +47,15 @@ export default function MapPanel({
     data.forEach((kec) => {
       map[kec.name.toUpperCase()] = kec.value;
     });
-    console.log("Valuemap", map)
+    console.log("Valuemap", map);
     return map;
   }, [data]);
-
-
 
   const maxValue = useMemo(() => {
     if (!data?.length) return 0;
     return Math.max(...data.map((d) => d.value));
   }, [data]);
-  console.log("MaxValue", maxValue)
+  console.log("MaxValue", maxValue);
 
   function getHeatColor(value, max) {
     if (!value || max === 0) return "#e2e8f0";
@@ -76,7 +76,6 @@ export default function MapPanel({
 
     if (heatmapEnable) {
       const value = valueMap?.[upperKec] || 0;
-
       return {
         fillColor: getHeatColor(value, maxValue),
         fillOpacity: 0.85,
@@ -157,6 +156,7 @@ export default function MapPanel({
       },
 
       mouseover: (e) => {
+              console.log("Values and maxValue", valueMap, maxValue);
         e.target.setStyle({
           weight: 3,
           color: "#fff",
@@ -167,10 +167,18 @@ export default function MapPanel({
 
       mouseout: (e) => {
         // Always restore from canonical style function
-        e.target.setStyle(mapStyle(e.target.feature));
+        geoJsonRef.current?.resetStyle();
       },
     });
   };
+
+  useEffect(() => {
+    if (!geoJsonRef.current) return;
+
+    geoJsonRef.current.eachLayer((layer) => {
+      geoJsonRef.current.resetStyle(layer);
+    });
+  }, [valueMap, maxValue, heatmapEnable]);
 
   return (
     <div className="flex-1 bg-slate-100 rounded-xl border relative">
@@ -185,6 +193,7 @@ export default function MapPanel({
           className="h-full"
         >
           <GeoJSON
+            ref={geoJsonRef}
             key={
               selectedKab +
               selectedKec +

@@ -33,6 +33,7 @@ export default function BarComparisonChart({ kab, kec, year, diklat, height = 40
     kec,
     year,
     diklat,
+    caller: "BAR CHART"
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);

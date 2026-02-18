@@ -31,6 +31,7 @@ export default function TimeGraphChart({
     year,
     diklat,
     timeGrain,
+       caller: "TIME GRAPH "
   });
 
   // console.log(data);

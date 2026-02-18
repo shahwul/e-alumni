@@ -49,6 +49,7 @@ export default function DataSection({
         kab={selectedKab}
         kec={selectedKec}
         year={selectedYear}
+        diklat={selectedDiklat}
         height={500}
       />
     ),
@@ -65,6 +66,7 @@ export default function DataSection({
         kab={selectedKab}
         kec={selectedKec}
         year={selectedYear}
+        diklat={selectedDiklat}
         height={500}
       />
     ),
@@ -73,6 +75,7 @@ export default function DataSection({
         kab={selectedKab}
         kec={selectedKec}
         year={selectedYear}
+        diklat={selectedDiklat}
         timeGrain="year"
         height={500}
       />

@@ -19,6 +19,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     kec,
     year,
     diklat,
+       caller: "VS CHART 1"
   });
 
   const untrained = useAnalytics({
@@ -26,6 +27,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     kab,
     kec,
     year,
+       caller: "VS CHART 2"
   });
 
   const loading = alumni.loading || untrained.loading;
