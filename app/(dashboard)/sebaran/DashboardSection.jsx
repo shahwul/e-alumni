@@ -36,7 +36,7 @@ export default function DashboardClient() {
     kab: selectedKab || undefined,
     year: selectedYear,
     diklat: selectedDiklat,
-    groupBy: selectedKab ? "Kecamatan" : "Kabupaten",
+    groupBy: "Kecamatan",
   });
 
   const listKecamatan = useMemo(() => {
