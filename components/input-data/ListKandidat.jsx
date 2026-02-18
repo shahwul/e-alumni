@@ -7,7 +7,7 @@ import { Trash2, FileSpreadsheet, Loader2, RefreshCw, Save } from "lucide-react"
 import { toast } from "sonner";
 import { generateAndDownloadExcel } from "./utils/export-excel";
 
-export default function ListKandidat({ diklatId, diklatTitle }) {
+export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -45,6 +45,7 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
         if (res.ok) {
             toast.success(json.message);
             fetchData();
+            if (onSuccess) onSuccess();
         } else {
             toast.error(json.error || "Gagal menyimpan");
         }

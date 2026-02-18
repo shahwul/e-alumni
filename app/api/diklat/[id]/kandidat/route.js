@@ -70,6 +70,13 @@ export async function DELETE(request, { params }) {
             }
         });
 
+        if (global.io) {
+            global.io.emit("refresh-data", { 
+                type: "DELETE_KANDIDAT",
+                nama: kandidatId
+            });
+        }
+
         return NextResponse.json({ message: 'Kandidat dihapus' });
 
     } catch (error) {

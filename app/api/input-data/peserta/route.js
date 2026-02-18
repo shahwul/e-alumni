@@ -62,7 +62,7 @@ export async function PUT(request) {
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
-    await prisma.data_alumni.update({
+    const updatedPeserta = await prisma.data_alumni.update({
       where: { id: parseInt(id) },
       data: {
         nama_peserta,
@@ -71,11 +71,19 @@ export async function PUT(request) {
         snapshot_nama_sekolah,
         snapshot_jabatan,
         snapshot_pangkat
-
       }
     });
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+
+    if (global.io) {
+      global.io.emit("refresh-data", { 
+        type: "UPDATE_PESERTA", 
+        id: updatedPeserta.id,
+        nama: updatedPeserta.nama_peserta 
+      });
+      console.log(`Socket.io: Peserta ${updatedPeserta.nama_peserta} diupdate`);
+    }
 
     return NextResponse.json({ success: true });
 
@@ -92,11 +100,20 @@ export async function DELETE(request) {
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
-    await prisma.data_alumni.delete({
+    const deletedPeserta = await prisma.data_alumni.delete({
       where: { id: parseInt(id) }
     });
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+
+    if (global.io) {
+      global.io.emit("refresh-data", { 
+        type: "DELETE_PESERTA", 
+        id: id,
+        nama: deletedPeserta.nama_peserta 
+      });
+      console.log(`Socket.io: Peserta ${deletedPeserta.nama_peserta} dihapus`);
+    }
 
     return NextResponse.json({ success: true });
 

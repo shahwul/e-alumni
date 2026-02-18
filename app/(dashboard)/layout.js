@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import DashboardTopbar from "@/components/layout/DashboardTopbar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -93,6 +94,7 @@ export default function DashboardLayout({ children }) {
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
           {children}
+          <Toaster position="top-center" richColors />
         </main>
       </div>
       

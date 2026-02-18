@@ -8,8 +8,12 @@ import InputDataHeader from "@/components/input-data/list/InputDataHeader";
 import { DiklatToolbar } from "@/components/diklat//DiklatToolbar";
 import FilterDialogDiklat from "@/components/diklat/FilterDialogDiklat";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { io } from "socket.io-client";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export default function InputDataPage() {
+  const [expandedId, setExpandedId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -27,6 +31,30 @@ export default function InputDataPage() {
     setActiveFilters,
     fetchData 
   } = useDiklat();
+
+  useEffect(() => {
+    const socket = io();
+
+    socket.on("refresh-data", (payload) => {
+      fetchData(true); 
+
+      if (payload.type === "DELETE_PESERTA") {
+          toast.error(`Peserta ${payload.nama} baru saja dihapus oleh admin lain!`);
+        } else if (payload.type === "UPDATE_PESERTA") {
+          toast.info(`Data ${payload.nama} diperbarui oleh admin lain.`);
+        } else if (payload.type === "NEW_DIKLAT") {
+          toast.success("Ada diklat baru yang baru saja ditambahkan!");
+        } else if (payload.type === "UPDATE_DIKLAT") {
+          toast.info(`Diklat ${payload.title} diperbarui oleh admin lain.`);
+        } else if (payload.type === "FINALISASI_ALUMNI") {
+          toast.info(`Diklat ${payload.title} telah finalisasi alumni.`);
+        } else if (payload.type === "DELETE_KANDIDAT") {
+          toast.error(`Kandidat dengan NIK ${payload.nama} baru saja dihapus oleh admin lain!`);
+        }
+    });
+
+    return () => socket.disconnect();
+  }, [fetchData]);
 
   const activeCount = Object.entries(activeFilters || {}).reduce((count, [key, value]) => {
     const systemParams = ['page', 'limit', 'search', 'q'];
@@ -79,6 +107,8 @@ export default function InputDataPage() {
             <DiklatCard
               key={item.id}
               data={item}
+              isExpanded={expandedId === item.id} 
+              onExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
               onRefresh={fetchData}
             />
           ))

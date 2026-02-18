@@ -87,6 +87,14 @@ export async function POST(request) {
       }
     });
 
+    if (global.io) {
+      global.io.emit("refresh-data", { 
+        type: "NEW_DIKLAT", 
+        title: newDiklat.title,
+      });
+      console.log("Socket.io: Emit refresh-data berhasil dikirim");
+    }
+
     return NextResponse.json(
       { message: "Data diklat berhasil disimpan!", data: newDiklat }, 
       { status: 201 }

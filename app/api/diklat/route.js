@@ -35,6 +35,15 @@ export async function PUT(request) {
       data: updateData,
     });
 
+    console.log("Diklat updated:", result);
+
+    if (global.io) {
+      global.io.emit("refresh-data", { 
+        type: "UPDATE_DIKLAT", 
+        title: result.title, 
+      });
+    }
+
     return NextResponse.json({ message: 'Diklat updated successfully', data: result });
 
   } catch (error) {

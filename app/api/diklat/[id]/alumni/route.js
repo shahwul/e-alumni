@@ -44,6 +44,18 @@ export async function POST(request, { params }) {
 
     await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
 
+    const diklatTitle = await prisma.master_diklat.findUnique({
+        where: { id: diklatId },
+        select: { title: true }
+    }).then(res => res?.title || `Diklat ID ${diklatId}`);
+
+    if (global.io) {
+     global.io.emit("refresh-data", { 
+            type: "FINALISASI_ALUMNI", 
+            title: diklatTitle 
+     });
+    }
+
     return NextResponse.json({ 
         success: true, 
         message: `Berhasil memindahkan ${result.count} kandidat ke daftar alumni.` 

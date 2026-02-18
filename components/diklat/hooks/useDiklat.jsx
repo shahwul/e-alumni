@@ -16,8 +16,9 @@ export function useDiklat() {
     moda: [], kategori: [], program: [], jenjang: [], jabatan: []
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true); 
+    
     try {
       const params = new URLSearchParams({
         search,
@@ -46,12 +47,13 @@ export function useDiklat() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      // Selalu matikan loading di akhir
+      setLoading(false); 
     }
   }, [search, page, limit, sorting, activeFilters]); 
 
   useEffect(() => {
-    const timer = setTimeout(fetchData, 500);
+    const timer = setTimeout(() => fetchData(false), 500); // Fetch awal pake loading
     return () => clearTimeout(timer);
   }, [fetchData]);
 
@@ -62,6 +64,6 @@ export function useDiklat() {
     limit, setLimit,
     sorting, setSorting, 
     activeFilters, setActiveFilters,
-    fetchData
+    fetchData // Sekarang fetchData bisa dipanggil dengan fetchData(true)
   };
 }

@@ -46,7 +46,7 @@ export default function DiklatCardTabs({
 
           <TabsContent value="kandidat" className="mt-0 focus-visible:ring-0">
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <ListKandidat diklatId={data.id} diklatTitle={data.title} />
+                  <ListKandidat diklatId={data.id} diklatTitle={data.title} onSuccess={onRefresh} />
               </div>
           </TabsContent>
 
