@@ -264,7 +264,7 @@ export function SignupForm({ className, ...props }) {
             <FieldSeparator />
             
             <div className="text-center text-xs text-slate-500">
-              Sudah Punya Akun? <a href="/login" className="text-indigo-600 font-bold hover:underline">Log in</a>
+              Sudah Punya Akun? <a href="/login" className="text-blue-600 font-bold hover:underline">Log in</a>
             </div>
           </FieldGroup>
         </form>
