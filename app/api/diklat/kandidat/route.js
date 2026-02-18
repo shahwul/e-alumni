@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-<<<<<<< HEAD
 import pool from '@/lib/db';
-=======
-import prisma from '@/lib/prisma';
->>>>>>> 039b2f2c290143746972999032bb8270416ff878
 
 // POST: Simpan Kandidat (Bulk Insert)
 export async function POST(request) {

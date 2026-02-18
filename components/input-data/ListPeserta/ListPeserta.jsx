@@ -8,6 +8,7 @@ import { usePesertaLogic } from "./usePesertaLogic";
 import { PesertaRow } from "./PesertaRow";
 
 export default function ListPeserta({ diklatId }) {
+  // Panggil Logic dari Hook
   const {
     data, loading, search, setSearch,
     editingId, editForm, setEditForm, isSaving,

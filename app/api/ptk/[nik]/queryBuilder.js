@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 // lib/builders/ptkQueryBuilder.js
 
-=======
->>>>>>> 039b2f2c290143746972999032bb8270416ff878
 export const PTK_QUERY_TYPE = {
   PROFIL: "profil",
   RIWAYAT: "riwayat",

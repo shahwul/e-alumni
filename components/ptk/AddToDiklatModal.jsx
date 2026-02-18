@@ -12,6 +12,7 @@ export function AddToDiklatModal({ isOpen, onClose, selectedNiks, onSuccess }) {
   const [diklatOptions, setDiklatOptions] = useState([]);
   const [selectedDiklat, setSelectedDiklat] = useState("");
 
+  // Load daftar diklat saat modal dibuka
   useEffect(() => {
     if (isOpen) {
         fetch('/api/diklat/kandidat') 

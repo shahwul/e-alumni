@@ -1,9 +1,9 @@
 "use client";
-
 import { useMemo, useState } from "react";
 import { useFilterContext } from "../FilterContext";
 import { useFilterData } from "../useFilterData";
 
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {

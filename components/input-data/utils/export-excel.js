@@ -13,6 +13,7 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Daftar Kandidat");
 
+    // --- KONFIGURASI KOLOM ---
     const columnsConfig = [
         { header: "No", key: "no", width: 5 },
         { header: "Nama Lengkap", key: "nama", width: 30 },
@@ -47,12 +48,14 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
 
     sheet.columns = columnsConfig.map(col => ({ key: col.key, width: col.width }));
 
+    // HEADER JUDUL
     sheet.mergeCells(1, 1, 1, columnsConfig.length);
     const titleCell = sheet.getCell('A1');
     titleCell.value = `DAFTAR USULAN PESERTA: ${diklatTitle}`;
     titleCell.font = { size: 14, bold: true };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
+    // HEADER TABLE
     const headerRow = sheet.getRow(3);
     headerRow.values = columnsConfig.map(col => col.header);
     headerRow.font = { bold: true };
@@ -63,6 +66,7 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
         cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
     });
 
+    // ISI DATA
     data.forEach((row, index) => {
         const addedRow = sheet.addRow({
             no: index + 1,
@@ -101,11 +105,13 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
         });
     });
 
+    // AUTOFILTER
     sheet.autoFilter = {
         from: { row: 3, column: 1 },
         to: { row: 3, column: columnsConfig.length }
     };
 
+    // DOWNLOAD
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, `Kandidat_${diklatTitle.substring(0, 20).replace(/[^a-z0-9]/gi, '_')}.xlsx`);

@@ -16,13 +16,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Loader2, Download } from "lucide-react";
+import { Button } from "@/components/ui/button"; // Import Button
+import { Loader2, Download } from "lucide-react"; // Import Icon Download
 
 export function PesertaDialog({ open, onOpenChange, diklatId, judulDiklat }) {
   const [peserta, setPeserta] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch Data Peserta
   useEffect(() => {
     if (open && diklatId) {
       setLoading(true);
@@ -41,8 +42,10 @@ export function PesertaDialog({ open, onOpenChange, diklatId, judulDiklat }) {
     }
   }, [open, diklatId]);
 
+  // Handler Export
   const handleExport = () => {
     if (!diklatId) return;
+    // Buka endpoint export di tab baru (otomatis download)
     window.open(`/api/diklat/${diklatId}/peserta/export`, '_blank');
   };
 

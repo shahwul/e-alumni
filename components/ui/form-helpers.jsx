@@ -27,6 +27,7 @@ export const FormInput = ({ control, name, label, placeholder, type = "text", di
               placeholder={placeholder} 
               disabled={disabled} 
               {...field} 
+              // Tambahkan logic agar value 0 tidak hilang/kosong jika type number
               value={field.value ?? ''}
               className={disabled ? "bg-slate-100 text-slate-500" : "bg-white"} 
             />

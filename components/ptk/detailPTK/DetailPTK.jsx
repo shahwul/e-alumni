@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
+//hooks
 import { useDetailPTK } from "./useDetailPTK";
 
 import ModeSwitcherPTK from "./section/ModeSwitcherPTK";
@@ -20,6 +21,7 @@ export default function DetailPTK({ nik }) {
   const { data, loading, error } = useDetailPTK(nik);
 
   const [mode, setMode] = useState("terpusat");
+  // === HANDLING LOADING STATE ===
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
@@ -29,6 +31,7 @@ export default function DetailPTK({ nik }) {
     );
   }
 
+  // === HANDLING ERROR STATE ===
   if (error) {
     return (
       <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
@@ -39,6 +42,7 @@ export default function DetailPTK({ nik }) {
     );
   }
 
+  // === HANDLING DATA KOSONG ===
   if (!data || !data.terpusat) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

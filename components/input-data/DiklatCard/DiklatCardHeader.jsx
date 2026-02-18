@@ -86,6 +86,7 @@ export default function DiklatCardHeader({
           </div>
         </div>
 
+        {/* === CHEVRON KANAN === */}
         <div className="flex items-center justify-end pl-4 md:border-l border-slate-100">
           <Button
             variant="ghost"

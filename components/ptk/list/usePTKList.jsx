@@ -13,23 +13,9 @@ export function usePTKList(searchParams) {
   const search = searchParams.get("search") || "";
 
   const sortParam = searchParams.get("sort");
-
-  const reverseSortMapping = {
-    "nama": "nama_ptk",
-    "sekolah": "nama_sekolah",
-    "usia": "usia_tahun",
-    "status": "status_kepegawaian"
-  };
-
   const sorting = sortParam 
-    ? sortParam.split(',').map(item => {
-        const [field, dir] = item.split(':');
-        return {
-          id: reverseSortMapping[field] || field,
-          desc: dir === "desc"
-        };
-      })
-    : [{ id: "nama_ptk", desc: false }];
+    ? [{ id: sortParam.split(":")[0], desc: sortParam.split(":")[1] === "desc" }] 
+    : [{ id: "nama", desc: false }];
 
   const activeFilters = {
     kabupaten: searchParams.getAll("kabupaten"),
@@ -78,12 +64,7 @@ export function usePTKList(searchParams) {
         const res = await fetch(`/api/ptk?${params.toString()}`);
         const json = await res.json();
 
-        const mappedData = (json.data || []).map(item => ({
-        ...item,
-        mapel: item.riwayat_sertifikasi
-      }));
-
-        setData(mappedData);
+        setData(json.data || []);
         setTotalData(json.meta?.totalData || 0);
       } catch (err) {
         console.error("Gagal fetch PTK", err);

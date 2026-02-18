@@ -1,6 +1,7 @@
-import { useState } from "react";
+// components/UploadPeserta/useUploadLogic.js
+import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { parseExcelPeserta } from "../utils/excel-processor";
+import { parseExcelPeserta } from "../utils/excel-processor"; // Sesuaikan path
 
 export function useUploadLogic(diklatId, onSuccess) {
   const [parsedData, setParsedData] = useState([]);
@@ -9,6 +10,7 @@ export function useUploadLogic(diklatId, onSuccess) {
   const [validationDone, setValidationDone] = useState(false);
   const [needsRevalidation, setNeedsRevalidation] = useState(false);
 
+  // Logic Deteksi Duplikat
   const markDuplicates = (data) => {
     const nikMap = {};
     const newData = data.map((item) => ({ ...item }));
@@ -71,6 +73,7 @@ const validateData = async (dataToValidate) => {
     try {
       const res = await fetch("/api/input-data/validate", {
         method: "POST",
+        // TAMBAHKAN diklatId DI SINI
         body: JSON.stringify({ 
             peserta: dataToValidate,
             diklatId: diklatId 
@@ -81,11 +84,13 @@ const validateData = async (dataToValidate) => {
       const json = await res.json();
       
       if (json.data) {
+        // Gabungkan logic duplikat Excel (lokal) dengan hasil validasi Server
         const finalData = markDuplicates(json.data);
         setParsedData(finalData);
         setValidationDone(true);
         setNeedsRevalidation(false);
-
+        
+        // Cek apakah ada yang statusnya "Sudah Terdaftar" untuk notifikasi
         const alreadyRegistered = json.data.filter(r => r.status_msg.includes("Sudah Terdaftar")).length;
         if (alreadyRegistered > 0) {
             toast.warning(`${alreadyRegistered} peserta sudah terdaftar di diklat ini.`);

@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 
 export function useDebounceSearch({
@@ -7,29 +6,20 @@ export function useDebounceSearch({
   query,
   minLength = 3,
   delay = 500,
-  extraParams = {},
 }) {
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [Loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const hasExtraParams = Object.values(extraParams).some(val => val !== "" && val !== null && val !== undefined);
-    
-    if ((!query || query.length < minLength) && !hasExtraParams) {
+    if (!query || query.length < minLength) {
       setResults([]);
       setLoading(false);
       return;
     }
-
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          q: query,
-          ...extraParams,
-        });
-
-        const response = await fetch(`${endpoint}?${params.toString()}`);
+        const response = await fetch(`${endpoint}?q=${query}`);
         if (response.ok) {
           const data = await response.json();
           setResults(data);
@@ -40,9 +30,8 @@ export function useDebounceSearch({
         setLoading(false);
       }
     }, delay);
-
     return () => clearTimeout(timer);
-  }, [query, endpoint, minLength, delay, JSON.stringify(extraParams)]);
+  }, [query, endpoint, minLength, delay]);
 
-  return { results, loading };
+  return { results, Loading };
 }

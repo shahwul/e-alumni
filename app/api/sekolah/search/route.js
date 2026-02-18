@@ -9,27 +9,6 @@ export async function GET(request) {
     if (!query || query.length < 3) {
       return NextResponse.json([]);
     }
-<<<<<<< HEAD
-=======
-    
-    const sekolah = await prisma.mv_dashboard_analitik.findMany({
-      where: {
-        nama_sekolah: {
-          contains: query,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        nama_sekolah: true,
-        npsn_sekolah: true,
-      },
-      distinct: ['nama_sekolah'], 
-      orderBy: {
-        nama_sekolah: 'asc',
-      },
-      take: 10, 
-    });
->>>>>>> 039b2f2c290143746972999032bb8270416ff878
 
     // Ambil nama sekolah yang unik dari view/tabel utama
     // Limit 10 biar ringan

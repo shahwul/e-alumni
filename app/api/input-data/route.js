@@ -64,41 +64,10 @@ export async function POST(request) {
         jenis_kegiatan, jenis_program, topic_id, sub_topic_id,
         chain_code, total_jp, jenis_perekrutan
 
-<<<<<<< HEAD
       ) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *;
     `;
-=======
-    const generatedSlug = data.title.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-') 
-      .replace(/^-+|-+$/g, '');
-
-    const newDiklat = await prisma.master_diklat.create({
-      data: {
-        title: data.title,
-        short_title: generatedShortTitle,
-        start_date: new Date(data.start_date),
-        end_date: new Date(data.end_date),
-        location: data.location,
-        description: data.description,
-        course_code: course_code,
-        chain_code: generatedChainCode,
-        participant_limit: parseInt(data.participant_limit) || 0,
-        total_jp: parseInt(data.total_jp) || 0,
-        category_id: data.category_id ? parseInt(data.category_id) : null,
-        mode_id: data.mode_id ? parseInt(data.mode_id) : null,
-        education_level_id: data.education_level_id ? parseInt(data.education_level_id) : null,
-        occupation_id: data.occupation_id ? parseInt(data.occupation_id) : null,
-        topic_id: topicId,
-        sub_topic_id: subTopicId,
-        jenis_kegiatan: data.jenis_kegiatan,
-        jenis_program: data.jenis_program,  
-        jenis_perekrutan: data.jenis_perekrutan,
-        slug: generatedSlug,
-      }
-    });
->>>>>>> 039b2f2c290143746972999032bb8270416ff878
 
     const values = [
       data.title,

@@ -17,21 +17,15 @@ import {
   Legend,
 } from "recharts";
 
-import { KAB_CODE_TO_NAME } from "../../../lib/constants";
+import { KAB_CODE_TO_NAME } from "../../lib/constants";
 import {
   processData,
   injectTotal,
-<<<<<<< HEAD:app/sebaran/DataSection.jsx
 } from "../../components/sebaran/helpers/utils";
 import { CustomTooltip } from "../../components/sebaran/CustomTooltip";
 import ChartCard from "../../components/sebaran/ChartCard";
 import PopupModal from "@/components/sebaran/PopupModal";
 
-=======
-} from "../../../components/sebaran/helpers/utils";
-import { CustomTooltip } from "../../../components/sebaran/CustomTooltip";
-import ChartCard from "../../../components/sebaran/ChartCard";
->>>>>>> 039b2f2c290143746972999032bb8270416ff878:app/(dashboard)/sebaran/DataSection.jsx
 import StatusKepegawaianChart from "@/components/sebaran/charts/StatusKepegawaianChart";
 import PtkVsAlumniChart from "@/components/sebaran/charts/PtkVsAlumniChart";
 import TabelViewData from "@/components/sebaran/charts/TabelViewData";
