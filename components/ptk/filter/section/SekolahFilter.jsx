@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useFilterContext } from "../FilterContext";
-import { useDebounceSearch } from "../useDebounceSearch";
+import { useDebounceSearch } from "../../../../hooks/useDebounceSearch";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandInput, CommandItem, CommandList, CommandGroup, CommandEmpty } from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandGroup,
+  CommandEmpty,
+} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -13,7 +24,8 @@ import { Check, XCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function SekolahFilter() {
-  const { filters, setFilters, schoolMapping, setSchoolMapping } = useFilterContext();
+  const { filters, setFilters, schoolMapping, setSchoolMapping } =
+    useFilterContext();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -24,9 +36,9 @@ export function SekolahFilter() {
 
   useEffect(() => {
     if (results?.length > 0) {
-      setSchoolMapping(prev => {
+      setSchoolMapping((prev) => {
         const newMap = { ...prev };
-        results.forEach(item => {
+        results.forEach((item) => {
           newMap[item.npsn_sekolah] = item.nama_sekolah;
         });
         return newMap;
@@ -36,7 +48,7 @@ export function SekolahFilter() {
 
   const toggleSekolah = (npsn, nama) => {
     if (nama) {
-      setSchoolMapping(prev => ({ ...prev, [npsn]: nama }));
+      setSchoolMapping((prev) => ({ ...prev, [npsn]: nama }));
     }
 
     setFilters((p) => ({
@@ -79,28 +91,51 @@ export function SekolahFilter() {
               onValueChange={setSearch}
             />
             <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar">
-              {loading && <div className="p-4 text-xs text-center text-slate-500 animate-pulse">Mencari...</div>}
+              {loading && (
+                <div className="p-4 text-xs text-center text-slate-500 animate-pulse">
+                  Mencari...
+                </div>
+              )}
               {!loading && results?.length === 0 && search.length > 2 && (
-                <CommandEmpty className="p-4 text-xs text-center">Sekolah tidak ditemukan.</CommandEmpty>
+                <CommandEmpty className="p-4 text-xs text-center">
+                  Sekolah tidak ditemukan.
+                </CommandEmpty>
               )}
               <CommandGroup>
                 {results?.map((item) => {
-                  const isSelected = filters.sekolah.includes(item.npsn_sekolah);
+                  const isSelected = filters.sekolah.includes(
+                    item.npsn_sekolah,
+                  );
                   return (
                     <CommandItem
                       key={item.npsn_sekolah}
-                      onSelect={() => toggleSekolah(item.npsn_sekolah, item.nama_sekolah)}
+                      onSelect={() =>
+                        toggleSekolah(item.npsn_sekolah, item.nama_sekolah)
+                      }
                       className="cursor-pointer py-2"
                     >
-                      <div className={cn(
-                        "mr-3 flex h-4 w-4 items-center justify-center border rounded transition-all",
-                        isSelected ? "bg-blue-600 border-blue-600 text-white" : "opacity-50 border-slate-300"
-                      )}>
-                        <Check className={cn("h-3 w-3 text-white transition-opacity", isSelected ? "opacity-100" : "opacity-0")} />
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center border rounded transition-all",
+                          isSelected
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "opacity-50 border-slate-300",
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            "h-3 w-3 text-white transition-opacity",
+                            isSelected ? "opacity-100" : "opacity-0",
+                          )}
+                        />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900">{item.nama_sekolah}</span>
-                        <span className="text-[10px] text-slate-500 font-mono italic">NPSN: {item.npsn_sekolah}</span>
+                        <span className="text-sm font-medium text-slate-900">
+                          {item.nama_sekolah}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono italic">
+                          NPSN: {item.npsn_sekolah}
+                        </span>
                       </div>
                     </CommandItem>
                   );
@@ -131,7 +166,10 @@ export function SekolahFilter() {
                   toggleSekolah(npsn);
                 }}
               >
-                <XCircle size={14} className="text-blue-400 group-hover:text-red-500 transition-colors" />
+                <XCircle
+                  size={14}
+                  className="text-blue-400 group-hover:text-red-500 transition-colors"
+                />
               </button>
             </Badge>
           ))}

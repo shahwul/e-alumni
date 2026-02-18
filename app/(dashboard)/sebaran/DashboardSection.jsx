@@ -12,6 +12,7 @@ export default function DashboardClient() {
   const [selectedKab, setSelectedKab] = useState("");
   const [selectedKec, setSelectedKec] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedDiklat, setSelectedDiklat] = useState("");
   const [loadingWilayah, setLoadingWilayah] = useState(true);
 
   useEffect(() => {
@@ -43,6 +44,8 @@ export default function DashboardClient() {
           wilayahData={wilayahData}
           selectedKab={selectedKab}
           selectedKec={selectedKec}
+          selectedYear={selectedYear}
+          selectedDiklat={selectedDiklat}
           onSelect={(kab, kec) => {
             setSelectedKab(kab);
             setSelectedKec(kec);
@@ -55,6 +58,7 @@ export default function DashboardClient() {
           selectedKab={selectedKab}
           selectedKec={selectedKec}
           selectedYear={selectedYear}
+          selectedDiklat={selectedDiklat}
           loadingWilayah={loadingWilayah}
           onKabChange={(v) => {
             setSelectedKab(v);
@@ -62,6 +66,7 @@ export default function DashboardClient() {
           }}
           onKecChange={setSelectedKec}
           onYearChange={setSelectedYear}
+          onDiklatChange={setSelectedDiklat}
           onReset={() => {
             setSelectedKab("");
             setSelectedKec("");
@@ -73,6 +78,7 @@ export default function DashboardClient() {
         selectedKab={selectedKab}
         selectedKec={selectedKec}
         selectedYear={selectedYear}
+        selectedDiklat={selectedDiklat}
       />
     </div>
   );
