@@ -176,6 +176,7 @@ export default function DataSection({
             kec={selectedKec}
             year={selectedYear}
             diklat={selectedDiklat}
+            height={400}
             onExpand={() => setActiveChart("jenjang")}
           />
 
@@ -184,6 +185,7 @@ export default function DataSection({
             kec={selectedKec}
             year={selectedYear}
             diklat={selectedDiklat}
+            height={400}
             onExpand={() => setActiveChart("ptkVsAlumni")}
           />
 
@@ -205,6 +207,7 @@ export default function DataSection({
               timeGrain="year"
               year={selectedYear}
               diklat={selectedDiklat}
+              height={400}
               onExpand={() => setActiveChart("timeGraph")}
             />
           </div>

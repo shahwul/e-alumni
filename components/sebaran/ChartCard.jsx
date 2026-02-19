@@ -1,3 +1,5 @@
+import { Expand } from "lucide-react";
+
 export default function ChartCard({
   title,
   children,
@@ -19,9 +21,9 @@ export default function ChartCard({
         {onExpand && (
           <button
             onClick={onExpand}
-            className="absolute top-2 right-2 text-xs text-slate-500 hover:text-slate-800"
+            className="absolute top-2 right-2 text-slate-500 hover:text-slate-800"
           >
-            Expand
+            <Expand size={18} />
           </button>
         )}
         {children}
