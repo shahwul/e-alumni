@@ -30,7 +30,7 @@ function PTKListContent() {
   useEffect(() => setRowSelection({}), [isCandidateMode]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-76px)] overflow-hidden space-y-4">
+    <div className="flex flex-col h-[calc(100vh-105px)] overflow-hidden space-y-4">
 
       <div className="flex-none space-y-4">
         <PTKHeader onExport={onExport} />

@@ -12,7 +12,7 @@ export default function DashboardTopbar({ user, setMobileOpen, pathname, getInit
           <span className="text-slate-400">E-Alumni</span>
           <span className="text-slate-300">/</span>
           <span className="font-semibold text-slate-700 capitalize">
-            {pathname === "/ptk" ? "PTK" : pathname.replace("/", "").replace("-", " ")}
+            {pathname.startsWith("/ptk") ? "PTK" + (pathname.length > 4 ? " / " + pathname.slice(5).replace(/-/g, " ") : "") : pathname.replace("/", "").replace(/-/g, " ")}
           </span>
         </div>
       </div>
