@@ -7,13 +7,13 @@ import { Search, Loader2, UserX } from "lucide-react";
 import { usePesertaLogic } from "./usePesertaLogic";
 import { PesertaRow } from "./PesertaRow";
 
-export default function ListPeserta({ diklatId }) {
+export default function ListPeserta({ diklatId, onSuccess }) {
   const {
     data, loading, search, setSearch,
     editingId, editForm, setEditForm, isSaving,
     validationStatus, validatingField,
     handleEditClick, handleCancelEdit, handleSaveEdit, handleDelete
-  } = usePesertaLogic(diklatId);
+  } = usePesertaLogic(diklatId, onSuccess);
 
   return (
     <div className="space-y-4">

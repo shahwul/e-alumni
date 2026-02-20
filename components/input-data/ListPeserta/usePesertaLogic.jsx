@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
-export function usePesertaLogic(diklatId) {
+export function usePesertaLogic(diklatId, onSuccess) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -17,8 +17,8 @@ export function usePesertaLogic(diklatId) {
     npsn: { isValid: true, msg: "" }
   });
 
-  const fetchPeserta = useCallback(async () => {
-    setLoading(true);
+  const fetchPeserta = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const res = await fetch(`/api/input-data/peserta?diklat_id=${diklatId}&search=${search}`);
       const json = await res.json();
@@ -129,6 +129,7 @@ export function usePesertaLogic(diklatId) {
       if (res.ok) {
         toast.success("Data berhasil diperbarui");
         setEditingId(null);
+        fetchPeserta(true);
         setData(prev => prev.map(item => item.id === editForm.id ? editForm : item));
       } else {
         toast.error(json.error || "Gagal update data");
@@ -147,6 +148,7 @@ export function usePesertaLogic(diklatId) {
       const res = await fetch(`/api/input-data/peserta?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success("Peserta dihapus permanen");
+        if (onSuccess) onSuccess(true);
       } else {
         throw new Error("Gagal hapus");
       }

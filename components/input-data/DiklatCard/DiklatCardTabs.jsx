@@ -31,7 +31,13 @@ export default function DiklatCardTabs({
 
         <div className="px-5 pb-6">
           <TabsContent value="list_peserta" className="mt-0 focus-visible:ring-0">
-            <ListPeserta diklatId={data.id} />
+            <ListPeserta diklatId={data.id} onSuccess={onRefresh} />
+          </TabsContent>
+
+          <TabsContent value="kandidat" className="mt-0 focus-visible:ring-0">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <ListKandidat diklatId={data.id} diklatTitle={data.title} onSuccess={onRefresh} />
+              </div>
           </TabsContent>
 
           <TabsContent value="upload" className="mt-0 focus-visible:ring-0">
@@ -44,11 +50,6 @@ export default function DiklatCardTabs({
             <DiklatDetailForm data={data} {...editProps} />
           </TabsContent>
 
-          <TabsContent value="kandidat" className="mt-0 focus-visible:ring-0">
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <ListKandidat diklatId={data.id} diklatTitle={data.title} />
-              </div>
-          </TabsContent>
 
         </div>
       </Tabs>

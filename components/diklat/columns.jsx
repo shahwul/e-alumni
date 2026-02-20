@@ -7,8 +7,8 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-const sortableHeader = (column, title) => {
-  const isSorted = column.getIsSorted(); 
+const sortableHeader = (column, title, icon = null) => {
+  const isSorted = column.getIsSorted();
   const sortIndex = column.getSortIndex();
 
   return (
@@ -16,26 +16,27 @@ const sortableHeader = (column, title) => {
       variant="ghost"
       size="sm"
       className={cn(
-        "-ml-3 h-8 font-semibold transition-all duration-200",
+        "-ml-3 h-8 font-semibold transition-all duration-200 group",
         isSorted
           ? "text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-100"
           : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
       )}
       onClick={(e) => {
-        column.toggleSorting(isSorted === "asc", !!e.shiftKey);
+        column.toggleSorting(column.getIsSorted() === "asc", !!e.shiftKey);
       }}
     >
-      <span>{title}</span>
+      {icon ? icon : <span>{title}</span>}
+
       {isSorted === "asc" ? (
-        <ArrowUp className="ml-2 h-4 w-4 text-blue-600" />
+        <ArrowUp className="ml-2 h-4 w-4 text-blue-600 shrink-0" />
       ) : isSorted === "desc" ? (
-        <ArrowDown className="ml-2 h-4 w-4 text-blue-600" />
+        <ArrowDown className="ml-2 h-4 w-4 text-blue-600 shrink-0" />
       ) : (
-        <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100" />
+        <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100 shrink-0" />
       )}
 
       {isSorted && sortIndex > -1 && (
-        <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">
+        <span className="ml-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white shadow-sm animate-in zoom-in-50 duration-200">
           {sortIndex + 1}
         </span>
       )}

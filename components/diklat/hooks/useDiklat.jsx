@@ -16,8 +16,8 @@ export function useDiklat() {
     moda: [], kategori: [], program: [], jenjang: [], jabatan: []
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const params = new URLSearchParams({
         search,

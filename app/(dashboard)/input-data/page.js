@@ -12,6 +12,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 export default function InputDataPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
   const { 
     data, 
@@ -79,6 +80,8 @@ export default function InputDataPage() {
             <DiklatCard
               key={item.id}
               data={item}
+              isExpanded={expandedId === item.id} 
+              onExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
               onRefresh={fetchData}
             />
           ))

@@ -75,7 +75,8 @@ export async function PUT(request) {
       }
     });
 
-    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+    prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`)
+      .catch(err => console.error("Background Refresh Error:", err));
 
     return NextResponse.json({ success: true });
 
@@ -96,7 +97,8 @@ export async function DELETE(request) {
       where: { id: parseInt(id) }
     });
 
-    await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`);
+    prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik`)
+      .catch(err => console.error("Background Refresh Error:", err));
 
     return NextResponse.json({ success: true });
 
