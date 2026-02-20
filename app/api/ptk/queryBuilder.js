@@ -29,6 +29,18 @@ export async function buildPrismaQuery(searchParams, prisma) {
     AND: [],
   };
 
+  const existingKandidat = await prisma.diklat_kandidat.findMany({
+    select: { nik: true },
+  });
+  
+  const kandidatNiks = existingKandidat.map(k => k.nik).filter(Boolean);
+
+  if (kandidatNiks.length > 0) {
+    where.AND.push({
+      nik: { notIn: kandidatNiks },
+    });
+  }
+
   if (p.search) {
     where.AND.push({
       OR: [
@@ -179,7 +191,8 @@ const dateCriteria = p.startDate && p.endDate ? {
       usia: "usia_tahun",
       status: "status_kepegawaian",
       mapel: "riwayat_sertifikasi",
-      tanggal: "start_date"
+      tanggal: "start_date",
+      jumlah_diklat: "jumlah_diklat",
     };
 
     sortPairs.forEach(pair => {

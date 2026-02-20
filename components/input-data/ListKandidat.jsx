@@ -7,20 +7,21 @@ import { Trash2, FileSpreadsheet, Loader2, RefreshCw, Save } from "lucide-react"
 import { toast } from "sonner";
 import { generateAndDownloadExcel } from "./utils/export-excel";
 
-export default function ListKandidat({ diklatId, diklatTitle }) {
+export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const res = await fetch(`/api/diklat/${diklatId}/kandidat`);
       const json = await res.json();
       setData(json.data || []);
     } catch (e) {
       console.error(e);
+      toast.error("Gagal memuat data kandidat");
     } finally {
       setLoading(false);
     }
@@ -44,7 +45,8 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
 
         if (res.ok) {
             toast.success(json.message);
-            fetchData();
+            fetchData(true); 
+            if (onSuccess) onSuccess(true); 
         } else {
             toast.error(json.error || "Gagal menyimpan");
         }
@@ -56,7 +58,6 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
     }
   };
 
-  // --- LOGIC EXPORT EXCEL ---
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -68,7 +69,6 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
     }
   };
 
-  // --- LOGIC HAPUS ---
   const handleDelete = async (kandidatId) => {
     if (!confirm("Hapus guru ini dari daftar kandidat?")) return;
     
@@ -76,7 +76,8 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
         const res = await fetch(`/api/diklat/${diklatId}/kandidat?kandidat_id=${kandidatId}`, { method: 'DELETE' });
         if (res.ok) {
             toast.success("Kandidat dihapus");
-            fetchData();
+            fetchData(true);
+            if (onSuccess) onSuccess(true);
         }
     } catch(e) { toast.error("Gagal menghapus"); }
   };
@@ -89,7 +90,7 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
             <p className="text-xs text-slate-500">Total: {data.length} Orang</p>
         </div>
         <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={fetchData} title="Refresh">
+            <Button size="sm" variant="outline" onClick={() => fetchData(false)} title="Refresh">
                 <RefreshCw className="w-4 h-4"/>
             </Button>
             <Button 
@@ -102,13 +103,14 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
                 {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Save className="w-4 h-4 mr-2"/>}
                 {isSaving ? "Menyimpan..." : "Simpan ke Alumni"}
             </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleExport} disabled={data.length === 0}>
-                <FileSpreadsheet className="w-4 h-4 mr-2"/> Export Excel
+            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleExport} disabled={data.length === 0 || isExporting}>
+                {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <FileSpreadsheet className="w-4 h-4 mr-2"/>}
+                Export Excel
             </Button>
         </div>
       </div>
 
-      <div className="rounded-md border bg-white overflow-hidden">
+      <div className="rounded-md border bg-white overflow-hidden min-h-[200px]">
         <Table>
             <TableHeader className="bg-slate-100">
                 <TableRow>
@@ -122,22 +124,27 @@ export default function ListKandidat({ diklatId, diklatTitle }) {
             </TableHeader>
             <TableBody>
                 {loading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="animate-spin mx-auto text-slate-400"/></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-slate-400"/></TableCell></TableRow>
                 ) : data.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-slate-500 italic">Belum ada kandidat dipilih.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-12 text-slate-500 italic">Belum ada kandidat dipilih.</TableCell></TableRow>
                 ) : (
                     data.map((row, idx) => (
-                        <TableRow key={row.kandidat_id}>
-                            <TableCell className="text-center text-xs">{idx + 1}</TableCell>
+                        <TableRow key={row.kandidat_id} className="hover:bg-slate-50/50">
+                            <TableCell className="text-center text-xs text-slate-500">{idx + 1}</TableCell>
                             <TableCell>
-                                <div className="font-medium text-sm">{row.nama_ptk}</div>
-                                <div className="text-xs text-slate-500">{row.nik || "NIK: -"}</div>
+                                <div className="font-medium text-sm text-slate-900">{row.nama_ptk}</div>
+                                <div className="text-[10px] font-mono text-slate-400">{row.nik || "NIK: -"}</div>
                             </TableCell>
-                            <TableCell className="text-xs">{row.nama_sekolah}</TableCell>
-                            <TableCell className="text-xs">{row.jabatan_ptk}</TableCell>
-                            <TableCell className="text-xs">{row.riwayat_sertifikasi}</TableCell>
+                            <TableCell className="text-xs text-slate-600">{row.nama_sekolah}</TableCell>
+                            <TableCell className="text-xs text-slate-600">{row.jabatan_ptk}</TableCell>
+                            <TableCell className="text-xs text-slate-600">{row.riwayat_sertifikasi || "-"}</TableCell>
                             <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-50" onClick={() => handleDelete(row.kandidat_id)}>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50" 
+                                  onClick={() => handleDelete(row.kandidat_id)}
+                                >
                                     <Trash2 className="w-4 h-4"/>
                                 </Button>
                             </TableCell>

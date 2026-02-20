@@ -83,7 +83,8 @@ export function buildPTKParams({
         "nama_sekolah": "sekolah",
         "usia_tahun": "usia",
         "status_kepegawaian": "status",
-        "is_sudah_pelatihan": "is_sudah_pelatihan"
+        "is_sudah_pelatihan": "is_sudah_pelatihan",
+        "jumlah_diklat": "jumlah_diklat",
       };
 
       const sortString = sorting.map(s => {
