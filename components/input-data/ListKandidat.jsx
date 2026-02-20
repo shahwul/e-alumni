@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Trash2, FileSpreadsheet, Loader2, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { generateAndDownloadExcel } from "./utils/export-excel";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
   const [data, setData] = useState([]);
@@ -82,6 +88,16 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
     } catch(e) { toast.error("Gagal menghapus"); }
   };
 
+  const kabupatenStats = data.reduce((acc, curr) => {
+        const kab = curr.kabupaten || "Tidak Diketahui";
+        acc[kab] = (acc[kab] || 0) + 1;
+        return acc;
+    }, {});
+
+    const tooltipContent = Object.entries(kabupatenStats)
+        .map(([kab, count]) => `${kab}: ${count} orang`)
+        .join("\n");
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border">
@@ -116,7 +132,19 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
                 <TableRow>
                     <TableHead className="w-[50px] text-center">No</TableHead>
                     <TableHead>Nama PTK</TableHead>
-                    <TableHead>Unit Kerja</TableHead>
+                    <TableHead>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger className="cursor-help">Unit Kerja ⓘ</TooltipTrigger>
+                                <TooltipContent className="bg-slate-800 text-white p-2 text-xs">
+                                    <p className="font-bold mb-1 border-b border-slate-600 pb-1">Sebaran Wilayah:</p>
+                                    <pre className="font-sans leading-relaxed">
+                                        {tooltipContent || "Belum ada data"}
+                                    </pre>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </TableHead>
                     <TableHead>Jabatan</TableHead>
                     <TableHead>Mata Pelajaran</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
@@ -135,7 +163,10 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
                                 <div className="font-medium text-sm text-slate-900">{row.nama_ptk}</div>
                                 <div className="text-[10px] font-mono text-slate-400">{row.nik || "NIK: -"}</div>
                             </TableCell>
-                            <TableCell className="text-xs text-slate-600">{row.nama_sekolah}</TableCell>
+                            <TableCell >
+                                <div className="text-sm text-slate-700">{row.nama_sekolah || "-"}</div>
+                                <div className="text-[10px] text-slate-400">{row.kabupaten || "-"}</div>
+                            </TableCell>
                             <TableCell className="text-xs text-slate-600">{row.jabatan_ptk}</TableCell>
                             <TableCell className="text-xs text-slate-600">{row.riwayat_sertifikasi || "-"}</TableCell>
                             <TableCell className="text-right">

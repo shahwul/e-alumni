@@ -47,6 +47,10 @@ export async function GET(request, { params }) {
         };
     });
 
+    flatData.sort((a, b) => {
+        return a.kabupaten.localeCompare(b.kabupaten);
+    });
+
     return NextResponse.json({ data: flatData });
 
   } catch (error) {

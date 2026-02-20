@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Asumsi pakai Shadcn Tooltip
+} from "@/components/ui/tooltip"; 
 import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,15 +31,11 @@ const sortableHeader = (column, title, icon = null) => {
           : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
       )}
       onClick={(e) => {
-        // PERBAIKAN: Gunakan toggleSorting dengan logika yang lebih robust
-        // Parameter kedua (true) adalah untuk 'isMulti' (Shift Click)
         column.toggleSorting(column.getIsSorted() === "asc", !!e.shiftKey);
       }}
     >
-      {/* Jika ada icon tampilkan icon, jika tidak tampilkan title */}
       {icon ? icon : <span>{title}</span>}
 
-      {/* 4. LOGIKA IKON DINAMIS */}
       {isSorted === "asc" ? (
         <ArrowUp className="ml-2 h-4 w-4 text-blue-600 shrink-0" />
       ) : isSorted === "desc" ? (
@@ -48,8 +44,6 @@ const sortableHeader = (column, title, icon = null) => {
         <ChevronsUpDown className="ml-2 h-4 w-4 text-slate-400 opacity-50 group-hover:opacity-100 shrink-0" />
       )}
 
-      {/* 5. BADGE URUTAN (MULTI-SORT) */}
-      {/* Gunakan isSorted saja tanpa check sortIndex > -1 terkadang lebih aman */}
       {isSorted && sortIndex > -1 && (
         <span className="ml-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white shadow-sm animate-in zoom-in-50 duration-200">
           {sortIndex + 1}
@@ -59,7 +53,6 @@ const sortableHeader = (column, title, icon = null) => {
   );
 };
 
-// --- DEFINISI KOLOM ---
 export const columns = [
   // 1. SELECT (CHECKBOX)
   {
@@ -189,7 +182,7 @@ export const columns = [
     },
     header: ({ column }) => {
       const isSorted = column.getIsSorted();
-      const sortIndex = column.getSortIndex(); // Ambil index urutan
+      const sortIndex = column.getSortIndex();
 
       return (
         <TooltipProvider>
