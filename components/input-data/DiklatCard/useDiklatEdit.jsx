@@ -26,15 +26,18 @@ export default function useDiklatEdit(data, onRefresh) {
 
       console.log("Data to be sent for update:", restData);
 
-      const res = await fetch("/api/diklat", {
+      const res = await fetch(`/api/diklat/${data.id}`, {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(restData),
       });
 
       if (res.ok) {
         toast.success("Data berhasil diperbarui");
         setIsEditing(false);
-        onRefresh();
+        if (onRefresh) onRefresh(true);
       } else {
         toast.error("Gagal update data");
       }

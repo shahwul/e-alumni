@@ -83,6 +83,16 @@ export default function DiklatCardHeader({
                 </div>
             )}
 
+            {/* 4. Participant Limit */}
+            {data.participant_limit > 0 && (
+                <div className="flex items-center gap-2" title="Batas Peserta">
+                    <Users className="w-4 h-4 text-slate-400" />
+                    <span className="text-slate-500">
+                        {data.total_peserta || 0} / {data.participant_limit}
+                    </span>
+                </div>
+            )}
+
           </div>
         </div>
 
