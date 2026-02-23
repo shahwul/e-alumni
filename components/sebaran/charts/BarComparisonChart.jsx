@@ -35,7 +35,7 @@ export default function BarComparisonChart({
   }, [kab, kec]);
 
   const { data: dataMetric1, loading: loadingMetric1, error: errorMetric1 } = useAnalytics({
-    metric1,
+    metric: metric1,
     groupBy,
     kab,
     kec,
@@ -45,7 +45,7 @@ export default function BarComparisonChart({
   });
 
   const { data: dataMetric2, loading: loadingMetric2, error: errorMetric2} = useAnalytics({
-    metric2, 
+    metric: metric2, 
     groupBy, 
     kab,
     kec,
@@ -54,8 +54,12 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   })
 
+  console.log("RAW  1", dataMetric1);
+
   const processedData1 = useMemo(() => injectTotal(processData(dataMetric1)), [dataMetric1]);
   const processedData2 = useMemo(() => injectTotal(processData(dataMetric2)), [dataMetric2]);
+
+  console.log("COOKED 1" ,processedData1);
 
   if (loadingMetric1 || loadingMetric2) {
     return (
@@ -86,23 +90,20 @@ export default function BarComparisonChart({
 
         <QuerySelector
           label="Metric"
-          value={metric}
-          onChange={setMetric}
+          value={metric1}
+          onChange={setMetric1}
           options={METRIC_OPTIONS}
         />
       </div>
 
       <ResponsiveContainer width="100%" height="80%">
         <BarChart
-          data={processedData}
+          data={processedData1}
           layout="vertical" // <-- important
         >
           <CartesianGrid strokeDasharray="3 3" />
 
-          {/* Value axis */}
           <XAxis type="number" domain={[0, (max) => Math.ceil(max * 1.1)]} />
-
-          {/* Category axis */}
           <YAxis type="category" dataKey="name" />
 
           <Tooltip />
