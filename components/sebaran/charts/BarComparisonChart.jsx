@@ -17,8 +17,16 @@ import { METRIC_OPTIONS } from "@/lib/constants";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
-export default function BarComparisonChart({ kab, kec, year, diklat, height = 400,  onExpand }) {
-  const [metric, setMetric] = useState("alumni");
+export default function BarComparisonChart({
+  kab,
+  kec,
+  year,
+  diklat,
+  height = 400,
+  onExpand,
+}) {
+  const [metric1, setMetric1] = useState("alumni");
+  const [metric2, setMetric2] = useState("untrained")
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
@@ -26,19 +34,30 @@ export default function BarComparisonChart({ kab, kec, year, diklat, height = 40
     return "jenjang";
   }, [kab, kec]);
 
-  const { data, loading, error } = useAnalytics({
-    metric,
+  const { data: dataMetric1, loading: loadingMetric1, error: errorMetric1 } = useAnalytics({
+    metric1,
     groupBy,
     kab,
     kec,
     year,
     diklat,
-    caller: "BAR CHART"
+    caller: "BAR CHART",
   });
 
-  const processedData = useMemo(() => injectTotal(processData(data)), [data]);
+  const { data: dataMetric2, loading: loadingMetric2, error: errorMetric2} = useAnalytics({
+    metric2, 
+    groupBy, 
+    kab,
+    kec,
+    year,
+    diklat,
+    caller: "BAR CHART",
+  })
 
-  if (loading) {
+  const processedData1 = useMemo(() => injectTotal(processData(dataMetric1)), [dataMetric1]);
+  const processedData2 = useMemo(() => injectTotal(processData(dataMetric2)), [dataMetric2]);
+
+  if (loadingMetric1 || loadingMetric2) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -48,11 +67,11 @@ export default function BarComparisonChart({ kab, kec, year, diklat, height = 40
     );
   }
 
-  if (error || data.length === 0) {
+  if (errorMetric1 || errorMetric2 || dataMetric1.length === 0 || dataMetric2.length ===0) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
-          Data Kosong
+          Data Kosong {errorMetric1} {errorMetric2}
         </div>
       </ChartCard>
     );
@@ -74,10 +93,18 @@ export default function BarComparisonChart({ kab, kec, year, diklat, height = 40
       </div>
 
       <ResponsiveContainer width="100%" height="80%">
-        <BarChart data={processedData}>
+        <BarChart
+          data={processedData}
+          layout="vertical" // <-- important
+        >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis domain={[0, (max) => Math.ceil(max * 1.1)]} />
+
+          {/* Value axis */}
+          <XAxis type="number" domain={[0, (max) => Math.ceil(max * 1.1)]} />
+
+          {/* Category axis */}
+          <YAxis type="category" dataKey="name" />
+
           <Tooltip />
           <Bar dataKey="value" />
         </BarChart>

@@ -32,6 +32,7 @@ import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
 import JenjangPtkChart from "@/components/sebaran/charts/JenjangPtkChart";
 import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
+import StackedChartComparison from "@/components/sebaran/charts/StackedComparisonChart";
 
 export default function DataSection({
   selectedKab,
