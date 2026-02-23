@@ -26,7 +26,7 @@ export default function BarComparisonChart({
   onExpand,
 }) {
   const [metric1, setMetric1] = useState("alumni");
-  const [metric2, setMetric2] = useState("untrained")
+  const [metric2, setMetric2] = useState("untrained");
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
@@ -34,7 +34,11 @@ export default function BarComparisonChart({
     return "jenjang";
   }, [kab, kec]);
 
-  const { data: dataMetric1, loading: loadingMetric1, error: errorMetric1 } = useAnalytics({
+  const {
+    data: dataMetric1,
+    loading: loadingMetric1,
+    error: errorMetric1,
+  } = useAnalytics({
     metric: metric1,
     groupBy,
     kab,
@@ -44,22 +48,32 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   });
 
-  const { data: dataMetric2, loading: loadingMetric2, error: errorMetric2} = useAnalytics({
-    metric: metric2, 
-    groupBy, 
+  const {
+    data: dataMetric2,
+    loading: loadingMetric2,
+    error: errorMetric2,
+  } = useAnalytics({
+    metric: metric2,
+    groupBy,
     kab,
     kec,
     year,
     diklat,
     caller: "BAR CHART",
-  })
+  });
 
   console.log("RAW  1", dataMetric1);
 
-  const processedData1 = useMemo(() => injectTotal(processData(dataMetric1)), [dataMetric1]);
-  const processedData2 = useMemo(() => injectTotal(processData(dataMetric2)), [dataMetric2]);
+  const processedData1 = useMemo(
+    () => injectTotal(processData(dataMetric1)),
+    [dataMetric1],
+  );
+  const processedData2 = useMemo(
+    () => injectTotal(processData(dataMetric2)),
+    [dataMetric2],
+  );
 
-  console.log("COOKED 1" ,processedData1);
+  console.log("COOKED 1", processedData1);
 
   if (loadingMetric1 || loadingMetric2) {
     return (
@@ -71,7 +85,12 @@ export default function BarComparisonChart({
     );
   }
 
-  if (errorMetric1 || errorMetric2 || dataMetric1.length === 0 || dataMetric2.length ===0) {
+  if (
+    errorMetric1 ||
+    errorMetric2 ||
+    dataMetric1.length === 0 ||
+    dataMetric2.length === 0
+  ) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -96,10 +115,11 @@ export default function BarComparisonChart({
         />
       </div>
 
-      <ResponsiveContainer width="100%" height="80%">
+      <ResponsiveContainer width="100%" height="90%">
         <BarChart
           data={processedData1}
-          layout="vertical" // <-- important
+          layout="vertical"
+          margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
 

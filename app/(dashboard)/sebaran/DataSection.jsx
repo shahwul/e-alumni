@@ -195,7 +195,7 @@ export default function DataSection({
               kec={selectedKec}
               year={selectedYear}
               diklat={selectedDiklat}
-              height={400}
+              height={600}
               onExpand={() => setActiveChart("barComparison")}
             />
           </div>
