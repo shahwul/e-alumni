@@ -17,7 +17,7 @@ export default function PtkVsAlumniChart({
   height = 300,
   onExpand,
 }) {
-  const [metric1, setMetric1] = useState("ptk");
+  const [metric1, setMetric1] = useState("untrained");
   const [metric2, setMetric2] = useState("alumni");
 
   const alumni = useAnalytics({
