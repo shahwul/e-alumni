@@ -32,6 +32,7 @@ import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
 import JenjangPtkChart from "@/components/sebaran/charts/JenjangPtkChart";
 import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
+import StackedChartComparison from "@/components/sebaran/charts/StackedComparisonChart";
 
 export default function DataSection({
   selectedKab,
@@ -82,7 +83,6 @@ export default function DataSection({
     ),
   };
 
-
   useEffect(() => {
     const controller = new AbortController();
 
@@ -114,7 +114,7 @@ export default function DataSection({
       selectedKab,
       selectedKec,
       selectedYear,
-      selectedDiklat
+      selectedDiklat,
     });
     console.log("Data fetched:", data);
     return () => controller.abort();
@@ -171,15 +171,6 @@ export default function DataSection({
         />
         {/* Chart Cards */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <JenjangPtkChart
-            kab={selectedKab}
-            kec={selectedKec}
-            year={selectedYear}
-            diklat={selectedDiklat}
-            height={400}
-            onExpand={() => setActiveChart("jenjang")}
-          />
-
           <PtkVsAlumniChart
             kab={selectedKab}
             kec={selectedKec}
@@ -187,6 +178,15 @@ export default function DataSection({
             diklat={selectedDiklat}
             height={400}
             onExpand={() => setActiveChart("ptkVsAlumni")}
+          />
+
+          <JenjangPtkChart
+            kab={selectedKab}
+            kec={selectedKec}
+            year={selectedYear}
+            diklat={selectedDiklat}
+            height={400}
+            onExpand={() => setActiveChart("jenjang")}
           />
 
           <div className="md:col-span-2">

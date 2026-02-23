@@ -5,13 +5,20 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { processData, injectTotal } from "../helpers/utils";
 import { METRIC_OPTIONS } from "@/lib/constants";
 
-import { CustomTooltip }  from "../CustomTooltip";
+import { CustomTooltip } from "../CustomTooltip";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300, onExpand }) {
-  const [ metric1, setMetric1 ] = useState("ptk");
-  const [ metric2, setMetric2 ] = useState("alumni");
+export default function PtkVsAlumniChart({
+  kab,
+  kec,
+  year,
+  diklat,
+  height = 300,
+  onExpand,
+}) {
+  const [metric1, setMetric1] = useState("ptk");
+  const [metric2, setMetric2] = useState("alumni");
 
   const alumni = useAnalytics({
     metric: metric2,
@@ -19,7 +26,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     kec,
     year,
     diklat,
-       caller: "VS CHART 1"
+    caller: "VS CHART 1",
   });
 
   const untrained = useAnalytics({
@@ -27,7 +34,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     kab,
     kec,
     year,
-       caller: "VS CHART 2"
+    caller: "VS CHART 2",
   });
 
   const loading = alumni.loading || untrained.loading;
@@ -49,10 +56,9 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
     [loading, alumni.data, untrained.data], // Updated dependencies
   );
 
-
   if (loading) {
     return (
-      <ChartCard title="PTK vs Alumni" height={height}>
+      <ChartCard title="Perbandingan Alumni & Non-Alumni" height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
           Loading…
         </div>
@@ -62,7 +68,7 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
 
   if (!data.length || data.every((item) => item.value === 0)) {
     return (
-      <ChartCard title="PTK vs Alumni" height={height}>
+      <ChartCard title="Perbandingan Alumni & Non-Alumni" height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
           Data Kosong
         </div>
@@ -72,12 +78,12 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
 
   return (
     <ChartCard height={height} onExpand={onExpand}>
-            <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <h5 className="text-sm font-semibold text-slate-600">
-          Ptk vs Alumni
+          Perbandingan Alumni & Non-Alumni
         </h5>
-        </div>
-      <ResponsiveContainer width="100%" height="100%">
+      </div>
+      <ResponsiveContainer width="100%" height="80%">
         <PieChart>
           <Pie
             data={data}
@@ -90,7 +96,12 @@ export default function PtkVsAlumniChart({ kab, kec, year, diklat, height = 300,
             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend verticalAlign="bottom" height={36} iconType="circle" />
+          <Legend
+            verticalAlign="bottom"
+            align="center"
+            layout="horizontal"
+            iconType="circle"
+          />
         </PieChart>
       </ResponsiveContainer>
     </ChartCard>

@@ -8,7 +8,14 @@ import { processData, injectTotal } from "../helpers/utils";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
-export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, onExpand }) {
+export default function JenjangPtkChart({
+  kab,
+  kec,
+  year,
+  diklat,
+  height = 300,
+  onExpand,
+}) {
   const [metric, setMetric] = useState("alumni");
 
   const { data, loading } = useAnalytics({
@@ -18,7 +25,7 @@ export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, 
     kec,
     year,
     diklat,
-       caller: "JENJANG CHART"
+    caller: "JENJANG CHART",
   });
 
   const processedData = useMemo(() => injectTotal(processData(data)), [data]);
@@ -57,7 +64,7 @@ export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, 
           options={METRIC_OPTIONS}
         />
       </div>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="80%">
         <PieChart>
           <Pie
             data={processedData}
@@ -69,7 +76,12 @@ export default function JenjangPtkChart({ kab, kec, year, diklat, height = 300, 
             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
           />
           <Tooltip />
-          <Legend verticalAlign="bottom" height={36} iconType="circle" />
+          <Legend
+            verticalAlign="bottom"
+            align="center"
+            layout="horizontal"
+            iconType="circle"
+          />
         </PieChart>
       </ResponsiveContainer>
     </ChartCard>
