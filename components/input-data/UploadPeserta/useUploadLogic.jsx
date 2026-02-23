@@ -1,13 +1,33 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { parseExcelPeserta } from "../utils/excel-processor";
 
 export function useUploadLogic(diklatId, onSuccess) {
   const [parsedData, setParsedData] = useState([]);
   const [isValidating, setIsValidating] = useState(false);
+  const [quotaInfo, setQuotaInfo] = useState({ limit: 0, current: 0 });
   const [isUploading, setIsUploading] = useState(false);
   const [validationDone, setValidationDone] = useState(false);
   const [needsRevalidation, setNeedsRevalidation] = useState(false);
+
+  const fetchQuota = useCallback(async () => {
+  try {
+    const res = await fetch(`/api/diklat/${diklatId}`); // Pastikan endpoint ini return limit & count
+    const json = await res.json();
+    setQuotaInfo({
+      limit: json.data.participant_limit || 0,
+      current: json.data._count?.data_alumni || 0
+    });
+    } catch (err) {
+      console.error("Gagal ambil kuota", err);
+    }
+  }, [diklatId]);
+
+  useEffect(() => {
+    if (diklatId) fetchQuota();
+  }, [fetchQuota]);
+
+  const sisaQuota = quotaInfo.limit > 0 ? quotaInfo.limit - quotaInfo.current : Infinity;
 
   const markDuplicates = (data) => {
     const nikMap = {};
@@ -186,5 +206,7 @@ const validateData = async (dataToValidate) => {
     handleSyncData,
     handleDeleteRow,
     handleSave,
+    sisaQuota,
+    fetchQuota
   };
 }
