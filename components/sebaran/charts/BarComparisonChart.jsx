@@ -163,7 +163,7 @@ export default function BarComparisonChart({
               0,
               (max) => {
                 const padded = max * 1.1;
-                return padded < 5 ? 5 : Math.ceil(padded);
+                return padded > 100 ? 100 : (padded < 5 ? 5 : Math.ceil(padded));
               },
             ]}
             tickFormatter={(value) => `${value}%`}
