@@ -40,6 +40,11 @@ export default function BarComparisonChart({
     loading: loadingMetric1,
     error: errorMetric1,
   } = useAnalytics({
+  const {
+    data: dataMetric1,
+    loading: loadingMetric1,
+    error: errorMetric1,
+  } = useAnalytics({
     metric: metric1,
     groupBy,
     kab,
@@ -56,6 +61,13 @@ export default function BarComparisonChart({
   } = useAnalytics({
     metric: metric2,
     groupBy,
+  const {
+    data: dataMetric2,
+    loading: loadingMetric2,
+    error: errorMetric2,
+  } = useAnalytics({
+    metric: metric2,
+    groupBy,
     kab,
     kec,
     year,
@@ -63,6 +75,14 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   });
 
+  const processedData1 = useMemo(
+    () => injectTotal(processData(dataMetric1)),
+    [dataMetric1],
+  );
+  const processedData2 = useMemo(
+    () => injectTotal(processData(dataMetric2)),
+    [dataMetric2],
+  );
   const processedData1 = useMemo(
     () => injectTotal(processData(dataMetric1)),
     [dataMetric1],
@@ -124,6 +144,12 @@ export default function BarComparisonChart({
     dataMetric1.length === 0 ||
     dataMetric2.length === 0
   ) {
+  if (
+    errorMetric1 ||
+    errorMetric2 ||
+    dataMetric1.length === 0 ||
+    dataMetric2.length === 0
+  ) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -148,10 +174,11 @@ export default function BarComparisonChart({
         />
       </div>
 
-      <ResponsiveContainer width="100%" height="80%">
+      <ResponsiveContainer width="100%" height="90%">
         <BarChart
           data={combData}
-          layout="vertical" // <-- important
+          layout="vertical"
+          margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
 

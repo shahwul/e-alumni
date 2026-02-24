@@ -133,7 +133,7 @@ export default function DataSection({
     );
 
   return (
-    <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 min-h-0">
+    <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 min-h-0 ">
       <PopupModal
         isOpen={activeChart !== null}
         onClose={() => setActiveChart(null)}
@@ -195,7 +195,7 @@ export default function DataSection({
               kec={selectedKec}
               year={selectedYear}
               diklat={selectedDiklat}
-              height={400}
+              height={600}
               onExpand={() => setActiveChart("barComparison")}
             />
           </div>
