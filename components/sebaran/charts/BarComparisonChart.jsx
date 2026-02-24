@@ -31,6 +31,12 @@ export default function BarComparisonChart({
   const [metric1, setMetric1] = useState("alumni");
   const [metric2, setMetric2] = useState("ptk");
 
+  const allowedMetrics = useMemo(() => {
+  return METRIC_OPTIONS.filter((opt) =>
+    ["alumni", "untrained"].includes(opt.value)
+  );
+}, []);
+
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
     if (kab && !kec) return "kecamatan";
@@ -146,7 +152,7 @@ export default function BarComparisonChart({
           label="Metric"
           value={metric1}
           onChange={setMetric1}
-          options={METRIC_OPTIONS}
+          options={allowedMetrics}
         />
       </div>
 
