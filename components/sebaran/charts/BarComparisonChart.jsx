@@ -40,11 +40,6 @@ export default function BarComparisonChart({
     loading: loadingMetric1,
     error: errorMetric1,
   } = useAnalytics({
-  const {
-    data: dataMetric1,
-    loading: loadingMetric1,
-    error: errorMetric1,
-  } = useAnalytics({
     metric: metric1,
     groupBy,
     kab,
@@ -61,13 +56,6 @@ export default function BarComparisonChart({
   } = useAnalytics({
     metric: metric2,
     groupBy,
-  const {
-    data: dataMetric2,
-    loading: loadingMetric2,
-    error: errorMetric2,
-  } = useAnalytics({
-    metric: metric2,
-    groupBy,
     kab,
     kec,
     year,
@@ -75,14 +63,6 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   });
 
-  const processedData1 = useMemo(
-    () => injectTotal(processData(dataMetric1)),
-    [dataMetric1],
-  );
-  const processedData2 = useMemo(
-    () => injectTotal(processData(dataMetric2)),
-    [dataMetric2],
-  );
   const processedData1 = useMemo(
     () => injectTotal(processData(dataMetric1)),
     [dataMetric1],
@@ -144,12 +124,6 @@ export default function BarComparisonChart({
     dataMetric1.length === 0 ||
     dataMetric2.length === 0
   ) {
-  if (
-    errorMetric1 ||
-    errorMetric2 ||
-    dataMetric1.length === 0 ||
-    dataMetric2.length === 0
-  ) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -195,14 +169,26 @@ export default function BarComparisonChart({
           />
           <YAxis type="category" dataKey="name" />
 
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              fontSize: "12px",
+              padding: "6px 8px",
+            }}
+            itemStyle={{
+              fontSize: "12px",
+            }}
+            labelStyle={{
+              fontSize: "12px",
+              fontWeight: 500,
+            }}
+          />
           <Bar dataKey="percentage">
             {combData.map((entry, index) => (
               <Cell key={`m1-${index}`} fill={entry.fill} />
             ))}
           </Bar>
 
-          <Bar dataKey={metric2} fill="#82ca9d" />
+          {/* <Bar dataKey={metric2} fill="#82ca9d" /> */}
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

@@ -1,7 +1,6 @@
 import { Montserrat, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import { icon } from "leaflet";
 
 const source_sans_3 = Source_Sans_3({
   variable: "--font-source-sans-3",
@@ -18,9 +17,6 @@ const montserrat = Montserrat({
 export const metadata = {
   title: "E-Alumni",
   description: "Aplikasi untuk mempermudah pengelolaan data alumni BBGTK",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({ children }) {

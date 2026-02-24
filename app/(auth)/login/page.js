@@ -39,11 +39,7 @@ export default function LoginPage() {
               className="flex items-center gap-2 font-medium item-center text-center"
             >
               <div className=" flex size-15 items-center justify-center">
-                <img
-                  src="/favicon.ico"
-                  alt="Logo"
-                  className="h-8 w-8 rounded-lg shrink-0 object-cover"
-                />
+                <img src="favicon.ico" alt="Logo" />
               </div>
               <div className="grid col-2 justify-items-start gap-y-0">
                 <div className="hidden text-xl font-bold sm:block leading-none m-0">
