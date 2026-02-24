@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  Label,
 } from "recharts";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useMemo, useState } from "react";
@@ -167,7 +168,23 @@ export default function BarComparisonChart({
             ]}
             tickFormatter={(value) => `${value}%`}
           />
-          <YAxis type="category" dataKey="name" />
+          <YAxis
+            type="category"
+            dataKey="name"
+            interval={0}
+            tick={({ x, y, payload }) => (
+              <text
+                x={x}
+                y={y}
+                dy={4}
+                textAnchor="end"
+                fill="#64748b"
+                fontSize={12}
+              >
+                {payload.value}
+              </text>
+            )}
+          />
 
           <Tooltip
             contentStyle={{
