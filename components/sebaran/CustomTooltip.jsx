@@ -1,6 +1,6 @@
 "use client";
 
-export const CustomTooltip = ({ active, payload }) => {
+export const CustomTooltipAlumniPtk = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const dataPoint = payload[0];
     const total = payload[0].payload.totalCount || 0;
@@ -26,4 +26,42 @@ export const CustomTooltip = ({ active, payload }) => {
     );
   }
   return null;
+};
+
+export const CustomTooltipBarchart = ({ active, payload, label, metric1, metric2 }) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const row = payload[0].payload;
+
+  const percent =
+    row.percentage != null
+      ? Math.floor(row.percentage * 10) / 10
+      : 0;
+
+  return (
+    <div className="bg-white p-3 border border-slate-200 shadow-md rounded text-xs">
+      <p className="font-bold mb-1">{label}</p>
+
+      <p className="text-slate-600">
+        Jumlah {metric1}:{" "}
+        <span className="font-semibold text-blue-600">
+          {new Intl.NumberFormat("id-ID").format(row.metric1Value)}
+        </span>
+      </p>
+
+      <p className="text-slate-600">
+        Total ({metric2}):{" "}
+        <span className="font-semibold text-indigo-600">
+          {new Intl.NumberFormat("id-ID").format(row.metric2Value)}
+        </span>
+      </p>
+
+      <p className="text-slate-500">
+        Persentase:{" "}
+        <span className="font-semibold text-green-600">
+          {percent}%
+        </span>
+      </p>
+    </div>
+  );
 };

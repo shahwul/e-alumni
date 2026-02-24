@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 import { processData, injectTotal } from "../helpers/utils";
 import { METRIC_OPTIONS } from "@/lib/constants";
 
+import { CustomTooltipBarchart } from "../CustomTooltip";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
@@ -163,7 +164,7 @@ export default function BarComparisonChart({
               0,
               (max) => {
                 const padded = max * 1.1;
-                return padded > 100 ? 100 : (padded < 5 ? 5 : Math.ceil(padded));
+                return padded > 100 ? 100 : padded < 5 ? 5 : Math.ceil(padded);
               },
             ]}
             tickFormatter={(value) => `${value}%`}
@@ -187,17 +188,18 @@ export default function BarComparisonChart({
           />
 
           <Tooltip
-            contentStyle={{
-              fontSize: "12px",
-              padding: "6px 8px",
-            }}
-            itemStyle={{
-              fontSize: "12px",
-            }}
-            labelStyle={{
-              fontSize: "12px",
-              fontWeight: 500,
-            }}
+            content={
+              <CustomTooltipBarchart
+                metric1={
+                  METRIC_OPTIONS.find((option) => option.value === metric1)
+                    ?.label || "Unknown"
+                }
+                metric2={
+                  METRIC_OPTIONS.find((option) => option.value === metric2)
+                    ?.label || "Unknown"
+                }
+              />
+            }
           />
           <Bar dataKey="percentage">
             {combData.map((entry, index) => (
