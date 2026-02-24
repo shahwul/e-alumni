@@ -1,4 +1,5 @@
 import {
+  Cell,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -26,7 +27,7 @@ export default function BarComparisonChart({
   onExpand,
 }) {
   const [metric1, setMetric1] = useState("alumni");
-  const [metric2, setMetric2] = useState("untrained")
+  const [metric2, setMetric2] = useState("ptk");
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
@@ -34,7 +35,11 @@ export default function BarComparisonChart({
     return "jenjang";
   }, [kab, kec]);
 
-  const { data: dataMetric1, loading: loadingMetric1, error: errorMetric1 } = useAnalytics({
+  const {
+    data: dataMetric1,
+    loading: loadingMetric1,
+    error: errorMetric1,
+  } = useAnalytics({
     metric: metric1,
     groupBy,
     kab,
@@ -44,22 +49,64 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   });
 
-  const { data: dataMetric2, loading: loadingMetric2, error: errorMetric2} = useAnalytics({
-    metric: metric2, 
-    groupBy, 
+  const {
+    data: dataMetric2,
+    loading: loadingMetric2,
+    error: errorMetric2,
+  } = useAnalytics({
+    metric: metric2,
+    groupBy,
     kab,
     kec,
     year,
     diklat,
     caller: "BAR CHART",
-  })
+  });
 
-  console.log("RAW  1", dataMetric1);
+  const processedData1 = useMemo(
+    () => injectTotal(processData(dataMetric1)),
+    [dataMetric1],
+  );
+  const processedData2 = useMemo(
+    () => injectTotal(processData(dataMetric2)),
+    [dataMetric2],
+  );
 
-  const processedData1 = useMemo(() => injectTotal(processData(dataMetric1)), [dataMetric1]);
-  const processedData2 = useMemo(() => injectTotal(processData(dataMetric2)), [dataMetric2]);
+  const combData = useMemo(() => {
+    const map = new Map();
 
-  console.log("COOKED 1" ,processedData1);
+    processedData1.forEach((item) => {
+      map.set(item.name, {
+        name: item.name,
+        fill: item.fill,
+        totalCount: item.totalCount,
+        metric1Value: item.value,
+        metric2Value: 0,
+      });
+    });
+
+    processedData2.forEach((item) => {
+      if (map.has(item.name)) {
+        map.get(item.name).metric2Value = item.value;
+      } else {
+        map.set(item.name, {
+          name: item.name,
+          fill: item.fill,
+          totalCount: item.totalCount,
+          metric1Value: 0,
+          metric2Value: item.value,
+        });
+      }
+    });
+
+    return Array.from(map.values()).map((item) => ({
+      ...item,
+      percentage:
+        item.metric2Value > 0
+          ? (item.metric1Value / item.metric2Value) * 100
+          : 0,
+    }));
+  }, [processedData1, processedData2]);
 
   if (loadingMetric1 || loadingMetric2) {
     return (
@@ -71,7 +118,12 @@ export default function BarComparisonChart({
     );
   }
 
-  if (errorMetric1 || errorMetric2 || dataMetric1.length === 0 || dataMetric2.length ===0) {
+  if (
+    errorMetric1 ||
+    errorMetric2 ||
+    dataMetric1.length === 0 ||
+    dataMetric2.length === 0
+  ) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -98,16 +150,32 @@ export default function BarComparisonChart({
 
       <ResponsiveContainer width="100%" height="80%">
         <BarChart
-          data={processedData1}
+          data={combData}
           layout="vertical" // <-- important
         >
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis type="number" domain={[0, (max) => Math.ceil(max * 1.1)]} />
+          <XAxis
+            type="number"
+            domain={[
+              0,
+              (max) => {
+                const padded = max * 1.1;
+                return padded < 5 ? 5 : Math.ceil(padded);
+              },
+            ]}
+            tickFormatter={(value) => `${value}%`}
+          />
           <YAxis type="category" dataKey="name" />
 
           <Tooltip />
-          <Bar dataKey="value" />
+          <Bar dataKey="percentage">
+            {combData.map((entry, index) => (
+              <Cell key={`m1-${index}`} fill={entry.fill} />
+            ))}
+          </Bar>
+
+          <Bar dataKey={metric2} fill="#82ca9d" />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
