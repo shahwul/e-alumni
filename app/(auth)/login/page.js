@@ -36,9 +36,9 @@ export default function LoginPage() {
           <div className="flex justify-center gap-2 md:justify-center">
             <a
               href="#"
-              className="flex items-center gap-2 font-medium item-center text-center"
+              className="flex items-center gap-6 font-medium item-center text-center"
             >
-              <div className=" flex size-15 items-center justify-center">
+              <div className=" flex size-12 items-center justify-center">
                 <img src="favicon.ico" alt="Logo" />
               </div>
               <div className="grid col-2 justify-items-start gap-y-0">
