@@ -33,7 +33,7 @@ export default function BarComparisonChart({
 
   const allowedMetrics = useMemo(() => {
   return METRIC_OPTIONS.filter((opt) =>
-    ["alumni", "ptk"].includes(opt.value)
+    ["alumni", "untrained"].includes(opt.value)
   );
 }, []);
 
