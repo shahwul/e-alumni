@@ -1,34 +1,7 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
-  const [form, setForm] = useState({ username: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        router.push("/ptk");
-      } else {
-        alert(data.message);
-      }
-    } catch (err) {
-      alert("Gagal koneksi ke server");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="flex min-h-svh items-center justify-center bg-slate-50 p-4 md:p-10">
       <div className="grid w-sm overflow-hidden rounded-[26px] bg-white shadow-sm lg:grid-cols-1">
