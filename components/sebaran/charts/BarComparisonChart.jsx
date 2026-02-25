@@ -159,7 +159,7 @@ export default function BarComparisonChart({
   ) {
     return (
       <ChartCard height={height}>
-        <div className="h-full flex items-center justify-center text-slate-400">
+        <div className="h-full flex items-center justify-center text-slate-400 ">
           Data Kosong {errorMetric1} {errorMetric2}
         </div>
       </ChartCard>
