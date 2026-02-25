@@ -168,7 +168,7 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
                                 <div className="text-[10px] text-slate-400">{row.kabupaten || "-"}</div>
                             </TableCell>
                             <TableCell className="text-xs text-slate-600">{row.jabatan_ptk}</TableCell>
-                            <TableCell className="text-xs text-slate-600">{row.riwayat_sertifikasi || "-"}</TableCell>
+                            <TableCell className="text-xs text-slate-600">{row.riwayat_sertifikasi_bidang_studi || "-"}</TableCell>
                             <TableCell className="text-right">
                                 <Button 
                                   variant="ghost" 

@@ -33,33 +33,33 @@ export async function GET() {
       prisma.data_ptk.findMany({
         where: {
           NOT: [
-            { riwayat_sertifikasi: null },
-            { riwayat_sertifikasi: "" }
+            { riwayat_sertifikasi_bidang_studi: null },
+            { riwayat_sertifikasi_bidang_studi: "" }
           ]
         },
-        distinct: ['riwayat_sertifikasi'],
-        select: { riwayat_sertifikasi: true },
-        orderBy: { riwayat_sertifikasi: 'asc' }
+        distinct: ['riwayat_sertifikasi_bidang_studi'],
+        select: { riwayat_sertifikasi_bidang_studi: true },
+        orderBy: { riwayat_sertifikasi_bidang_studi: 'asc' }
       }),
 
       prisma.data_ptk.findMany({
         where: {
           NOT: [
-            { riwayat_pend_bidang: null },
-            { riwayat_pend_bidang: "" }
+            { riwayat_pendidikan_formal_bidang_studi: null },
+            { riwayat_pendidikan_formal_bidang_studi: "" }
           ]
         },
-        distinct: ['riwayat_pend_bidang'],
-        select: { riwayat_pend_bidang: true },
-        orderBy: { riwayat_pend_bidang: 'asc' }
+        distinct: ['riwayat_pendidikan_formal_bidang_studi'],
+        select: { riwayat_pendidikan_formal_bidang_studi: true },
+        orderBy: { riwayat_pendidikan_formal_bidang_studi: 'asc' }
       })
     ]);
 
     const responseData = {
       jenisPtk: jenisPtkRes.map(item => item.jenis_ptk),
       statusKepegawaian: statusRes.map(item => item.status_kepegawaian),
-      mapel: mapelRes.map(item => item.riwayat_sertifikasi),
-      jurusan: jurusanRes.map(item => item.riwayat_pend_bidang),
+      mapel: mapelRes.map(item => item.riwayat_sertifikasi_bidang_studi),
+      jurusan: jurusanRes.map(item => item.riwayat_pendidikan_formal_bidang_studi),
     };
 
     return NextResponse.json(responseData);

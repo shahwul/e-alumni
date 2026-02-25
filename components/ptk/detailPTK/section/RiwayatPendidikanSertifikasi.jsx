@@ -33,8 +33,8 @@ export default function RiwayatPendidikanSertifikasi({ mode, pusat, pelita }) {
           />
           <InfoItem
             label="Tugas Tambahan"
-            pusat={pusat?.tugas_tambahan}
-            pelita={pelita?.tugas_tambahan}
+            pusat={pusat?.tugas_tambahan_jabatan_ptk}
+            pelita={pelita?.tugas_tambahan_jabatan_ptk}
             mode={mode}
           />
         </div>

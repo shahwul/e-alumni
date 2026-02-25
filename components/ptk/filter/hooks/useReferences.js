@@ -75,3 +75,17 @@ export function useKategori() {
     isError: error
   };
 }
+
+export function useJenjang() {
+  const { data, error, isLoading } = useSWR('/api/ref/jenjang', fetcher, {
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    dedupingInterval: 3600000,
+  });
+
+  return {
+    jenjang: data || [],
+    isLoading,
+    isError: error
+  };
+}

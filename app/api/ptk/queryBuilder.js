@@ -74,19 +74,19 @@ export async function buildPrismaQuery(searchParams, prisma) {
 
   if (p.mapel) {
     where.AND.push({
-      riwayat_sertifikasi: { contains: p.mapel, mode: "insensitive" },
+      riwayat_sertifikasi_bidang_studi: { contains: p.mapel, mode: "insensitive" },
     });
   }
 
   if (p.bidangPendidikan) {
     where.AND.push({
-      riwayat_pend_bidang: { contains: p.bidangPendidikan, mode: "insensitive" },
+      riwayat_pendidikan_formal_bidang_studi: { contains: p.bidangPendidikan, mode: "insensitive" },
     });
   }
 
   if (p.pendidikanTerakhir) {
     where.AND.push({
-      riwayat_pend_jenjang: { contains: p.pendidikanTerakhir, mode: "insensitive" },
+      riwayat_pendidikan_formal_jenjang_pendidikan: { contains: p.pendidikanTerakhir, mode: "insensitive" },
     });
   }
 
@@ -190,7 +190,7 @@ const dateCriteria = p.startDate && p.endDate ? {
       sekolah: "nama_sekolah",
       usia: "usia_tahun",
       status: "status_kepegawaian",
-      mapel: "riwayat_sertifikasi",
+      mapel: "riwayat_sertifikasi_bidang_studi",
       tanggal: "start_date",
       jumlah_diklat: "jumlah_diklat",
     };

@@ -33,16 +33,16 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
         { header: "Golongan", key: "pangkat_golongan", width: 10 },
         { header: "Jenis PTK", key: "jenis_ptk", width: 20 },
         { header: "Jabatan (Gabungan)", key: "jabatan", width: 30 },
-        { header: "Tugas Tambahan", key: "tugas_tambahan", width: 20 },
+        { header: "Tugas Tambahan", key: "tugas_tambahan_jabatan_ptk", width: 20 },
         { header: "SK CPNS", key: "sk_cpns", width: 20 },
         { header: "TMT CPNS", key: "tmt_cpns", width: 15 },
         { header: "SK Pengangkatan", key: "sk_pengangkatan", width: 20 },
         { header: "TMT Pengangkatan", key: "tmt_pengangkatan", width: 15 },
         { header: "TMT Tugas", key: "tmt_tugas", width: 15 },
-        { header: "Masa Kerja (Thn)", key: "masa_kerja_tahun", width: 10 },
-        { header: "Pendidikan", key: "riwayat_pend_jenjang", width: 10 },
-        { header: "Bidang Studi", key: "riwayat_pend_bidang", width: 20 },
-        { header: "Sertifikasi", key: "riwayat_sertifikasi", width: 30 },
+        { header: "Masa Kerja (Thn)", key: "masa_kerja_thn", width: 10 },
+        { header: "Pendidikan", key: "riwayat_pendidikan_formal_jenjang_pendidikan", width: 10 },
+        { header: "Bidang Studi", key: "riwayat_pendidikan_formal_bidang_studi", width: 20 },
+        { header: "Sertifikasi", key: "riwayat_sertifikasi_bidang_studi", width: 30 },
     ];
 
     sheet.columns = columnsConfig.map(col => ({ key: col.key, width: col.width }));
@@ -84,16 +84,16 @@ export const generateAndDownloadExcel = async (data, diklatTitle) => {
             pangkat_golongan: row.pangkat_golongan || "-",
             jenis_ptk: row.jenis_ptk || "-",
             jabatan: `${row.jabatan_ptk || ''} ${row.pangkat_golongan ? `(${row.pangkat_golongan})` : ''}`,
-            tugas_tambahan: row.tugas_tambahan || "-",
+            tugas_tambahan_jabatan_ptk: row.tugas_tambahan_jabatan_ptk || "-",
             sk_cpns: row.sk_cpns || "-",
             tmt_cpns: row.tmt_cpns || "-",
             sk_pengangkatan: row.sk_pengangkatan || "-",
             tmt_pengangkatan: row.tmt_pengangkatan || "-",
             tmt_tugas: row.tmt_tugas || "-",
-            masa_kerja_tahun: row.masa_kerja_tahun || "-",
-            riwayat_pend_jenjang: row.riwayat_pend_jenjang || "-",
-            riwayat_pend_bidang: row.riwayat_pend_bidang || "-",
-            riwayat_sertifikasi: row.riwayat_sertifikasi || "-",
+            masa_kerja_thn: row.masa_kerja_thn || "-",
+            riwayat_pendidikan_formal_jenjang_pendidikan: row.riwayat_pendidikan_formal_jenjang_pendidikan || "-",
+            riwayat_pendidikan_formal_bidang_studi: row.riwayat_pendidikan_formal_bidang_studi || "-",
+            riwayat_sertifikasi_bidang_studi: row.riwayat_sertifikasi_bidang_studi || "-",
         });
 
         addedRow.eachCell((cell) => {

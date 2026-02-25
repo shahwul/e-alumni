@@ -10,12 +10,20 @@ datasource db {
 }
 
 model audit_logs {
-  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id    String?   @db.Uuid
-  action     String    @db.VarChar(100)
-  details    String?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  id          String   @id
+  user_id     String
+  action      String
+  resource    String
+  resource_id String?
+  old_value   Json?
+  new_value   Json?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now())
+
+  @@index([created_at])
+  @@index([resource])
+  @@index([user_id])
 }
 
 model data_alumni {
@@ -42,37 +50,38 @@ model data_alumni {
 }
 
 model data_ptk {
-  nik                  String             @id @db.VarChar(16)
-  nuptk                String?            @db.VarChar(16)
-  nip                  String?            @db.VarChar(18)
-  nama_ptk             String             @db.VarChar(100)
-  jenis_kelamin        String?            @db.Char(1)
-  tempat_lahir         String?            @db.VarChar(32)
-  tanggal_lahir        DateTime?          @db.Date
-  agama                String?            @db.VarChar(25)
-  no_hp                String?            @db.VarChar(20)
-  kode_pos             String?            @db.Char(5)
-  email                String?            @db.VarChar(100)
-  status_kepegawaian   String?            @db.VarChar(40)
-  pangkat_golongan     String?            @db.VarChar(30)
-  jenis_ptk            String?            @db.VarChar(30)
-  jabatan_ptk          String?            @db.VarChar(50)
-  tugas_tambahan       String?            @db.VarChar(50)
-  sk_cpns              String?            @db.VarChar(80)
-  tgl_cpns             DateTime?          @db.Date
-  sk_pengangkatan      String?            @db.VarChar(80)
-  tmt_pengangkatan     DateTime?          @db.Date
-  tmt_tugas            DateTime?          @db.Date
-  masa_kerja_tahun     Int?
-  riwayat_pend_jenjang String?            @db.VarChar(50)
-  riwayat_pend_bidang  String?            @db.VarChar(50)
-  riwayat_sertifikasi  String?            @db.VarChar(50)
-  npsn                 String?            @db.Char(8)
-  data_alumni          data_alumni[]
-  satuan_pendidikan    satuan_pendidikan? @relation(fields: [npsn], references: [npsn], onDelete: NoAction, onUpdate: NoAction)
-  diklat_kandidat      diklat_kandidat[]
+  nik                                          String             @id @db.VarChar(25)
+  nuptk                                        String?            @db.VarChar(25)
+  nip                                          String?            @db.VarChar(18)
+  nama_ptk                                     String             @db.VarChar(150)
+  jenis_kelamin                                String?            @db.Char(1)
+  tempat_lahir                                 String?            @db.VarChar(100)
+  tanggal_lahir                                DateTime?          @db.Date
+  agama                                        String?            @db.VarChar(25)
+  no_hp                                        String?            @db.VarChar(20)
+  kode_pos                                     String?            @db.Char(5)
+  email                                        String?            @db.VarChar(100)
+  status_kepegawaian                           String?            @db.VarChar(40)
+  pangkat_golongan                             String?            @db.VarChar(30)
+  jenis_ptk                                    String?            @db.VarChar(30)
+  jabatan_ptk                                  String?            @db.VarChar(50)
+  tugas_tambahan_jabatan_ptk                   String?            @db.VarChar(50)
+  sk_cpns                                      String?            @db.VarChar(80)
+  tgl_cpns                                     DateTime?          @db.Date
+  sk_pengangkatan                              String?            @db.VarChar(80)
+  tmt_pengangkatan                             DateTime?          @db.Date
+  tmt_tugas                                    DateTime?          @db.Date
+  masa_kerja_thn                               Int?
+  riwayat_pendidikan_formal_jenjang_pendidikan String?            @db.VarChar(50)
+  riwayat_pendidikan_formal_bidang_studi       String?            @db.VarChar(50)
+  riwayat_sertifikasi_bidang_studi             String?            @db.VarChar(50)
+  npsn                                         String?            @db.VarChar(8)
+  last_sync                                    DateTime?          @default(now()) @db.Timestamptz(6)
+  data_alumni                                  data_alumni[]
+  satuan_pendidikan                            satuan_pendidikan? @relation(fields: [npsn], references: [npsn], onDelete: NoAction, onUpdate: NoAction)
+  diklat_kandidat                              diklat_kandidat[]
 
-  @@index([riwayat_pend_jenjang], map: "idx_ptk_jenjang")
+  @@index([riwayat_pendidikan_formal_jenjang_pendidikan], map: "idx_ptk_jenjang")
   @@index([nama_ptk], map: "idx_ptk_nama")
   @@index([npsn], map: "idx_ptk_npsn")
   @@index([status_kepegawaian, jenis_ptk], map: "idx_ptk_status_jenis")
@@ -175,11 +184,11 @@ model ref_topik {
 }
 
 model ref_wilayah {
-  kode_kecamatan    String              @id @db.Char(8)
+  kode_kecamatan    String              @id @db.VarChar(8)
   kecamatan         String              @db.VarChar(60)
-  kode_kabupaten    String              @db.Char(8)
+  kode_kabupaten    String              @db.VarChar(8)
   kabupaten         String              @db.VarChar(60)
-  kode_provinsi     String              @db.Char(8)
+  kode_provinsi     String              @db.VarChar(8)
   provinsi          String              @db.VarChar(60)
   satuan_pendidikan satuan_pendidikan[]
 
@@ -187,50 +196,63 @@ model ref_wilayah {
 }
 
 model satuan_pendidikan {
-  npsn                  String        @id @db.Char(8)
-  nama                  String        @db.VarChar(100)
-  nama_nomenklatur      String?       @db.VarChar(100)
-  bentuk_pendidikan     String?       @db.VarChar(50)
-  status_sekolah        String?       @db.VarChar(20)
-  alamat_jalan          String?       @db.VarChar(255)
-  kode_kecamatan        String?       @db.Char(8)
-  sk_pendirian_sekolah  String?       @db.VarChar(50)
-  tanggal_sk_pendirian  DateTime?     @db.Date
-  status_kepemilikan    String?       @db.VarChar(50)
-  yayasan               String?       @db.VarChar(100)
-  sk_izin_operasional   String?       @db.VarChar(80)
-  npwp                  String?       @db.Char(15)
-  nomor_telepon         String?       @db.VarChar(20)
-  email                 String?       @db.VarChar(60)
-  website               String?       @db.VarChar(256)
-  kebutuhan_khusus      String?       @db.VarChar(40)
-  daya_listrik          Decimal?      @db.Decimal(10, 2)
-  sumber_listrik        String?       @db.VarChar(50)
-  akses_internet        String?       @db.VarChar(50)
-  akreditasi            String?       @db.VarChar(30)
-  partisipasi_bos       String?       @db.VarChar(5)
-  sertifikasi_iso       String?       @db.VarChar(50)
-  waktu_penyelenggaraan String?       @db.VarChar(50)
-  keaktifan             String?       @db.VarChar(5)
-  data_alumni           data_alumni[]
-  data_ptk              data_ptk[]
-  ref_wilayah           ref_wilayah?  @relation(fields: [kode_kecamatan], references: [kode_kecamatan], onDelete: NoAction, onUpdate: NoAction)
+  npsn                        String        @id @db.VarChar(8)
+  nama                        String        @db.VarChar(100)
+  nama_nomenklatur            String?       @db.VarChar(100)
+  bentuk_pendidikan           String?       @db.VarChar(50)
+  status_sekolah              String?       @db.VarChar(20)
+  alamat_jalan                String?       @db.VarChar(255)
+  kode_kecamatan              String?       @db.VarChar(8)
+  sk_pendirian_sekolah        String?       @db.VarChar(80)
+  tanggal_sk_pendirian        DateTime?     @db.Date
+  status_kepemilikan          String?       @db.VarChar(50)
+  yayasan                     String?       @db.VarChar(100)
+  sk_izin_operasional         String?       @db.VarChar(80)
+  npwp                        String?       @db.VarChar(100)
+  nomor_telepon               String?       @db.VarChar(50)
+  email                       String?       @db.VarChar(60)
+  website                     String?       @db.VarChar(500)
+  kebutuhan_khusus            String?       @db.VarChar(40)
+  daya_listrik                Decimal?      @db.Decimal(10, 2)
+  sumber_listrik              String?       @db.VarChar(50)
+  akses_internet              String?       @db.VarChar(50)
+  akreditasi                  String?       @db.VarChar(30)
+  partisipasi_bos             String?       @db.VarChar(5)
+  sertifikasi_iso             String?       @db.VarChar(50)
+  waktu_penyelenggaraan       String?       @db.VarChar(50)
+  keaktifan                   String?       @db.VarChar(5)
+  sekolah_id                  String?       @db.Uuid
+  desa_kelurahan              String?
+  kode_pos                    String?       @db.VarChar(5)
+  tanggal_sk_izin_operasional DateTime?     @db.Date
+  kode_kabupaten              String?       @db.VarChar(6)
+  kode_provinsi               String?       @db.VarChar(6)
+  nomor_fax                   String?       @db.VarChar(50)
+  last_sync                   DateTime?     @default(now()) @db.Timestamptz(6)
+  data_alumni                 data_alumni[]
+  data_ptk                    data_ptk[]
+  ref_wilayah                 ref_wilayah?  @relation(fields: [kode_kecamatan], references: [kode_kecamatan], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([kode_kecamatan], map: "idx_sekolah_kode_kec")
   @@index([nama], map: "idx_sekolah_nama")
 }
 
 model users {
-  id         String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  username   String       @unique @db.VarChar(50)
+  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username   String     @unique @db.VarChar(50)
   password   String
-  nama       String       @db.VarChar(100)
-  email      String?      @unique @db.VarChar(100)
-  role       user_role?   @default(SUPERADMIN)
-  last_login DateTime?    @db.Timestamptz(6)
-  created_at DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at DateTime?    @default(now()) @db.Timestamptz(6)
-  audit_logs audit_logs[]
+  nama       String     @db.VarChar(100)
+  email      String?    @unique @db.VarChar(100)
+  role       user_role? @default(SUPERADMIN)
+  last_login DateTime?  @db.Timestamptz(6)
+  created_at DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?  @default(now()) @db.Timestamptz(6)
+}
+
+model system_metadata {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @default(now())
 }
 
 view mv_dashboard_analitik {
@@ -244,9 +266,9 @@ view mv_dashboard_analitik {
   no_hp                 String?
   jenis_ptk             String?
   jabatan_ptk           String?
-  riwayat_pend_jenjang  String?
-  riwayat_pend_bidang   String?
-  riwayat_sertifikasi   String?
+  riwayat_pendidikan_formal_jenjang_pendidikan  String?
+  riwayat_pendidikan_formal_bidang_studi   String?
+  riwayat_sertifikasi_bidang_studi   String?
   status_kepegawaian    String?
   pangkat_golongan      String?
   usia_tahun            Int?

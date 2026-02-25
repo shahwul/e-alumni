@@ -31,6 +31,8 @@ export async function GET(request, { params }) {
 
     const flatData = rawData.map(item => {
         const ptk = item.data_ptk || {};
+
+        console.log(ptk);
         const sekolah = ptk.satuan_pendidikan || {};
         const wilayah = sekolah.ref_wilayah || {};
 
@@ -40,8 +42,8 @@ export async function GET(request, { params }) {
             status: item.status,
             ...ptk, 
             nama_sekolah: sekolah.nama || '-',
-            kabupaten: wilayah.kabupaten || '-',
-            kecamatan: wilayah.kecamatan || '-',
+            kabupaten: wilayah.kabupaten?.trim() || '-',
+            kecamatan: wilayah.kecamatan?.trim() || '-',
 
             satuan_pendidikan: undefined 
         };

@@ -20,7 +20,8 @@ function PTKListContent() {
 
   const {
     data, loading, totalData,
-    page, limit, search, sorting, activeFilters, onExport,
+    page, limit, search, sorting, activeFilters, onExport, isSyncing,
+    syncStatus, syncProgress, lastSync, onGlobalSync, onSyncKecamatan
   } = usePTKList(searchParams);
 
   const { setPage, setLimit, setSearch, setSorting, setActiveFilters } = 
@@ -33,7 +34,16 @@ function PTKListContent() {
     <div className="flex flex-col h-[calc(100vh-105px)] overflow-hidden space-y-4">
 
       <div className="flex-none space-y-4">
-        <PTKHeader onExport={onExport} />
+        <PTKHeader 
+        onExport={onExport}
+        onGlobalSync={onGlobalSync}
+        onSyncKecamatan={onSyncKecamatan}
+        isSyncing={isSyncing}
+        syncStatus={syncStatus}
+        syncProgress={syncProgress}
+        lastSync={lastSync}
+        activeFilters={activeFilters}
+        />
         <PTKToolbar
           search={search}
           setSearch={setSearch}

@@ -9,9 +9,9 @@ view mv_dashboard_analitik {
   no_hp                 String?
   jenis_ptk             String?
   jabatan_ptk           String?
-  riwayat_pend_jenjang  String?
-  riwayat_pend_bidang   String?
-  riwayat_sertifikasi   String?
+  riwayat_pendidikan_formal_jenjang_pendidikan  String?
+  riwayat_pendidikan_formal_bidang_studi   String?
+  riwayat_sertifikasi_bidang_studi   String?
   status_kepegawaian    String?
   pangkat_golongan      String?
   usia_tahun            Int?
