@@ -47,7 +47,7 @@ export default function FilterPanel({
             htmlFor="heatmap-switch"
             className="text-sm font-medium text-slate-700"
           >
-            Heatmap
+            Persebaran
           </Label>
 
           <Switch
@@ -58,7 +58,7 @@ export default function FilterPanel({
         </div>
 
         <p className="mt-2 text-xs text-slate-500">
-          Aktifkan untuk menampilkan distribusi nilai dalam bentuk heatmap.
+          Aktifkan untuk menampilkan distribusi lulusan dalam bentuk persebaran.
         </p>
       </div>
     </div>

@@ -20,6 +20,19 @@ const GeoJSON = dynamic(
   { ssr: false },
 );
 
+// Konstanta palet warna heatmap agar mudah diakses oleh Legend
+const HEATMAP_COLORS = [
+  { threshold: 0.9, color: "#7f1d1d", label: "Intensitas > 90%" }, // Merah Marun Gelap
+  { threshold: 0.8, color: "#991b1b", label: "Intensitas > 80%" },
+  { threshold: 0.7, color: "#b91c1c", label: "Intensitas > 70%" },
+  { threshold: 0.6, color: "#dc2626", label: "Intensitas > 60%" },
+  { threshold: 0.5, color: "#ef4444", label: "Intensitas > 50%" }, // Merah Terang
+  { threshold: 0.4, color: "#ea580c", label: "Intensitas > 40%" },
+  { threshold: 0.3, color: "#f97316", label: "Intensitas > 30%" }, // Oranye
+  { threshold: 0.2, color: "#eab308", label: "Intensitas > 20%" }, // Kuning Gelap
+  { threshold: 0.0, color: "#fef08a", label: "Intensitas > 0%" }, // Kuning Pucat
+];
+
 export default function MapPanel({
   geoJsonData,
   selectedKab,
@@ -43,19 +56,13 @@ export default function MapPanel({
 
   const valueMap = useMemo(() => {
     if (!data?.length) return {};
-
     const map = {};
-
     data.forEach((item) => {
       if (!item.name) return;
-
       const kecUpper = item.name.toUpperCase();
-
       const key = selectedKab ? `${selectedKab}|${kecUpper}` : kecUpper;
-
       map[key] = Number(item.value);
     });
-
     return map;
   }, [data, selectedKab]);
 
@@ -64,15 +71,20 @@ export default function MapPanel({
     return Math.max(...data.map((d) => Number(d.value)), 1);
   }, [data]);
 
+  // Fungsi getHeatColor yang baru dengan 9 tingkat warna
   function getHeatColor(value, max) {
-    if (!value || max === 0) return "#e2e8f0";
+    if (!value || max === 0) return "#e2e8f0"; // Abu-abu jika benar-benar nol
 
     const intensity = value / max;
 
-    if (intensity > 0.8) return "#e93e3a"; // Merah Tua
-    if (intensity > 0.6) return "#ef4444"; // Merah Terang
-    if (intensity > 0.4) return "#f97316"; // Oranye
-    if (intensity > 0.2) return "#eab308"; // Kuning
+    // Looping array warna dari atas ke bawah (paling tinggi ke paling rendah)
+    for (let i = 0; i < HEATMAP_COLORS.length; i++) {
+      if (intensity > HEATMAP_COLORS[i].threshold) {
+        return HEATMAP_COLORS[i].color;
+      }
+    }
+
+    // Fallback yang seharusnya tidak pernah tersentuh
     return "#fef08a";
   }
 
@@ -90,9 +102,17 @@ export default function MapPanel({
       // HEATMAP MODE (exclusive)
       // -------------------------------
       if (heatmapEnable) {
-        if (!loading && maxValue > 0) {
-          const key = selectedKab ? `${kabCode}|${kecName}` : kecName;
+        if (selectedKab && !isSameKab) {
+          return {
+            fillColor: "#e2e8f0",
+            fillOpacity: 0.5,
+            weight: 0.5,
+            color: "#ffffff",
+          };
+        }
 
+        if (!loading) {
+          const key = selectedKab ? `${kabCode}|${kecName}` : kecName;
           const value = valueMap[key] || 0;
 
           return {
@@ -103,11 +123,12 @@ export default function MapPanel({
           };
         }
 
+        // Default state loading (abu-abu/nol)
         return {
-          fillColor: "#f8fafc",
-          fillOpacity: 0.6,
+          fillColor: "#e2e8f0",
+          fillOpacity: 0.85,
           weight: 1,
-          color: "#e2e8f0",
+          color: "#fff",
         };
       }
 
@@ -166,30 +187,22 @@ export default function MapPanel({
         const targetKabName = KAB_CODE_TO_NAME[kabCode];
 
         let finalKecName = kecNameGeo;
-
         const kabData = wilayahData.find((w) => w.kabupaten === targetKabName);
 
         if (kabData?.kecamatan) {
           const match = kabData.kecamatan.find(
             (k) => k.toUpperCase() === kecNameGeo.toUpperCase(),
           );
-
           if (match) {
-            finalKecName = match; // canonical casing
+            finalKecName = match;
           }
         }
-
         onSelect(kabCode, finalKecName);
       },
-
       mouseover: (e) => {
-        e.target.setStyle({
-          weight: 3,
-          fillOpacity: 0.95,
-        });
+        e.target.setStyle({ weight: 3, fillOpacity: 0.95 });
         if (!navigator.maxTouchPoints) e.target.bringToFront();
       },
-
       mouseout: (e) => {
         e.target.setStyle(latestStyleRef.current(e.target.feature));
       },
@@ -204,6 +217,36 @@ export default function MapPanel({
 
   return (
     <div className="flex-1 bg-slate-100 rounded-xl border relative">
+      {heatmapEnable && (
+        <div className="absolute bottom-6 left-6 z-[400] bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-slate-200 pointer-events-none">
+          <h4 className="font-semibold text-sm text-slate-700 mb-3">
+            Skala Persebaran Alumni
+          </h4>
+
+          {/* Kontainer Horizontal untuk Skala */}
+          <div className="flex flex-col gap-1.5">
+            {/* Teks Indikator */}
+            <div className="flex justify-between text-[11px] text-slate-500 font-medium px-0.5">
+              <span>Rendah</span>
+              <span>Tinggi</span>
+            </div>
+
+            {/* Baris Blok Warna Horizontal */}
+            <div className="flex">
+              {/* Array di-reverse agar kuning di kiri, merah di kanan */}
+              <span className="w-6 h-3.5 border border-slate-200 bg-[#e2e8f0] shadow-sm"></span>
+              {[...HEATMAP_COLORS].reverse().map((item, index) => (
+                <span
+                  key={index}
+                  className="w-6 h-3.5 border-y border-r first:border-l border-black/5 shadow-sm"
+                  style={{ backgroundColor: item.color }}
+                ></span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {geoJsonData ? (
         <MapContainer
           center={[-7.88, 110.45]}
@@ -212,7 +255,7 @@ export default function MapPanel({
           maxZoom={13}
           maxBounds={YOGYA_BOUNDS}
           maxBoundsViscosity={1.0}
-          className="h-full"
+          className="h-full z-[100]"
         >
           <GeoJSON
             ref={geoJsonRef}
