@@ -69,11 +69,11 @@ export default function MapPanel({
 
     const intensity = value / max;
 
-    if (intensity > 0.8) return "#1e3a8a";
-    if (intensity > 0.6) return "#2563eb";
-    if (intensity > 0.4) return "#3b82f6";
-    if (intensity > 0.2) return "#93c5fd";
-    return "#dbeafe";
+    if (intensity > 0.8) return "#e93e3a"; // Merah Tua
+    if (intensity > 0.6) return "#ef4444"; // Merah Terang
+    if (intensity > 0.4) return "#f97316"; // Oranye
+    if (intensity > 0.2) return "#eab308"; // Kuning
+    return "#fef08a";
   }
 
   const mapStyle = useCallback(
