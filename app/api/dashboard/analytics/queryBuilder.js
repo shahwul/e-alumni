@@ -21,6 +21,7 @@ export const GROUP_BY = {
   JABATAN: "jabatan_ptk",
   SEKOLAH: "nama_sekolah",
   JENJANG: "bentuk_pendidikan",
+  DIKLAT: "judul_diklat"
 };
 
 export function timeSelect(grain) {
