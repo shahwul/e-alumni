@@ -20,6 +20,9 @@ import { CustomTooltipBarchart } from "../CustomTooltip";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
 
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Percent, Hash } from "lucide-react";
+
 export default function BarComparisonChart({
   kab,
   kec,
@@ -30,12 +33,13 @@ export default function BarComparisonChart({
 }) {
   const [metric1, setMetric1] = useState("alumni");
   const [metric2, setMetric2] = useState("ptk");
+  const [displayMode, setDisplayMode] = useState("percentage"); // "percentage" | "quantity"
 
   const allowedMetrics = useMemo(() => {
-  return METRIC_OPTIONS.filter((opt) =>
-    ["alumni", "untrained"].includes(opt.value)
-  );
-}, []);
+    return METRIC_OPTIONS.filter((opt) =>
+      ["alumni", "untrained"].includes(opt.value),
+    );
+  }, []);
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
@@ -113,8 +117,29 @@ export default function BarComparisonChart({
         item.metric2Value > 0
           ? (item.metric1Value / item.metric2Value) * 100
           : 0,
+      // quantity uses metric1Value directly
     }));
   }, [processedData1, processedData2]);
+
+  const isPercentage = displayMode === "percentage";
+
+  // Derive axis domain and formatter based on display mode
+  const xAxisDomain = isPercentage
+    ? [
+        0,
+        (max) => {
+          const padded = max * 1.1;
+          const capped = Math.min(padded, 100);
+          return capped < 5 ? 5 : Math.ceil(capped);
+        },
+      ]
+    : [0, (max) => Math.ceil(max * 1.1)];
+
+  const xAxisTickFormatter = isPercentage
+    ? (value) => `${value}%`
+    : (value) => value.toLocaleString();
+
+  const activeDataKey = isPercentage ? "percentage" : "metric1Value";
 
   if (loadingMetric1 || loadingMetric2) {
     return (
@@ -143,17 +168,47 @@ export default function BarComparisonChart({
 
   return (
     <ChartCard height={height} onExpand={onExpand}>
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between gap-2 flex-wrap">
         <h5 className="text-sm font-semibold text-slate-600">
           Perbandingan Data PTK
         </h5>
 
-        <QuerySelector
-          label="Metric"
-          value={metric1}
-          onChange={setMetric1}
-          options={allowedMetrics}
-        />
+        <div className="flex items-center gap-2">
+          {/* Display mode toggle */}
+          <ToggleGroup
+            type="single"
+            value={displayMode}
+            onValueChange={(val) => {
+              if (val) setDisplayMode(val);
+            }}
+            className="border border-slate-200 rounded-md p-0.5 bg-slate-50"
+          >
+            <ToggleGroupItem
+              value="percentage"
+              aria-label="Show as percentage"
+              className="h-7 px-2 text-xs gap-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              <Percent className="h-3 w-3" />
+              Persentase
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="quantity"
+              aria-label="Show as quantity"
+              className="h-7 px-2 text-xs gap-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              <Hash className="h-3 w-3" />
+              Jumlah
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          {/* Metric selector */}
+          <QuerySelector
+            label="Metric"
+            value={metric1}
+            onChange={setMetric1}
+            options={allowedMetrics}
+          />
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height="90%">
@@ -166,14 +221,8 @@ export default function BarComparisonChart({
 
           <XAxis
             type="number"
-            domain={[
-              0,
-              (max) => {
-                const padded = max * 1.1;
-                return padded > 100 ? 100 : padded < 5 ? 5 : Math.ceil(padded);
-              },
-            ]}
-            tickFormatter={(value) => `${value}%`}
+            domain={xAxisDomain}
+            tickFormatter={xAxisTickFormatter}
           />
           <YAxis
             type="category"
@@ -204,16 +253,16 @@ export default function BarComparisonChart({
                   METRIC_OPTIONS.find((option) => option.value === metric2)
                     ?.label || "Unknown"
                 }
+                displayMode={displayMode}
               />
             }
           />
-          <Bar dataKey="percentage">
+
+          <Bar dataKey={activeDataKey}>
             {combData.map((entry, index) => (
               <Cell key={`m1-${index}`} fill={entry.fill} />
             ))}
           </Bar>
-
-          {/* <Bar dataKey={metric2} fill="#82ca9d" /> */}
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
