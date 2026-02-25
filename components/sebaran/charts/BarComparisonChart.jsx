@@ -178,7 +178,8 @@ export default function BarComparisonChart({
             : groupBy === "kecamatan"
               ? "kecamatan"
               : "jenjang"}{" "}
-          {tahun ? `tahun ${year}` : ""} {diklat ? `diklat ${diklat}` : ""}        
+          tahun {year}
+          
         </h5>
 
         <div className="flex items-center gap-2">
