@@ -64,9 +64,11 @@ export default function DashboardSidebar({
         )}
 
         {collapsed && !isMobile && (
-          <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-blue-600/20">
-            E
-          </div>
+          <img
+            src="/e-alumni.png"
+            alt="Logo"
+            className="h-8 w-8 rounded-lg shrink-0 object-cover"
+          />
         )}
 
         {/* Toggle Button */}

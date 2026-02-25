@@ -32,6 +32,7 @@ import TabelViewData from "@/components/sebaran/charts/TabelViewData";
 import TimeGraphChart from "@/components/sebaran/charts/TimeGraphChart";
 import JenjangPtkChart from "@/components/sebaran/charts/JenjangPtkChart";
 import BarComparisonChart from "@/components/sebaran/charts/BarComparisonChart";
+import DiklatComparisonChart from "@/components/sebaran/charts/DiklatComparisonChart";
 import StackedChartComparison from "@/components/sebaran/charts/StackedComparisonChart";
 
 export default function DataSection({
@@ -133,7 +134,7 @@ export default function DataSection({
     );
 
   return (
-    <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 min-h-0">
+    <div className="flex-1 bg-slate-50 rounded-xl border border-slate-300 p-4 min-h-0 ">
       <PopupModal
         isOpen={activeChart !== null}
         onClose={() => setActiveChart(null)}
@@ -195,10 +196,23 @@ export default function DataSection({
               kec={selectedKec}
               year={selectedYear}
               diklat={selectedDiklat}
-              height={400}
+              height={600}
               onExpand={() => setActiveChart("barComparison")}
             />
           </div>
+
+          {Array.isArray(selectedDiklat) && selectedDiklat.length > 1 && (
+            <div className="md:col-span-2">
+              <DiklatComparisonChart
+                kab={selectedKab}
+                kec={selectedKec}
+                year={selectedYear}
+                diklat={selectedDiklat}
+                height={600}
+                onExpand={() => setActiveChart("diklatComparison")}
+              />
+            </div>
+          )}
 
           <div className="md:col-span-2">
             <TimeGraphChart

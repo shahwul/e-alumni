@@ -1,4 +1,5 @@
 import {
+  Cell,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -7,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  Label,
 } from "recharts";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useMemo, useState } from "react";
@@ -14,8 +16,12 @@ import { useMemo, useState } from "react";
 import { processData, injectTotal } from "../helpers/utils";
 import { METRIC_OPTIONS } from "@/lib/constants";
 
+import { CustomTooltipBarchart } from "../CustomTooltip";
 import QuerySelector from "../QuerySelector";
 import ChartCard from "../ChartCard";
+
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Percent, Hash } from "lucide-react";
 
 export default function BarComparisonChart({
   kab,
@@ -26,7 +32,14 @@ export default function BarComparisonChart({
   onExpand,
 }) {
   const [metric1, setMetric1] = useState("alumni");
-  const [metric2, setMetric2] = useState("untrained")
+  const [metric2, setMetric2] = useState("ptk");
+  const [displayMode, setDisplayMode] = useState("percentage"); // "percentage" | "quantity"
+
+  const allowedMetrics = useMemo(() => {
+    return METRIC_OPTIONS.filter((opt) =>
+      ["alumni", "untrained"].includes(opt.value),
+    );
+  }, []);
 
   const groupBy = useMemo(() => {
     if (!kab) return "kabupaten";
@@ -34,7 +47,11 @@ export default function BarComparisonChart({
     return "jenjang";
   }, [kab, kec]);
 
-  const { data: dataMetric1, loading: loadingMetric1, error: errorMetric1 } = useAnalytics({
+  const {
+    data: dataMetric1,
+    loading: loadingMetric1,
+    error: errorMetric1,
+  } = useAnalytics({
     metric: metric1,
     groupBy,
     kab,
@@ -44,22 +61,85 @@ export default function BarComparisonChart({
     caller: "BAR CHART",
   });
 
-  const { data: dataMetric2, loading: loadingMetric2, error: errorMetric2} = useAnalytics({
-    metric: metric2, 
-    groupBy, 
+  const {
+    data: dataMetric2,
+    loading: loadingMetric2,
+    error: errorMetric2,
+  } = useAnalytics({
+    metric: metric2,
+    groupBy,
     kab,
     kec,
     year,
     diklat,
     caller: "BAR CHART",
-  })
+  });
 
-  console.log("RAW  1", dataMetric1);
+  const processedData1 = useMemo(
+    () => injectTotal(processData(dataMetric1)),
+    [dataMetric1],
+  );
+  const processedData2 = useMemo(
+    () => injectTotal(processData(dataMetric2)),
+    [dataMetric2],
+  );
 
-  const processedData1 = useMemo(() => injectTotal(processData(dataMetric1)), [dataMetric1]);
-  const processedData2 = useMemo(() => injectTotal(processData(dataMetric2)), [dataMetric2]);
+  const combData = useMemo(() => {
+    const map = new Map();
 
-  console.log("COOKED 1" ,processedData1);
+    processedData1.forEach((item) => {
+      map.set(item.name, {
+        name: item.name,
+        fill: item.fill,
+        totalCount: item.totalCount,
+        metric1Value: item.value,
+        metric2Value: 0,
+      });
+    });
+
+    processedData2.forEach((item) => {
+      if (map.has(item.name)) {
+        map.get(item.name).metric2Value = item.value;
+      } else {
+        map.set(item.name, {
+          name: item.name,
+          fill: item.fill,
+          totalCount: item.totalCount,
+          metric1Value: 0,
+          metric2Value: item.value,
+        });
+      }
+    });
+
+    return Array.from(map.values()).map((item) => ({
+      ...item,
+      percentage:
+        item.metric2Value > 0
+          ? (item.metric1Value / item.metric2Value) * 100
+          : 0,
+      // quantity uses metric1Value directly
+    }));
+  }, [processedData1, processedData2]);
+
+  const isPercentage = displayMode === "percentage";
+
+  // Derive axis domain and formatter based on display mode
+  const xAxisDomain = isPercentage
+    ? [
+        0,
+        (max) => {
+          const padded = max * 1.1;
+          const capped = Math.min(padded, 100);
+          return capped < 5 ? 5 : Math.ceil(capped);
+        },
+      ]
+    : [0, (max) => Math.ceil(max * 1.1)];
+
+  const xAxisTickFormatter = isPercentage
+    ? (value) => `${value}%`
+    : (value) => value.toLocaleString();
+
+  const activeDataKey = isPercentage ? "percentage" : "metric1Value";
 
   if (loadingMetric1 || loadingMetric2) {
     return (
@@ -71,7 +151,12 @@ export default function BarComparisonChart({
     );
   }
 
-  if (errorMetric1 || errorMetric2 || dataMetric1.length === 0 || dataMetric2.length ===0) {
+  if (
+    errorMetric1 ||
+    errorMetric2 ||
+    dataMetric1.length === 0 ||
+    dataMetric2.length === 0
+  ) {
     return (
       <ChartCard height={height}>
         <div className="h-full flex items-center justify-center text-slate-400">
@@ -83,31 +168,117 @@ export default function BarComparisonChart({
 
   return (
     <ChartCard height={height} onExpand={onExpand}>
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <h5 className="text-sm font-semibold text-slate-600">
-          Perbandingan Data PTK
-        </h5>
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <h5 className="text-sm font-semibold text-slate-600">
+            Perbandingan{" "}
+            {displayMode === "percentage" ? "persentase" : "jumlah"}{" "}
+            {METRIC_OPTIONS.find(
+              (opt) => opt.value === metric1,
+            )?.label.toLowerCase()}{" "}
+            per{" "}
+            {groupBy === "kabupaten"
+              ? "kabupaten"
+              : groupBy === "kecamatan"
+                ? "kecamatan"
+                : "jenjang"}{" "}
+            {year}{" "}
+            {Array.isArray(diklat) && diklat.length < 2
+              ? `diklat ${diklat[0]}`
+              : ""}
+          </h5>
+        </div>
 
-        <QuerySelector
-          label="Metric"
-          value={metric1}
-          onChange={setMetric1}
-          options={METRIC_OPTIONS}
-        />
+        <div className="flex items-center gap-2">
+          {/* Display mode toggle */}
+          <ToggleGroup
+            type="single"
+            value={displayMode}
+            onValueChange={(val) => {
+              if (val) setDisplayMode(val);
+            }}
+            className="border border-slate-200 rounded-md p-0.5 bg-slate-50"
+          >
+            <ToggleGroupItem
+              value="percentage"
+              aria-label="Show as percentage"
+              className="h-7 px-2 text-xs gap-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              <Percent className="h-3 w-3" />
+              Persentase
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="quantity"
+              aria-label="Show as quantity"
+              className="h-7 px-2 text-xs gap-1 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+            >
+              <Hash className="h-3 w-3" />
+              Jumlah
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          {/* Metric selector */}
+          <QuerySelector
+            label="Metric"
+            value={metric1}
+            onChange={setMetric1}
+            options={allowedMetrics}
+          />
+        </div>
       </div>
 
-      <ResponsiveContainer width="100%" height="80%">
+      <ResponsiveContainer width="100%" height="90%">
         <BarChart
-          data={processedData1}
-          layout="vertical" // <-- important
+          data={combData}
+          layout="vertical"
+          margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis type="number" domain={[0, (max) => Math.ceil(max * 1.1)]} />
-          <YAxis type="category" dataKey="name" />
+          <XAxis
+            type="number"
+            domain={xAxisDomain}
+            tickFormatter={xAxisTickFormatter}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            interval={0}
+            tick={({ x, y, payload }) => (
+              <text
+                x={x}
+                y={y}
+                dy={4}
+                textAnchor="end"
+                fill="#64748b"
+                fontSize={12}
+              >
+                {payload.value}
+              </text>
+            )}
+          />
 
-          <Tooltip />
-          <Bar dataKey="value" />
+          <Tooltip
+            content={
+              <CustomTooltipBarchart
+                metric1={
+                  METRIC_OPTIONS.find((option) => option.value === metric1)
+                    ?.label || "Unknown"
+                }
+                metric2={
+                  METRIC_OPTIONS.find((option) => option.value === metric2)
+                    ?.label || "Unknown"
+                }
+                displayMode={displayMode}
+              />
+            }
+          />
+
+          <Bar dataKey={activeDataKey}>
+            {combData.map((entry, index) => (
+              <Cell key={`m1-${index}`} fill={entry.fill} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

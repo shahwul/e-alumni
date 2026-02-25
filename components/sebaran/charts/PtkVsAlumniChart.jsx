@@ -5,7 +5,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { processData, injectTotal } from "../helpers/utils";
 import { METRIC_OPTIONS } from "@/lib/constants";
 
-import { CustomTooltip } from "../CustomTooltip";
+import { CustomTooltipAlumniPtk } from "../CustomTooltip";
 import ChartCard from "../ChartCard";
 import QuerySelector from "../QuerySelector";
 
@@ -17,7 +17,7 @@ export default function PtkVsAlumniChart({
   height = 300,
   onExpand,
 }) {
-  const [metric1, setMetric1] = useState("ptk");
+  const [metric1, setMetric1] = useState("untrained");
   const [metric2, setMetric2] = useState("alumni");
 
   const alumni = useAnalytics({
@@ -95,7 +95,7 @@ export default function PtkVsAlumniChart({
             nameKey="name"
             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltipAlumniPtk />} />
           <Legend
             verticalAlign="bottom"
             align="center"
