@@ -170,7 +170,15 @@ export default function BarComparisonChart({
     <ChartCard height={height} onExpand={onExpand}>
       <div className="px-4 pt-4 pb-2 flex items-center justify-between gap-2 flex-wrap">
         <h5 className="text-sm font-semibold text-slate-600">
-          Perbandingan Data PTK
+          Perbandingan {" "}
+          {displayMode === "percentage" ? "persentase" : "jumlah"} {" "}
+          {METRIC_OPTIONS.find((opt) => opt.value === metric1)?.label.toLowerCase()} per{" "}
+          {groupBy === "kabupaten"
+            ? "kabupaten"
+            : groupBy === "kecamatan"
+              ? "kecamatan"
+              : "jenjang"}{" "}
+          {tahun ? `tahun ${year}` : ""} {diklat ? `diklat ${diklat}` : ""}        
         </h5>
 
         <div className="flex items-center gap-2">
