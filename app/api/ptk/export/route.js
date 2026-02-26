@@ -4,58 +4,60 @@ import { buildPrismaQuery } from '@/app/api/ptk/queryBuilder';
 import ExcelJS from 'exceljs';
 
 BigInt.prototype.toJSON = function () {
-  return this.toString();
+    return this.toString();
 };
 
 export async function GET(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const { 
-        where, 
-        orderBy, 
-        hasDiklatFilter, 
-        modeFilter 
-    } = await buildPrismaQuery(searchParams, prisma);
+    try {
+        const { searchParams } = new URL(request.url);
+        const {
+            where,
+            orderBy,
+            hasDiklatFilter,
+            modeFilter
+        } = await buildPrismaQuery(searchParams, prisma);
 
-    const isHistoryMode = modeFilter === 'history';
+        const isHistoryMode = modeFilter === 'history';
 
-    if (!hasDiklatFilter && isHistoryMode) {
-        return generateExcel([], isHistoryMode); 
-    }
-
-    const rows = await prisma.mv_dashboard_analitik.findMany({
-        where: where,
-        orderBy: orderBy,
-        distinct: ['nik'], 
-        select: {
-            nama_ptk: true,
-            nik: true,
-            nuptk: true,
-            nip: true,
-            nama_sekolah: true,
-            npsn_sekolah: true,
-            bentuk_pendidikan: true,
-            kecamatan: true,
-            kabupaten: true,
-            no_hp: true,
-            jenis_ptk: true,
-            jabatan_ptk: true,
-            status_kepegawaian: true,
-            pangkat_golongan: true,
-            judul_diklat: true,
-            total_jp: true,
-            start_date: true,
-            end_date: true,
-            moda_diklat: true
+        if (!hasDiklatFilter && isHistoryMode) {
+            return generateExcel([], isHistoryMode);
         }
-    });
 
-    return await generateExcel(rows, isHistoryMode);
+        const rows = await prisma.mv_dashboard_analitik.findMany({
+            where: where,
+            orderBy: orderBy,
+            distinct: ['nik'],
+            select: {
+                nama_ptk: true,
+                nik: true,
+                nuptk: true,
+                nip: true,
+                nama_sekolah: true,
+                npsn_sekolah: true,
+                bentuk_pendidikan: true,
+                kecamatan: true,
+                kabupaten: true,
+                no_hp: true,
+                jenis_ptk: true,
+                jabatan_ptk: true,
+                status_kepegawaian: true,
+                pangkat_golongan: true,
+                judul_diklat: true,
+                total_jp: true,
+                start_date: true,
+                end_date: true,
+                moda_diklat: true
+            }
+        });
 
-  } catch (error) {
-    console.error("Error Export Excel:", error);
-    return NextResponse.json({ error: 'Gagal export data' }, { status: 500 });
-  }
+        await generateExcel(rows, isHistoryMode);
+
+        return NextResponse.json({ success: true });
+
+    } catch (error) {
+        console.error("Error Export Excel:", error);
+        return NextResponse.json({ error: 'Gagal export data' }, { status: 500 });
+    }
 }
 
 async function generateExcel(rows, isHistoryMode) {
@@ -99,7 +101,7 @@ async function generateExcel(rows, isHistoryMode) {
             nuptk: row.nuptk || '-',
             nama_sekolah: row.nama_sekolah,
             npsn_sekolah: row.npsn_sekolah,
-            jenjang: row.bentuk_pendidikan, 
+            jenjang: row.bentuk_pendidikan,
             kecamatan: row.kecamatan,
             kabupaten: row.kabupaten,
             jabatan_ptk: row.jabatan_ptk || '-',
@@ -120,13 +122,13 @@ async function generateExcel(rows, isHistoryMode) {
     });
 
     const headerRow = worksheet.getRow(1);
-    const headerColor = isHistoryMode ? 'FF1F4E78' : 'FF2E7D32'; 
-    
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; 
+    const headerColor = isHistoryMode ? 'FF1F4E78' : 'FF2E7D32';
+
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: headerColor } 
+        fgColor: { argb: headerColor }
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
@@ -136,9 +138,9 @@ async function generateExcel(rows, isHistoryMode) {
     };
 
     const buffer = await workbook.xlsx.writeBuffer();
-    const filename = isHistoryMode 
-        ? `Riwayat_Diklat_${new Date().toISOString().slice(0,10)}.xlsx` 
-        : `Kandidat_PTK_${new Date().toISOString().slice(0,10)}.xlsx`;
+    const filename = isHistoryMode
+        ? `Riwayat_Diklat_${new Date().toISOString().slice(0, 10)}.xlsx`
+        : `Kandidat_PTK_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
     return new NextResponse(buffer, {
         status: 200,
