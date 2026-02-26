@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 export function AddToDiklatModal({ isOpen, onClose, selectedNiks, onSuccess }) {
@@ -48,6 +49,8 @@ export function AddToDiklatModal({ isOpen, onClose, selectedNiks, onSuccess }) {
           nik_list: selectedNiks,
         }),
       });
+
+      console.log(res);
 
       if (res.ok) {
         toast.success(

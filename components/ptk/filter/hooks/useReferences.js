@@ -14,7 +14,7 @@ export function usePTKMetadata() {
     statusKepegawaian: data?.statusKepegawaian || [],
     mapel: data?.mapel || [],
     jurusan: data?.jurusan || [],
-    
+
     isLoading,
     isError: error
   };
@@ -22,8 +22,8 @@ export function usePTKMetadata() {
 
 export function useWilayah() {
   const { data, error, isLoading } = useSWR('/api/ref/wilayah', fetcher, {
-    revalidateOnFocus: false, 
-    dedupingInterval: 60000, 
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
   });
 
   return {
@@ -85,6 +85,20 @@ export function useJenjang() {
 
   return {
     jenjang: data || [],
+    isLoading,
+    isError: error
+  };
+}
+
+export function useBentukPendidikan() {
+  const { data, error, isLoading } = useSWR('/api/ref/bentuk-pendidikan', fetcher, {
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    dedupingInterval: 3600000,
+  });
+
+  return {
+    bentukPendidikan: data || [],
     isLoading,
     isError: error
   };
