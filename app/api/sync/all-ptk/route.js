@@ -9,9 +9,9 @@ async function withRetry(fn, retries = 3, delay = 2000) {
     return await fn();
   } catch (err) {
     if (retries <= 0) throw err;
-    console.warn(`⚠️ Gagal: ${err.message}. Mencoba lagi (${retries} retries left)...`);
+    console.warn(`Gagal: ${err.message}. Mencoba lagi (${retries} retries left)...`);
     await new Promise(r => setTimeout(r, delay));
-    return withRetry(fn, retries - 1, delay * 2); 
+    return withRetry(fn, retries - 1, delay * 2);
   }
 }
 
@@ -49,7 +49,7 @@ async function syncSatuSekolah(sekolah, dapoToken) {
     const ptkList = await withRetry(async () => {
       const url = `${DAPODIK_CONFIG.baseUrl}${DAPODIK_CONFIG.endpoints.ptkBySekolah}?npsn=${sekolah.npsn.trim()}`
       const res = await fetch(url, {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${dapoToken}`,
           'X-API-KEY': DAPODIK_CONFIG.apiKey,
         },
@@ -110,7 +110,7 @@ async function syncSatuSekolah(sekolah, dapoToken) {
       }, 2);
     }
   } catch (err) {
-    console.error(`❌ Permanent Failure NPSN ${sekolah.npsn}: ${err.message}`);
+    console.error(`Permanent Failure NPSN ${sekolah.npsn}: ${err.message}`);
   }
 }
 
@@ -123,7 +123,7 @@ export async function POST(req) {
 
     runMainFlow(daftarSekolah);
 
-    return NextResponse.json({ message: "Sync PTK Turbo (With Max Error Handling) Started!" });
+    return NextResponse.json({ message: "Sync PTK Started!" });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -134,21 +134,21 @@ async function runMainFlow(daftarSekolah) {
     const dapoToken = await getDapodikToken();
     if (!dapoToken) return;
 
-    const batchSize = 10; 
+    const batchSize = 10;
     for (let i = 0; i < daftarSekolah.length; i += batchSize) {
       const batch = daftarSekolah.slice(i, i + batchSize);
       await Promise.all(batch.map(s => syncSatuSekolah(s, dapoToken)));
-      console.log(`📊 Progress: ${i + batch.length}/${daftarSekolah.length} sekolah.`);
-      await new Promise(r => setTimeout(r, 200)); 
+      console.log(`Progress: ${i + batch.length}/${daftarSekolah.length} sekolah.`);
+      await new Promise(r => setTimeout(r, 200));
     }
-    
-    console.log("🏁 DONE. Refreshing MV...");
+
+    console.log("DONE. Refreshing MV...");
     await withRetry(async () => {
-        await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik;`);
+      await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_analitik;`);
     }, 2);
-    console.log("✨ All Systems Green.");
+    console.log("All Systems Green.");
 
   } catch (error) {
-    console.error("💥 Critical Flow Error:", error.message);
+    console.error("Critical Flow Error:", error.message);
   }
 }

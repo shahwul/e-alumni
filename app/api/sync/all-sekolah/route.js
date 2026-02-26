@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DAPODIK_CONFIG } from '@/lib/config';
 
-export const maxDuration = 300; 
+export const maxDuration = 300;
 
 let DAPODIK_INTERNAL_CACHE_TOKEN = null;
 
@@ -22,7 +22,7 @@ async function getDapodikToken() {
     DAPODIK_INTERNAL_CACHE_TOKEN = result.access_token;
     return DAPODIK_INTERNAL_CACHE_TOKEN;
   } catch (error) {
-    console.error("💥 Auth Failed:", error.message);
+    console.error("Auth Failed:", error.message);
     return null;
   }
 }
@@ -35,11 +35,11 @@ const fDate = (d) => !d || d === "0000-00-00" ? 'NULL' : `'${d}'::date`;
 
 async function fetchSekolah(kode_kecamatan, page, token) {
   const url = `${DAPODIK_CONFIG.baseUrl}${DAPODIK_CONFIG.endpoints.sekolah}?page=${page}&per_page=100&kode_kecamatan=${kode_kecamatan}`;
-  
+
   try {
     const res = await fetch(url, {
       method: 'GET',
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${token}`,
         'X-API-KEY': DAPODIK_CONFIG.apiKey,
       },
@@ -77,8 +77,8 @@ async function processRawUpsert(sekolahList) {
 
   const values = validSekolah.map(s => `(
     ${esc(s.npsn)}, ${esc(s.sekolah_id)}, ${esc(s.nama?.toUpperCase().slice(0, 150))}, 
-    ${esc(s.nama_nomenklatur?.slice(0, 150))}, ${esc(s.bentuk_pendidikan)}, 
-    ${esc(s.status_sekolah)}, ${esc(s.alamat_jalan?.slice(0, 250))}, 
+    ${esc(s.nama_nomenklatur?.slice(0, 150))}, ${esc(s.status_sekolah)}, 
+    ${esc(s.alamat_jalan?.slice(0, 250))}, 
     ${esc(s.desa_kelurahan)}, ${esc(s.kode_kecamatan?.trim())}, 
     ${esc(s.kode_kabupaten?.trim())}, ${esc(s.kode_provinsi?.trim())}, 
     ${esc(s.kode_pos?.trim().slice(0, 10))}, ${esc(s.sk_pendirian_sekolah?.slice(0, 100))}, 
@@ -92,7 +92,7 @@ async function processRawUpsert(sekolahList) {
 
   await prisma.$executeRawUnsafe(`
     INSERT INTO satuan_pendidikan (
-      npsn, sekolah_id, nama, nama_nomenklatur, bentuk_pendidikan, 
+      npsn, sekolah_id, nama, nama_nomenklatur,
       status_sekolah, alamat_jalan, desa_kelurahan, kode_kecamatan, 
       kode_kabupaten, kode_provinsi, kode_pos, sk_pendirian_sekolah, 
       tanggal_sk_pendirian, status_kepemilikan, yayasan, sk_izin_operasional, 
@@ -104,7 +104,6 @@ async function processRawUpsert(sekolahList) {
       sekolah_id = EXCLUDED.sekolah_id,
       nama = EXCLUDED.nama,
       nama_nomenklatur = EXCLUDED.nama_nomenklatur,
-      bentuk_pendidikan = EXCLUDED.bentuk_pendidikan,
       status_sekolah = EXCLUDED.status_sekolah,
       alamat_jalan = EXCLUDED.alamat_jalan,
       desa_kelurahan = EXCLUDED.desa_kelurahan,
@@ -138,7 +137,7 @@ export async function POST(req) {
 
     runGlobalSync(daftarKecamatan);
 
-    return NextResponse.json({ message: "Turbo Raw Sync Sekolah dimulai!" });
+    return NextResponse.json({ message: "Sync Sekolah dimulai!" });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -148,7 +147,7 @@ async function runGlobalSync(daftarKecamatan) {
   const dapoToken = await getDapodikToken();
   if (!dapoToken) return;
 
-  const batchSize = 5; 
+  const batchSize = 5;
   for (let i = 0; i < daftarKecamatan.length; i += batchSize) {
     const batch = daftarKecamatan.slice(i, i + batchSize);
 
@@ -169,12 +168,12 @@ async function runGlobalSync(daftarKecamatan) {
         }
 
         await processRawUpsert(allSekolah);
-        console.log(`✅ Kec ${kec.kecamatan} (${allSekolah.length} schools)`);
+        console.log(`Kec ${kec.kecamatan} (${allSekolah.length} schools)`);
 
       } catch (err) {
-        console.error(`❌ Gagal ${kec.kecamatan}: ${err.message}`);
+        console.error(`Gagal ${kec.kecamatan}: ${err.message}`);
       }
     }));
-    console.log(`📊 Progress: ${i + batch.length}/${daftarKecamatan.length} kecamatan.`);
+    console.log(`Progress: ${i + batch.length}/${daftarKecamatan.length} kecamatan.`);
   }
 }
