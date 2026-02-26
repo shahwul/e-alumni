@@ -21,7 +21,6 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NEXT_FONT_GOOGLE_MOCKED=true 
-ENV DATABASE_URL="postgresql://postgres:123@db:5432/db_e_alumni?schema=public"
 RUN npm run build
 
 # ----- Stage 3: Runner -----
