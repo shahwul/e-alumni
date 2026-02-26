@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import MapPanel from "@/components/sebaran/MapPanel";
+import MapPanel from "@/components/sebaran/map/MapPanel";
 import FilterPanel from "@/components/sebaran/filters/FilterPanel";
 import DataSection from "./DataSection";
 import { KAB_CODE_TO_NAME, YEAR_LIST } from "@/lib/constants";
