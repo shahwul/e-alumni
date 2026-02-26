@@ -5,10 +5,8 @@ services:
       dockerfile: Dockerfile.db
     container_name: e-alumni_db
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "123"
-      POSTGRES_DB: e_alumni
+    env_file:
+      - .env.production
     ports:
       - "5432:5432"
     volumes:
@@ -58,6 +56,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
 
 networks:
   app_network:
