@@ -45,4 +45,15 @@ Untuk build dan menjalankan instance dari container, eksekusi perintah:
 docker-compose up -d --build
 ```
 
-Setelah itu, aplikasi siap digunakan berdasarkan port konfigurasi di file `docker-compose.yml`.
+## 📄 Dokumentasi API
+
+Seluruh dokumentasi teknis API untuk proyek ini tersedia di direktori `docs/`:
+
+- [**Authentication**](docs/api_dokumentasi_auth.md) (Login, Logout, Session)
+- [**Dashboard**](docs/api_dokumentasi_dashboard.md) (Analytics & Stats)
+- [**Manajemen Diklat**](docs/api_dokumentasi_diklat.md) (CRUD, Peserta, Alumni)
+- [**PTK & Input Data**](docs/api_dokumentasi_ptk.md) (Profil PTK, Import/Validate)
+- [**Rekapitulasi**](docs/api_dokumentasi_rekap.md) (Drill-down Wilayah)
+- [**Referensi Data**](docs/api_dokumentasi_ref.md) (Metadata & Wilayah)
+- [**Sync Dapodik**](docs/api_dokumentasi_sync.md) (Proses Sinkronisasi)
+- [**Pencarian Sekolah**](docs/api_dokumentasi_sekolah.md) (Auto-complete NPSN/Nama)

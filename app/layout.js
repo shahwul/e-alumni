@@ -1,6 +1,7 @@
 import { Montserrat, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const source_sans_3 = Source_Sans_3({
   variable: "--font-source-sans-3",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
         className={`${montserrat.variable} ${source_sans_3.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

@@ -11,6 +11,8 @@ import {
   Loader2,
   Settings,
   X,
+  School,
+  GraduationCap,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarItem, SidebarDivider } from "./SidebarItems";
@@ -103,6 +105,21 @@ export default function DashboardSidebar({
             label="Input Data"
             active={pathname === "/input-data"}
             onClick={() => navigate("/input-data")}
+            collapsed={collapsed && !isMobile}
+          />
+          <SidebarDivider label="Rekapitulasi" collapsed={collapsed && !isMobile} />
+          <SidebarItem
+            icon={<GraduationCap size={17} />}
+            label="Rekap PTK"
+            active={pathname === "/rekap"}
+            onClick={() => navigate("/rekap")}
+            collapsed={collapsed && !isMobile}
+          />
+          <SidebarItem
+            icon={<School size={17} />}
+            label="Rekap Sekolah"
+            active={pathname === "/rekap-sekolah"}
+            onClick={() => navigate("/rekap-sekolah")}
             collapsed={collapsed && !isMobile}
           />
 

@@ -12,7 +12,7 @@ async function withRetry(fn, retries = 3, delay = 2000) {
     return await fn();
   } catch (err) {
     if (retries <= 0) throw err;
-    console.warn(`⚠️ Gagal: ${err.message}. Retry...`);
+    console.warn(`Gagal: ${err.message}. Retry...`);
     await new Promise(r => setTimeout(r, delay));
     return withRetry(fn, retries - 1, delay * 2);
   }
@@ -52,7 +52,7 @@ export async function POST(req) {
     const ptkDetail = await withRetry(async () => {
       const url = `${DAPODIK_CONFIG.baseUrl}${DAPODIK_CONFIG.endpoints.ptkDetail}?nik=${nik}&npsn=${npsn}`;
       const res = await fetch(url, {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${dapoToken}`,
           'X-API-KEY': DAPODIK_CONFIG.apiKey,
         },
@@ -80,7 +80,7 @@ export async function POST(req) {
       )
       VALUES (
         ${escapeSql(p.nik)}, ${escapeSql(p.nuptk?.slice(0, 16))}, ${escapeSql(p.nip?.slice(0, 18))}, 
-        ${escapeSql(p.nama?.toUpperCase().slice(0, 100))}, ${escapeSql(p.jenis_kelamin?.slice(0, 1))}, 
+        ${escapeSql(p.nama?.slice(0, 100))}, ${escapeSql(p.jenis_kelamin?.slice(0, 1))}, 
         ${escapeSql(p.tempat_lahir?.slice(0, 32))}, ${formatDSql(p.tanggal_lahir)}, 
         ${escapeSql(p.agama?.slice(0, 25))}, ${escapeSql(p.no_hp?.slice(0, 20))}, 
         ${escapeSql(p.email?.toLowerCase().slice(0, 100))}, ${escapeSql(p.status_kepegawaian?.slice(0, 40))}, 

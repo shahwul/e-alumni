@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useFilterContext } from "../FilterContext";
-import { usePTKMetadata } from "../hooks/useReferences";
+import { usePTKMetadata, useBentukPendidikan } from "../hooks/useReferences";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 
 import { Label } from "@/components/ui/label";
@@ -20,19 +20,21 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import { XCircle, Loader2 } from "lucide-react"; 
+import { XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function KriteriaPTK() {
   const { filters, setFilters } = useFilterContext();
 
-  const { 
-    jenisPtk, 
-    statusKepegawaian, 
-    mapel, 
-    jurusan, 
-    isLoading 
+  const {
+    jenisPtk,
+    statusKepegawaian,
+    mapel,
+    jurusan,
+    isLoading
   } = usePTKMetadata();
+
+  const { bentukPendidikan, isLoading: isLoadingBentuk } = useBentukPendidikan();
 
   const [ageRange, setAgeRange] = useState([20, 60]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -74,6 +76,7 @@ export function KriteriaPTK() {
   );
 
   const hasUsiaFilter = !!filters.usia_min || !!filters.usia_max;
+  const isAnyLoading = isLoading || isLoadingBentuk;
 
   return (
     <div className="space-y-4">
@@ -81,31 +84,30 @@ export function KriteriaPTK() {
         <span className="h-4 w-1 bg-green-500 rounded-full" />
         Kriteria PTK
         {/* Indikator Loading Data Referensi */}
-        {isLoading && <Loader2 className="h-3 w-3 animate-spin text-slate-400" />}
+        {isAnyLoading && <Loader2 className="h-3 w-3 animate-spin text-slate-400" />}
       </h4>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-        
-        {/* ================= 1. JENJANG (HARDCODE) ================= */}
+
+        {/* ================= 1. JENJANG / BENTUK PENDIDIKAN ================= */}
         <div className="space-y-1.5">
-          <Label className="text-xs text-slate-500">Jenjang</Label>
+          <Label className="text-xs text-slate-500">Bentuk Pendidikan</Label>
           <Select
             value={filters.jenjang || "ALL"}
             onValueChange={(val) => setFilters((p) => ({ ...p, jenjang: val === "ALL" ? "" : val }))}
+            disabled={isLoadingBentuk}
           >
             <SelectTrigger className="h-9 text-xs">
               <div className="flex items-center justify-between w-full pr-2">
-                <SelectValue placeholder="Semua" />
+                <SelectValue placeholder={isLoadingBentuk ? "Memuat..." : "Semua"} />
                 {filters.jenjang && <ClearButton field="jenjang" />}
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="SD">SD</SelectItem>
-              <SelectItem value="SMP">SMP</SelectItem>
-              <SelectItem value="SMA">SMA</SelectItem>
-              <SelectItem value="SMK">SMK</SelectItem>
-              <SelectItem value="SLB">SLB</SelectItem>
+              {bentukPendidikan.map((bp) => (
+                <SelectItem key={bp} value={bp}>{bp}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -113,12 +115,12 @@ export function KriteriaPTK() {
         {/* ================= 2. MAPEL (AUTOCOMPLETE) ================= */}
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Mapel / Sertifikasi</Label>
-          <SearchableSelect 
-             value={filters.mapel}
-             onChange={(val) => setFilters(p => ({...p, mapel: val}))}
-             options={mapel} 
-             placeholder="Pilih Mapel..."
-             emptyMessage="Mapel tidak ditemukan"
+          <SearchableSelect
+            value={filters.mapel}
+            onChange={(val) => setFilters(p => ({ ...p, mapel: val }))}
+            options={mapel}
+            placeholder="Pilih Mapel..."
+            emptyMessage="Mapel tidak ditemukan"
           />
         </div>
 
@@ -136,9 +138,9 @@ export function KriteriaPTK() {
               >
                 {hasUsiaFilter ? `${filters.usia_min} - ${filters.usia_max} Thn` : "Pilih Usia"}
                 {hasUsiaFilter && (
-                   <span onClick={handleResetUsia} className="ml-2 hover:bg-red-50 rounded p-0.5">
-                     <XCircle className="h-3.5 w-3.5 text-red-400" />
-                   </span>
+                  <span onClick={handleResetUsia} className="ml-2 hover:bg-red-50 rounded p-0.5">
+                    <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  </span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -235,14 +237,14 @@ export function KriteriaPTK() {
 
         {/* ================= 7. JURUSAN (AUTOCOMPLETE) ================= */}
         <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500">Jurusan / Bidang</Label>
-            <SearchableSelect 
-                value={filters.pendidikan_bidang}
-                onChange={(val) => setFilters(p => ({...p, pendidikan_bidang: val}))}
-                options={jurusan} 
-                placeholder="Cari Jurusan..."
-                emptyMessage="Jurusan tidak ditemukan"
-            />
+          <Label className="text-xs text-slate-500">Jurusan / Bidang</Label>
+          <SearchableSelect
+            value={filters.pendidikan_bidang}
+            onChange={(val) => setFilters(p => ({ ...p, pendidikan_bidang: val }))}
+            options={jurusan}
+            placeholder="Cari Jurusan..."
+            emptyMessage="Jurusan tidak ditemukan"
+          />
         </div>
 
         {/* ================= 8. STATUS KEPALA SEKOLAH ================= */}
