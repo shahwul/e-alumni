@@ -13,10 +13,10 @@ export default function DiklatCard({ data, onRefresh }) {
   const formatDate = (d) =>
     d
       ? new Date(d).toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "-";
 
   return (
@@ -34,6 +34,7 @@ export default function DiklatCard({ data, onRefresh }) {
         isEditing={edit.isEditing}
         setExpanded={setExpanded}
         formatDate={formatDate}
+        onDelete={edit.handleDelete}
       />
 
       {expanded && (

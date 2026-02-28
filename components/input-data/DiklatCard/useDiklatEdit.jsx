@@ -10,7 +10,7 @@ export default function useDiklatEdit(data, onRefresh) {
   useEffect(() => {
     setEditData({ ...data });
   }, [data]);
-  
+
   const handleSaveEdit = async () => {
     try {
       const {
@@ -46,11 +46,30 @@ export default function useDiklatEdit(data, onRefresh) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus Diklat "${data.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) return;
+    try {
+      const res = await fetch(`/api/diklat/${data.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Diklat berhasil dihapus");
+        if (onRefresh) onRefresh(true);
+      } else {
+        toast.error("Gagal menghapus data");
+      }
+    } catch {
+      toast.error("Error saat menghapus data");
+    }
+  };
+
   return {
     isEditing,
     setIsEditing,
     editData,
     setEditData,
     handleSaveEdit,
+    handleDelete,
   };
 }

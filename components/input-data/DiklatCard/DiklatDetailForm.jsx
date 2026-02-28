@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  Calendar as CalendarIcon, MapPin, Clock, Users, Edit2, Save, X, GraduationCap, 
-  Briefcase, AlignLeft, Tag, Layers, SearchCode, Monitor, Shapes 
+import {
+  Calendar as CalendarIcon, MapPin, Clock, Users, Edit2, Save, X, GraduationCap,
+  Briefcase, AlignLeft, Tag, Layers, SearchCode, Monitor, Shapes
 } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -33,6 +33,7 @@ const DataField = ({ label, icon: Icon, isEditing, children, viewValue, classNam
 export default function DiklatDetailForm({ data, isEditing, setIsEditing, editData, setEditData, handleSaveEdit }) {
   const [refs, setRefs] = useState({ topics: [], categories: [], levels: [], jobs: [] });
   const [subTopics, setSubTopics] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -57,6 +58,12 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
   const updateEdit = (key, val) => setEditData(prev => ({ ...prev, [key]: val }));
   const fmtDate = (d) => d ? format(new Date(d), "dd MMM yyyy", { locale: localeId }) : "-";
 
+  const onSave = async () => {
+    setIsSaving(true);
+    await handleSaveEdit();
+    setIsSaving(false);
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-8">
       {/* HEADER */}
@@ -72,11 +79,11 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
             </Button>
           ) : (
             <>
-              <Button size="sm" variant="ghost" onClick={() => { setIsEditing(false); setEditData({ ...data }); }}>
+              <Button size="sm" variant="ghost" onClick={() => { setIsEditing(false); setEditData({ ...data }); }} disabled={isSaving}>
                 <X className="w-3.5 h-3.5 mr-1" /> Batal
               </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={handleSaveEdit}>
-                <Save className="w-3.5 h-3.5 mr-1" /> Simpan
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 transition-colors" onClick={onSave} disabled={isSaving}>
+                <Save className={cn("w-3.5 h-3.5 mr-1", isSaving && "animate-spin")} /> {isSaving ? "Menyimpan..." : "Simpan"}
               </Button>
             </>
           )}
@@ -176,7 +183,7 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
             </DataField>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <DataField label="Perekrutan" icon={SearchCode} isEditing={isEditing} viewValue={data.jenis_perekrutan}>
               <Select value={editData.jenis_perekrutan} onValueChange={v => updateEdit("jenis_perekrutan", v)}>
                 <SelectTrigger className="bg-slate-50"><SelectValue /></SelectTrigger>
@@ -185,6 +192,9 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
             </DataField>
             <DataField label="JP" icon={Clock} isEditing={isEditing} viewValue={`${data.total_jp} JP`}>
               <Input type="number" value={editData.total_jp || 0} onChange={e => updateEdit("total_jp", Number(e.target.value))} className="bg-slate-50" />
+            </DataField>
+            <DataField label="Batas Peserta" icon={Users} isEditing={isEditing} viewValue={`${data.participant_limit || 0} Orang`}>
+              <Input type="number" value={editData.participant_limit || 0} onChange={e => updateEdit("participant_limit", Number(e.target.value))} className="bg-slate-50" />
             </DataField>
           </div>
 

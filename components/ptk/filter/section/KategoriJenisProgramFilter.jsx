@@ -34,7 +34,7 @@ export function KategoriJenisProgramFilter() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* ================= Kategori ================= */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label className="text-xs text-slate-500">Kategori Kegiatan</Label>
 
         <Select
@@ -46,8 +46,8 @@ export function KategoriJenisProgramFilter() {
             }))
           }
         >
-          <SelectTrigger className="pr-2">
-            <div className="flex items-center justify-between w-full">
+          <SelectTrigger className="h-9 text-xs">
+            <div className="flex items-center justify-between w-full pr-2">
               <SelectValue placeholder="Semua Kategori" />
 
               {hasKategori && (
@@ -59,9 +59,9 @@ export function KategoriJenisProgramFilter() {
                     e.stopPropagation();
                     setFilters((p) => ({ ...p, kategori: "" }));
                   }}
-                  className="ml-2 flex h-6 w-6 items-center justify-center rounded hover:bg-red-50"
+                  className="ml-2 flex h-5 w-5 items-center justify-center rounded hover:bg-red-50"
                 >
-                  <XCircle className="h-4 w-4 text-red-400 hover:text-red-600" />
+                  <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
                 </span>
               )}
             </div>
@@ -78,7 +78,7 @@ export function KategoriJenisProgramFilter() {
         </Select>
       </div>
       {/* ================= Jenis ================= */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label className="text-xs text-slate-500">Jenis Kegiatan</Label>
         <Select
           value={filters.jenis || "ALL"}
@@ -89,8 +89,8 @@ export function KategoriJenisProgramFilter() {
             }))
           }
         >
-          <SelectTrigger className="pr-2">
-            <div className="flex items-center justify-between w-full">
+          <SelectTrigger className="h-9 text-xs">
+            <div className="flex items-center justify-between w-full pr-2">
               <SelectValue placeholder="Semua Jenis" />
               {hasJenis && (
                 <span
@@ -100,9 +100,9 @@ export function KategoriJenisProgramFilter() {
                     e.stopPropagation();
                     setFilters((p) => ({ ...p, jenis: "" }));
                   }}
-                  className="ml-2 flex h-6 w-6 items-center justify-center rounded hover:bg-red-50"
+                  className="ml-2 flex h-5 w-5 items-center justify-center rounded hover:bg-red-50"
                 >
-                  <XCircle className="h-4 w-4 text-red-400 hover:text-red-600" />
+                  <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
                 </span>
               )}
             </div>
@@ -119,7 +119,7 @@ export function KategoriJenisProgramFilter() {
       </div>
 
       {/* ================= PROGRAM ================= */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label className="text-xs text-slate-500">Sumber Program</Label>
         <Select
           value={filters.program || "ALL"}
@@ -130,8 +130,8 @@ export function KategoriJenisProgramFilter() {
             }))
           }
         >
-          <SelectTrigger className="pr-2">
-            <div className="flex items-center justify-between w-full">
+          <SelectTrigger className="h-9 text-xs">
+            <div className="flex items-center justify-between w-full pr-2">
               <SelectValue placeholder="Semua Program" />
               {hasProgram && (
                 <span
@@ -141,9 +141,9 @@ export function KategoriJenisProgramFilter() {
                     e.stopPropagation();
                     setFilters((p) => ({ ...p, program: "" }));
                   }}
-                  className="ml-2 flex h-6 w-6 items-center justify-center rounded hover:bg-red-50"
+                  className="ml-2 flex h-5 w-5 items-center justify-center rounded hover:bg-red-50"
                 >
-                  <XCircle className="h-4 w-4 text-red-400 hover:text-red-600" />
+                  <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
                 </span>
               )}
             </div>

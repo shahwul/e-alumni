@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Calendar, Users, ChevronUp, ChevronDown, UserPlus } from "lucide-react";
+import { Calendar, Users, ChevronUp, ChevronDown, UserPlus, Trash2 } from "lucide-react";
 
 export default function DiklatCardHeader({
   data,
@@ -9,6 +9,7 @@ export default function DiklatCardHeader({
   isEditing,
   setExpanded,
   formatDate,
+  onDelete,
 }) {
   return (
     <div
@@ -16,10 +17,10 @@ export default function DiklatCardHeader({
       onClick={() => !isEditing && setExpanded(!expanded)}
     >
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
-        
+
         {/* === KONTEN KIRI === */}
         <div className="flex-1 min-w-0 space-y-3">
-          
+
           {/* BADGES (Topik & Moda) */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
@@ -36,8 +37,8 @@ export default function DiklatCardHeader({
                 data.moda === "Daring"
                   ? "text-blue-600 bg-blue-50 border-blue-200"
                   : data.moda === "Luring"
-                  ? "text-orange-600 bg-orange-50 border-orange-200"
-                  : "text-purple-600 bg-purple-50 border-purple-200"
+                    ? "text-orange-600 bg-orange-50 border-orange-200"
+                    : "text-purple-600 bg-purple-50 border-purple-200"
               )}
             >
               {data.moda}
@@ -45,13 +46,13 @@ export default function DiklatCardHeader({
           </div>
 
           {/* JUDUL */}
-          <h3 className="font-bold text-slate-900 text-lg leading-tight group-hover:text-blue-700 transition-colors">
+          <h3 className="font-bold text-slate-800 text-lg leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
             {data.title}
           </h3>
 
           {/* META INFO (Tanggal, Peserta, Kandidat) */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 font-medium">
-            
+
             {/* 1. TANGGAL */}
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
@@ -75,32 +76,46 @@ export default function DiklatCardHeader({
 
             {/* 3. TOTAL KANDIDAT (Style Sama) */}
             {data.total_kandidat > 0 && (
-                <div className="flex items-center gap-2" title="Kandidat / Calon Peserta">
-                    <UserPlus className="w-4 h-4 text-orange-500" />
-                    <span className="text-slate-700">
-                        {data.total_kandidat} Kandidat
-                    </span>
-                </div>
+              <div className="flex items-center gap-2" title="Kandidat / Calon Peserta">
+                <UserPlus className="w-4 h-4 text-orange-500" />
+                <span className="text-slate-700">
+                  {data.total_kandidat} Kandidat
+                </span>
+              </div>
             )}
 
             {/* 4. Participant Limit */}
             {data.participant_limit > 0 && (
-                <div className="flex items-center gap-2" title="Batas Peserta">
-                    <Users className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-500">
-                        {data.total_peserta || 0} / {data.participant_limit}
-                    </span>
-                </div>
+              <div className="flex items-center gap-2" title="Batas Peserta">
+                <Users className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-500">
+                  {data.total_peserta || 0} / {data.participant_limit}
+                </span>
+              </div>
             )}
 
           </div>
         </div>
 
-        <div className="flex items-center justify-end pl-4 md:border-l border-slate-100">
+        <div className="flex items-center justify-end pl-4 md:border-l border-slate-100 gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button
             variant="ghost"
             size="icon"
-            className="text-slate-400 hover:text-blue-600 rounded-full h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="text-red-400 hover:text-red-600 hover:bg-red-50 focus:ring-red-200 rounded-full h-8 w-8 transition-colors"
+            title="Hapus Diklat"
+            aria-label="Hapus Diklat"
+          >
+            <Trash2 size={18} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 focus:ring-blue-200 rounded-full h-8 w-8 transition-colors"
+            aria-label={expanded ? "Tutup detail" : "Buka detail"}
           >
             {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </Button>

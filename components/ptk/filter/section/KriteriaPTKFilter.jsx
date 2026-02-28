@@ -31,6 +31,7 @@ export function KriteriaPTK() {
     statusKepegawaian,
     mapel,
     jurusan,
+    pendidikan,
     isLoading
   } = usePTKMetadata();
 
@@ -69,7 +70,7 @@ export function KriteriaPTK() {
         e.stopPropagation();
         setFilters((p) => ({ ...p, [field]: "" }));
       }}
-      className="ml-2 flex h-5 w-5 items-center justify-center rounded hover:bg-red-50 cursor-pointer"
+      className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-red-50 cursor-pointer transition-colors"
     >
       <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
     </span>
@@ -138,8 +139,8 @@ export function KriteriaPTK() {
               >
                 {hasUsiaFilter ? `${filters.usia_min} - ${filters.usia_max} Thn` : "Pilih Usia"}
                 {hasUsiaFilter && (
-                  <span onClick={handleResetUsia} className="ml-2 hover:bg-red-50 rounded p-0.5">
-                    <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  <span onClick={handleResetUsia} className="ml-2 flex h-5 w-5 items-center justify-center rounded hover:bg-red-50 transition-colors">
+                    <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
                   </span>
                 )}
               </Button>
@@ -225,12 +226,9 @@ export function KriteriaPTK() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua</SelectItem>
-              <SelectItem value="S3">S3</SelectItem>
-              <SelectItem value="S2">S2</SelectItem>
-              <SelectItem value="S1">S1</SelectItem>
-              <SelectItem value="D4">D4</SelectItem>
-              <SelectItem value="D3">D3</SelectItem>
-              <SelectItem value="SMA">SMA / Sederajat</SelectItem>
+              {pendidikan.map((pen) => (
+                <SelectItem key={pen} value={pen}>{pen}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -269,7 +267,7 @@ export function KriteriaPTK() {
         </div>
 
         {/* ================= 9. STATUS PELATIHAN ================= */}
-        <div className="space-y-1.5 col-span-2">
+        <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Status Pelatihan</Label>
           <Select
             value={filters.status || "ALL"}
@@ -290,7 +288,7 @@ export function KriteriaPTK() {
         </div>
 
         {/* JENIS KELAMIN */}
-        <div className="space-y-1.5 col-span-2">
+        <div className="space-y-1.5">
           <Label className="text-xs text-slate-500">Jenis Kelamin</Label>
           <Select
             value={filters.jenis_kelamin || "ALL"}

@@ -18,12 +18,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function SearchableSelect({ 
-  value, 
-  onChange, 
-  options = [], 
-  placeholder = "Pilih opsi...", 
-  emptyMessage = "Tidak ditemukan." 
+export function SearchableSelect({
+  value,
+  onChange,
+  options = [],
+  placeholder = "Pilih opsi...",
+  emptyMessage = "Tidak ditemukan."
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -39,39 +39,39 @@ export function SearchableSelect({
           <span className="truncate mr-2 flex-1 text-left">
             {value ? value : placeholder}
           </span>
-          
+
           <div className="flex items-center gap-1 shrink-0">
             {value && (
-                <div
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onChange("");
-                    }}
-                    className="hover:bg-slate-200 rounded-full p-0.5 cursor-pointer transition-colors"
-                >
-                    <XCircle className="h-3.5 w-3.5 text-slate-400 hover:text-red-500" />
-                </div>
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange("");
+                }}
+                className="flex h-5 w-5 items-center justify-center rounded hover:bg-red-50 cursor-pointer transition-colors"
+              >
+                <XCircle className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
+              </div>
             )}
             <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-50" />
           </div>
         </Button>
       </PopoverTrigger>
 
-        <PopoverContent
-            className="w-[--radix-popover-trigger-width] p-0 z-[9999]"
-            align="start"
-            sideOffset={4}
-        >
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 z-[9999]"
+        align="start"
+        sideOffset={4}
+      >
         <Command className="w-full">
           <CommandInput placeholder={`Cari ${placeholder.toLowerCase()}...`} className="h-8 text-xs" />
           <CommandList
             className="max-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar"
             onWheel={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
-            >
+          >
             <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
-                {emptyMessage}
+              {emptyMessage}
             </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
@@ -96,7 +96,7 @@ export function SearchableSelect({
             </CommandGroup>
           </CommandList>
         </Command>
-        </PopoverContent>
+      </PopoverContent>
     </Popover>
   );
 }

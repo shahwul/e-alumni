@@ -14,6 +14,7 @@ export function usePTKMetadata() {
     statusKepegawaian: data?.statusKepegawaian || [],
     mapel: data?.mapel || [],
     jurusan: data?.jurusan || [],
+    pendidikan: data?.pendidikan || [],
 
     isLoading,
     isError: error
