@@ -6,6 +6,7 @@ import { toast } from "sonner";
 export default function useDiklatEdit(data, onRefresh) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...data });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     setEditData({ ...data });
@@ -46,8 +47,10 @@ export default function useDiklatEdit(data, onRefresh) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus Diklat "${data.title}"?\n\nTindakan ini tidak dapat dibatalkan.`)) return;
+  const handleDelete = () => setShowDeleteDialog(true);
+
+  const confirmDelete = async () => {
+    setShowDeleteDialog(false);
     try {
       const res = await fetch(`/api/diklat/${data.id}`, {
         method: "DELETE",
@@ -71,5 +74,8 @@ export default function useDiklatEdit(data, onRefresh) {
     setEditData,
     handleSaveEdit,
     handleDelete,
+    showDeleteDialog,
+    setShowDeleteDialog,
+    confirmDelete,
   };
 }

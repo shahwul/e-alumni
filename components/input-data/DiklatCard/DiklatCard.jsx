@@ -5,6 +5,16 @@ import { cn } from "@/lib/utils";
 import DiklatCardHeader from "./DiklatCardHeader";
 import DiklatCardTabs from "./DiklatCardTabs";
 import useDiklatEdit from "./useDiklatEdit";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function DiklatCard({ data, onRefresh }) {
   const [expanded, setExpanded] = useState(false);
@@ -44,6 +54,23 @@ export default function DiklatCard({ data, onRefresh }) {
           editProps={edit}
         />
       )}
+
+      <AlertDialog open={edit.showDeleteDialog} onOpenChange={edit.setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Diklat</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus Diklat "{data.title}"?
+              <br /><br />
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={edit.confirmDelete} className="bg-red-600 hover:bg-red-700">Ya, Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

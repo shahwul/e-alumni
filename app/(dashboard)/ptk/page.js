@@ -12,6 +12,15 @@ import { PTKSelectedActionsBar } from "@/components/ptk/list/PTKSelectedActionsB
 import { usePTKList } from "@/components/ptk/list/usePTKList";
 import { usePTKNavigation } from "@/components/ptk/list/hooks/usePTKNavigation";
 import { AddToDiklatModal } from "@/components/ptk/AddToDiklatModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function PTKListContent() {
   const searchParams = useSearchParams();
@@ -21,10 +30,11 @@ function PTKListContent() {
   const {
     data, loading, totalData,
     page, limit, search, sorting, activeFilters, onExport, isSyncing,
-    syncStatus, syncProgress, lastSync, onGlobalSync, onSyncKecamatan
+    syncStatus, syncProgress, lastSync, onGlobalSync, onSyncKecamatan,
+    alertConfig, handleAlertClose
   } = usePTKList(searchParams);
 
-  const { setPage, setLimit, setSearch, setSorting, setActiveFilters } = 
+  const { setPage, setLimit, setSearch, setSorting, setActiveFilters } =
     usePTKNavigation(activeFilters);
 
   const isCandidateMode = activeFilters.mode_filter === "eligible";
@@ -34,15 +44,15 @@ function PTKListContent() {
     <div className="flex flex-col h-[calc(100vh-105px)] overflow-hidden space-y-4">
 
       <div className="flex-none space-y-4">
-        <PTKHeader 
-        onExport={onExport}
-        onGlobalSync={onGlobalSync}
-        onSyncKecamatan={onSyncKecamatan}
-        isSyncing={isSyncing}
-        syncStatus={syncStatus}
-        syncProgress={syncProgress}
-        lastSync={lastSync}
-        activeFilters={activeFilters}
+        <PTKHeader
+          onExport={onExport}
+          onGlobalSync={onGlobalSync}
+          onSyncKecamatan={onSyncKecamatan}
+          isSyncing={isSyncing}
+          syncStatus={syncStatus}
+          syncProgress={syncProgress}
+          lastSync={lastSync}
+          activeFilters={activeFilters}
         />
         <PTKToolbar
           search={search}
@@ -55,9 +65,9 @@ function PTKListContent() {
       </div>
 
       <div className="flex-1 min-h-0 bg-white rounded-xl border flex flex-col overflow-hidden shadow-sm">
-        <PTKTable 
+        <PTKTable
           data={data} loading={loading}
-          rowSelection={rowSelection} setRowSelection={setRowSelection} 
+          rowSelection={rowSelection} setRowSelection={setRowSelection}
           isCandidateMode={isCandidateMode} enableRowClick={isCandidateMode}
           sorting={sorting} setSorting={setSorting}
         />
@@ -67,18 +77,30 @@ function PTKListContent() {
         />
       </div>
 
-      <PTKSelectedActionsBar 
+      <PTKSelectedActionsBar
         count={Object.keys(rowSelection).length}
         onClear={() => setRowSelection({})}
         onAction={() => setIsAddToDiklatOpen(true)}
       />
 
-      <AddToDiklatModal 
+      <AddToDiklatModal
         isOpen={isAddToDiklatOpen}
         selectedNiks={Object.keys(rowSelection)}
         onClose={() => setIsAddToDiklatOpen(false)}
-        onSuccess={() => setRowSelection({})} 
+        onSuccess={() => setRowSelection({})}
       />
+
+      <AlertDialog open={alertConfig.open} onOpenChange={handleAlertClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig.message}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => handleAlertClose(false)} className="bg-blue-600 hover:bg-blue-700">OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

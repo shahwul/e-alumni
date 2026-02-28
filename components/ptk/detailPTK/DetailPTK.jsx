@@ -3,6 +3,15 @@ import React, { useState } from "react";
 import { Loader2, ArrowLeft, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { useDetailPTK } from "./useDetailPTK";
 
@@ -19,15 +28,18 @@ export default function DetailPTK({ nik }) {
   const router = useRouter();
   const { data, loading, error, isSyncing, syncData } = useDetailPTK(nik);
   const [mode, setMode] = useState("terpusat");
+  const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "" });
+
+  const showAlert = (title, message) => setAlertConfig({ open: true, title, message });
 
   const handleSyncManual = async () => {
     const npsn = data?.terpusat?.wilayah?.npsn;
     const result = await syncData(npsn);
-    
+
     if (result?.success) {
       console.log("Sinkronisasi Berhasil!");
     } else if (result?.message) {
-      alert(result.message);
+      showAlert("Informasi Sinkronisasi", result.message);
     }
   };
 
@@ -92,7 +104,7 @@ export default function DetailPTK({ nik }) {
               </span>
             </div>
           )}
-          
+
           <Button
             size="sm"
             variant="outline"
@@ -172,6 +184,18 @@ export default function DetailPTK({ nik }) {
           pelita={pelitaData?.riwayatPendidikanSertifikasi}
         />
       </div>
+
+      <AlertDialog open={alertConfig.open} onOpenChange={(o) => setAlertConfig(p => ({ ...p, open: o }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig.message}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setAlertConfig(p => ({ ...p, open: false }))}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

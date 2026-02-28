@@ -12,6 +12,13 @@ export function usePTKList(searchParams) {
   const [syncProgress, setSyncProgress] = useState(0);
   const [lastSync, setLastSync] = useState(null);
 
+  const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "" });
+
+  const showAlert = (title, message) => setAlertConfig({ open: true, title, message });
+  const handleAlertClose = (open) => {
+    if (!open) setAlertConfig(prev => ({ ...prev, open: false }));
+  };
+
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 25;
   const search = searchParams.get("search") || "";
@@ -26,12 +33,12 @@ export function usePTKList(searchParams) {
 
   const sorting = sortParam
     ? sortParam.split(",").map((item) => {
-        const [field, dir] = item.split(":");
-        return {
-          id: reverseSortMapping[field] || field,
-          desc: dir === "desc",
-        };
-      })
+      const [field, dir] = item.split(":");
+      return {
+        id: reverseSortMapping[field] || field,
+        desc: dir === "desc",
+      };
+    })
     : [{ id: "nama_ptk", desc: false }];
 
   // Mapping Active Filters
@@ -45,7 +52,7 @@ export function usePTKList(searchParams) {
     mapel: searchParams.get("mapel") || "",
     usia_min: searchParams.get("usia_min") || "",
     usia_max: searchParams.get("usia_max") || "",
-    status: searchParams.get("status") || "", 
+    status: searchParams.get("status") || "",
     kategori: searchParams.get("kategori") || "",
     jenis: searchParams.get("jenis") || "",
     program: searchParams.get("program") || "",
@@ -124,7 +131,7 @@ export function usePTKList(searchParams) {
 
     eventSource.onmessage = (event) => {
       const res = JSON.parse(event.data);
-      
+
       if (res.message) setSyncStatus(res.message);
       if (res.progress !== undefined) setSyncProgress(res.progress);
 
@@ -186,7 +193,7 @@ export function usePTKList(searchParams) {
       };
 
     } catch (err) {
-      alert(err.message);
+      showAlert("Gagal Sinkronisasi", err.message);
       setIsSyncing(false);
     }
   };
@@ -220,5 +227,7 @@ export function usePTKList(searchParams) {
     onGlobalSync: handleGlobalSync,
     onSyncKecamatan: handleSyncKecamatan,
     onExport: handleExport,
+    alertConfig,
+    handleAlertClose,
   };
 }

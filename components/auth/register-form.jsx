@@ -10,10 +10,19 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { 
-  User, Mail, Eye, EyeOff, X, Check, 
-  CircleAlert, IdCardLanyard, Loader2 
+import {
+  User, Mail, Eye, EyeOff, X, Check,
+  CircleAlert, IdCardLanyard, Loader2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function SignupForm({ className, ...props }) {
   const [step, setStep] = useState(1);
@@ -29,6 +38,19 @@ export function SignupForm({ className, ...props }) {
   const [passwordNotSynchronize, setPasswordNotSynchronize] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [usernameError, setUsernameError] = useState("");
+
+  const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "", onSuccess: null });
+
+  const showAlert = (title, message, onSuccess = null) => {
+    setAlertConfig({ open: true, title, message, onSuccess });
+  };
+
+  const handleAlertClose = (open) => {
+    if (!open) {
+      if (alertConfig.onSuccess) alertConfig.onSuccess();
+      setAlertConfig(prev => ({ ...prev, open: false }));
+    }
+  };
 
   const validations = [
     { text: "Minimal 8 karakter", valid: form.password.length >= 8 },
@@ -91,10 +113,10 @@ export function SignupForm({ className, ...props }) {
       if (res.ok) setStep(2);
       else {
         const data = await res.json();
-        alert(data.message || "Gagal kirim OTP");
+        showAlert("Gagal", data.message || "Gagal kirim OTP");
       }
     } catch (error) {
-      alert("Terjadi kesalahan koneksi");
+      showAlert("Error", "Terjadi kesalahan koneksi");
     } finally {
       setIsLoading(false);
     }
@@ -110,9 +132,8 @@ export function SignupForm({ className, ...props }) {
         body: JSON.stringify({ email: form.email, otp }),
       });
       if (res.ok) {
-        alert("Registrasi Berhasil! Silakan Login.");
-        router.push("/login");
-      } else alert("Kode OTP salah atau kedaluwarsa");
+        showAlert("Berhasil", "Registrasi Berhasil! Silakan Login.", () => router.push("/login"));
+      } else showAlert("Gagal", "Kode OTP salah atau kedaluwarsa");
     } finally {
       setIsLoading(false);
     }
@@ -252,8 +273,8 @@ export function SignupForm({ className, ...props }) {
               ))}
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="mt-3 w-full font-bold h-11 text-sm bg-blue-600 hover:bg-blue-700" // Ganti bg-indigo ke bg-blue
               disabled={!allValid || passwordNotSynchronize || usernameError || emailError || isLoading}
             >
@@ -262,7 +283,7 @@ export function SignupForm({ className, ...props }) {
             </Button>
 
             <FieldSeparator />
-            
+
             <div className="text-center text-xs text-slate-500">
               Sudah Punya Akun? <a href="/login" className="text-blue-600 font-bold hover:underline">Log in</a>
             </div>
@@ -273,32 +294,44 @@ export function SignupForm({ className, ...props }) {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-slate-800">Verifikasi Email</h1>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Kode verifikasi telah dikirim ke: <br/>
+              Kode verifikasi telah dikirim ke: <br />
               <span className="font-bold text-slate-900">{form.email}</span>
             </p>
           </div>
-          
-          <Input 
-            placeholder="000000" 
+
+          <Input
+            placeholder="000000"
             maxLength={6}
             className="text-center tracking-[0.8em] text-3xl font-mono h-16 border-2 focus:border-indigo-500"
             onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-            required 
+            required
           />
-          
+
           <Button type="submit" className="w-full h-12 text-sm font-bold bg-blue-600" disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Verifikasi Sekarang"}
           </Button>
 
-          <button 
-            type="button" 
-            onClick={() => setStep(1)} 
+          <button
+            type="button"
+            onClick={() => setStep(1)}
             className="text-xs text-slate-400 hover:text-blue-600 font-medium transition-colors"
           >
             ← Kembali ke form pendaftaran
           </button>
         </form>
       )}
+
+      <AlertDialog open={alertConfig.open} onOpenChange={handleAlertClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig.message}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => handleAlertClose(false)} className="bg-blue-600 hover:bg-blue-700">OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
