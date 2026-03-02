@@ -84,7 +84,7 @@ Memulai proses sinkronisasi seluruh data PTK untuk semua sekolah yang sudah ada 
 - **Response**:
   ```json
   {
-    "message": "Sync PTK Turbo (With Max Error Handling) Started!"
+    "message": "Sync PTK dimulai!"
   }
   ```
 
@@ -98,7 +98,7 @@ Memulai proses sinkronisasi data sekolah untuk seluruh kecamatan yang terdaftar 
 - **Response**:
   ```json
   {
-    "message": "Turbo Raw Sync Sekolah dimulai!"
+    "message": "Sync Sekolah dimulai!"
   }
   ```
 

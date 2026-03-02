@@ -9,8 +9,8 @@ export function useDiklat() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [sorting, setSorting] = useState([]); 
-  
+  const [sorting, setSorting] = useState([]);
+
   const [activeFilters, setActiveFilters] = useState({
     startDate: "", endDate: "", rumpun: "", sub_rumpun: "",
     moda: [], kategori: [], program: [], jenjang: [], jabatan: []
@@ -27,8 +27,8 @@ export function useDiklat() {
 
       if (sorting && sorting.length > 0) {
         const sortString = sorting
-            .map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`)
-            .join(",");
+          .map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`)
+          .join(",");
         params.append("sort", sortString);
       }
 
@@ -38,9 +38,9 @@ export function useDiklat() {
         else if (val && !Array.isArray(val)) params.append(key, val);
       });
 
-      const res = await fetch(`/api/diklat?${params.toString()}`);
+      const res = await fetch(`/api/diklat?${params.toString()}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
       const result = await res.json();
-      
+
       setData(result.data || []);
       setTotalData(result.meta?.total || 0);
     } catch (err) {
@@ -48,7 +48,7 @@ export function useDiklat() {
     } finally {
       setLoading(false);
     }
-  }, [search, page, limit, sorting, activeFilters]); 
+  }, [search, page, limit, sorting, activeFilters]);
 
   useEffect(() => {
     const timer = setTimeout(fetchData, 500);
@@ -56,11 +56,11 @@ export function useDiklat() {
   }, [fetchData]);
 
   return {
-    data, totalData, loading, 
-    search, setSearch, 
-    page, setPage, 
+    data, totalData, loading,
+    search, setSearch,
+    page, setPage,
     limit, setLimit,
-    sorting, setSorting, 
+    sorting, setSorting,
     activeFilters, setActiveFilters,
     fetchData
   };

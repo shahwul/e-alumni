@@ -11,13 +11,13 @@ export function useUploadLogic(diklatId, onSuccess) {
   const [needsRevalidation, setNeedsRevalidation] = useState(false);
 
   const fetchQuota = useCallback(async () => {
-  try {
-    const res = await fetch(`/api/diklat/${diklatId}`); // Pastikan endpoint ini return limit & count
-    const json = await res.json();
-    setQuotaInfo({
-      limit: json.data.participant_limit || 0,
-      current: json.data._count?.data_alumni || 0
-    });
+    try {
+      const res = await fetch(`/api/diklat/${diklatId}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+      const json = await res.json();
+      setQuotaInfo({
+        limit: json.data.participant_limit || 0,
+        current: json.data._count?.data_alumni || 0
+      });
     } catch (err) {
       console.error("Gagal ambil kuota", err);
     }
@@ -86,20 +86,21 @@ export function useUploadLogic(diklatId, onSuccess) {
     }
   };
 
-const validateData = async (dataToValidate) => {
+  const validateData = async (dataToValidate) => {
     setIsValidating(true);
     try {
       const res = await fetch("/api/input-data/validate", {
+        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },
         method: "POST",
-        body: JSON.stringify({ 
-            peserta: dataToValidate,
-            diklatId: diklatId 
+        body: JSON.stringify({
+          peserta: dataToValidate,
+          diklatId: diklatId
         }),
       });
-      
+
       if (!res.ok) throw new Error("Gagal validasi");
       const json = await res.json();
-      
+
       if (json.data) {
         const finalData = markDuplicates(json.data);
         setParsedData(finalData);
@@ -108,9 +109,9 @@ const validateData = async (dataToValidate) => {
 
         const alreadyRegistered = json.data.filter(r => r.status_msg.includes("Sudah Terdaftar")).length;
         if (alreadyRegistered > 0) {
-            toast.warning(`${alreadyRegistered} peserta sudah terdaftar di diklat ini.`);
+          toast.warning(`${alreadyRegistered} peserta sudah terdaftar di diklat ini.`);
         } else {
-            toast.success("Validasi selesai.");
+          toast.success("Validasi selesai.");
         }
       }
     } catch (err) {
@@ -175,7 +176,7 @@ const validateData = async (dataToValidate) => {
     try {
       const res = await fetch(`/api/input-data/import`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({ id_diklat: diklatId, peserta: validPeserta }),
       });
       const json = await res.json();

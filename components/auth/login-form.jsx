@@ -36,7 +36,7 @@ export function LoginForm({ className, ...props }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/login", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY }, 
         method: "POST",
         body: JSON.stringify(form),
       });

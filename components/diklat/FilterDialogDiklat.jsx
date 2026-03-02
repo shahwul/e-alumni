@@ -54,9 +54,9 @@ export default function FilterDialogDiklat({ isOpen, onClose, onApply }) {
     async function fetchOptions() {
       try {
         const [resRumpun, resJenjang, resJabatan] = await Promise.all([
-          fetch('/api/ref/rumpun'),
-          fetch('/api/ref/jenjang'),
-          fetch('/api/ref/jabatan')
+          fetch('/api/ref/rumpun', { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } }),
+          fetch('/api/ref/jenjang', { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } }),
+          fetch('/api/ref/jabatan', { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } })
         ]);
 
         if (resRumpun.ok) setRumpunOptions(await resRumpun.json());
@@ -83,7 +83,7 @@ export default function FilterDialogDiklat({ isOpen, onClose, onApply }) {
     }
     async function fetchSub() {
       try {
-        const res = await fetch(`/api/ref/sub-rumpun?topic_id=${filters.rumpun}`);
+        const res = await fetch(`/api/ref/sub-rumpun?topic_id=${filters.rumpun}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
         if (res.ok) setSubRumpunOptions(await res.json());
       } catch (e) { console.error(e); }
     }

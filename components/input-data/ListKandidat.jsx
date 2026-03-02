@@ -35,7 +35,7 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
   const fetchData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const res = await fetch(`/api/diklat/${diklatId}/kandidat`);
+      const res = await fetch(`/api/diklat/${diklatId}/kandidat`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
       const json = await res.json();
       setData(json.data || []);
     } catch (e) {
@@ -56,7 +56,7 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
 
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/diklat/${diklatId}/alumni`, {
+      const res = await fetch(`/api/diklat/${diklatId}/alumni`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY }, 
         method: 'POST',
       });
 
@@ -93,7 +93,7 @@ export default function ListKandidat({ diklatId, diklatTitle, onSuccess }) {
     setKandidatToDelete(null);
 
     try {
-      const res = await fetch(`/api/diklat/${diklatId}/kandidat?kandidat_id=${kandidatToDelete}`, { method: 'DELETE' });
+      const res = await fetch(`/api/diklat/${diklatId}/kandidat?kandidat_id=${kandidatToDelete}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },  method: 'DELETE' });
       if (res.ok) {
         toast.success("Kandidat dihapus");
         fetchData(true);

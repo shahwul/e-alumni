@@ -85,7 +85,7 @@ export function usePTKList(searchParams) {
         activeFilters,
       });
 
-      const res = await fetch(`/api/ptk?${params.toString()}`);
+      const res = await fetch(`/api/ptk?${params.toString()}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
       if (!res.ok) throw new Error("Gagal memuat data tabel");
       const json = await res.json();
 
@@ -105,7 +105,7 @@ export function usePTKList(searchParams) {
 
   const fetchMetadata = useCallback(async () => {
     try {
-      const res = await fetch("/api/sync/metadata");
+      const res = await fetch("/api/sync/metadata", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
       const json = await res.json();
       if (json.value && !json.value.includes("ERROR") && json.value !== "RUNNING") {
         setLastSync(json.value);
@@ -125,7 +125,7 @@ export function usePTKList(searchParams) {
 
     setIsSyncing(true);
     setSyncProgress(0);
-    setSyncStatus("Memulai Turbo Sync...");
+    setSyncStatus("Memulai Sync...");
 
     const eventSource = new EventSource("/api/sync/global");
 
@@ -162,7 +162,7 @@ export function usePTKList(searchParams) {
     try {
       const resMap = await fetch(`/api/wilayah/map-kecamatan`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ names: selectedKecNames })
       });
       const { codes } = await resMap.json();

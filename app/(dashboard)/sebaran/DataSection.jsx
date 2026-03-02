@@ -97,6 +97,7 @@ export default function DataSection({
         if (selectedDiklat) params.append("diklat", selectedDiklat);
 
         const res = await fetch(`/api/dashboard/stats?${params.toString()}`, {
+          headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },
           signal: controller.signal,
         });
         if (!res.ok) throw new Error("Failed to fetch data");

@@ -20,7 +20,7 @@ export function usePesertaLogic(diklatId, onSuccess) {
   const fetchPeserta = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const res = await fetch(`/api/input-data/peserta?diklat_id=${diklatId}&search=${search}`);
+      const res = await fetch(`/api/input-data/peserta?diklat_id=${diklatId}&search=${search}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
       const json = await res.json();
       setData(json.data || []);
     } catch (e) {
@@ -48,7 +48,7 @@ export function usePesertaLogic(diklatId, onSuccess) {
     };
 
     try {
-        const res = await fetch("/api/input-data/validate", {
+        const res = await fetch("/api/input-data/validate", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY }, 
             method: "POST",
             body: JSON.stringify(payload)
         });
@@ -121,7 +121,7 @@ export function usePesertaLogic(diklatId, onSuccess) {
     try {
       const res = await fetch('/api/input-data/peserta', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
       });
       const json = await res.json();
@@ -145,7 +145,7 @@ export function usePesertaLogic(diklatId, onSuccess) {
     const oldData = [...data];
     setData(prev => prev.filter(item => item.id !== id));
     try {
-      const res = await fetch(`/api/input-data/peserta?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/input-data/peserta?id=${id}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },  method: 'DELETE' });
       if (res.ok) {
         toast.success("Peserta dihapus permanen");
         if (onSuccess) onSuccess(true);

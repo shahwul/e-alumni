@@ -86,7 +86,7 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch("/api/auth/me", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
         if (res.ok) {
           const data = await res.json();
           setUser(data);
@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }) {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
+      const res = await fetch("/api/auth/logout", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },  method: "POST" });
       if (res.ok) {
         router.push("/login");
         router.refresh(); 
