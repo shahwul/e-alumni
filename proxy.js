@@ -2,47 +2,69 @@ import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 export async function proxy(request) {
-  const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get('auth_token')?.value;
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const isPublicApi = pathname.startsWith('/api/auth');
+  const isStaticFile = pathname.includes('.') || pathname.startsWith('/_next');
 
-  if (!token && !isAuthPage && !isPublicApi) {
+  if (isStaticFile || isPublicApi) {
+    return NextResponse.next();
+  }
+
+  if (isAuthPage) {
+    if (token) {
+      try {
+        await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+        return NextResponse.redirect(new URL('/ptk', request.url));
+      } catch (err) {
+        const res = NextResponse.next();
+        res.cookies.delete('auth_token');
+        return res;
+      }
+    }
+    return NextResponse.next();
+  }
+
+  if (!token) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  if (token) {
-    try {
-      await jwtVerify(
-        token, 
-        new TextEncoder().encode(process.env.JWT_SECRET)
-      );
+  try {
+    await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET)
+    );
+    return NextResponse.next();
+  } catch (err) {
+    console.error("Middleware Auth Error:", err.message);
 
-      if (isAuthPage) {
-        return NextResponse.redirect(new URL('/ptk', request.url));
-      }
+    const response = pathname.startsWith('/api/')
+      ? NextResponse.json({ message: 'Session expired or invalid' }, { status: 401 })
+      : NextResponse.redirect(new URL('/login', request.url));
 
-      return NextResponse.next();
-    } catch (err) {
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('auth_token');
-      return response;
-    }
+    response.cookies.delete('auth_token');
+    return response;
   }
-
-  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
-     * Pantau semua halaman kecuali:
-     * - api (kecuali api auth yang sudah dihandle di atas)
-     * - _next/static (file CSS/JS)
-     * - _next/image (optimasi gambar)
-     * - favicon.ico
+     * Match semua request path kecuali:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (misal logo.png)
+     * * NOTE: Kita HAPUS pengecualian 'api' di sini biar /api/ptk kena saring!
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 };

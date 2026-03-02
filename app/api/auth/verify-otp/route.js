@@ -7,15 +7,26 @@ export async function POST(req) {
     const { email, otp } = await req.json();
 
     const cachedData = await redis.get(`reg:${email}`);
-    console.log("Cached Data:", cachedData); 
     if (!cachedData) {
       return NextResponse.json({ message: "OTP Kedaluwarsa" }, { status: 400 });
+    }
+
+    const attemptsKey = `reg_attempts:${email}`;
+    const attempts = await redis.incr(attemptsKey);
+    if (attempts === 1) {
+      await redis.expire(attemptsKey, 300);
+    }
+
+    if (attempts > 5) {
+      await redis.del(`reg:${email}`);
+      await redis.del(attemptsKey);
+      return NextResponse.json({ message: "Terlalu banyak percobaan OTP gagal. Silakan request OTP baru." }, { status: 429 });
     }
 
     const userData = JSON.parse(cachedData);
 
     if (userData.otp.toString().trim() !== otp.toString().trim()) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "OTP tidak sesuai",
       }, { status: 400 });
     }
@@ -26,7 +37,7 @@ export async function POST(req) {
         password: userData.password,
         nama: userData.nama,
         email: email,
-        role: "SUPERADMIN"
+        role: "USER"
       }
     });
 
