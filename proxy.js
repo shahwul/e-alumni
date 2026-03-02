@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose';
 
 const ALLOWED_FRONTEND_ORIGINS = [
   'http://localhost:3000',
+  'http://localhost:80'
 ];
 
 export async function proxy(request) {
