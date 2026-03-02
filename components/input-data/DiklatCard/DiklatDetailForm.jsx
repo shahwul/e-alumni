@@ -38,7 +38,7 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
   useEffect(() => {
     const fetchAll = async () => {
       const endpoints = ["rumpun", "kategori", "jenjang", "jabatan"];
-      const results = await Promise.all(endpoints.map(e => fetch(`/api/ref/${e}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } }).then(r => r.json())));
+      const results = await Promise.all(endpoints.map(e => fetch(`/api/ref/${e}`).then(r => r.json())));
       setRefs({ topics: results[0], categories: results[1], levels: results[2], jobs: results[3] });
     };
     fetchAll();
@@ -46,7 +46,7 @@ export default function DiklatDetailForm({ data, isEditing, setIsEditing, editDa
 
   const fetchSub = useCallback(async (id) => {
     if (!id) return setSubTopics([]);
-    const res = await fetch(`/api/ref/sub-rumpun?topic_id=${id}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+    const res = await fetch(`/api/ref/sub-rumpun?topic_id=${id}`);
     if (res.ok) setSubTopics(await res.json());
   }, []);
 

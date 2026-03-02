@@ -12,7 +12,7 @@ export function useUploadLogic(diklatId, onSuccess) {
 
   const fetchQuota = useCallback(async () => {
     try {
-      const res = await fetch(`/api/diklat/${diklatId}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+      const res = await fetch(`/api/diklat/${diklatId}`);
       const json = await res.json();
       setQuotaInfo({
         limit: json.data.participant_limit || 0,
@@ -90,7 +90,7 @@ export function useUploadLogic(diklatId, onSuccess) {
     setIsValidating(true);
     try {
       const res = await fetch("/api/input-data/validate", {
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY },
+        headers: { },
         method: "POST",
         body: JSON.stringify({
           peserta: dataToValidate,
@@ -176,7 +176,7 @@ export function useUploadLogic(diklatId, onSuccess) {
     try {
       const res = await fetch(`/api/input-data/import`, {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_diklat: diklatId, peserta: validPeserta }),
       });
       const json = await res.json();

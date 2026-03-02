@@ -62,7 +62,7 @@ export default function AddDiklatForm({ onBack, onSuccess }) {
     setIsMounted(true);
     async function fetchRefs() {
       try {
-        const res = await fetch("/api/input-data", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+        const res = await fetch("/api/input-data");
         const data = await res.json();
         if (res.ok) setOptions(data);
       } catch (err) {
@@ -93,7 +93,7 @@ export default function AddDiklatForm({ onBack, onSuccess }) {
     try {
       const response = await fetch("/api/input-data", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
 

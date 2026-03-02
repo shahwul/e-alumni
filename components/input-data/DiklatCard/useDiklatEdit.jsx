@@ -29,8 +29,7 @@ export default function useDiklatEdit(data, onRefresh) {
 
       const res = await fetch(`/api/diklat/${data.id}`, {
         method: "PUT",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY, 
-          "Content-Type": "application/json",
+        headers: { "Content-Type": "application/json",
         },
         body: JSON.stringify(restData),
       });
@@ -52,7 +51,7 @@ export default function useDiklatEdit(data, onRefresh) {
   const confirmDelete = async () => {
     setShowDeleteDialog(false);
     try {
-      const res = await fetch(`/api/diklat/${data.id}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY }, 
+      const res = await fetch(`/api/diklat/${data.id}`, { headers: { }, 
         method: "DELETE",
       });
 

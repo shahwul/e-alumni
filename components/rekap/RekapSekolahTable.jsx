@@ -38,7 +38,7 @@ export default function RekapSekolahTable() {
             if (parentCode) {
                 url += `&parent_code=${parentCode}`;
             }
-            const res = await fetch(url, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+            const res = await fetch(url);
             const json = await res.json();
             if (res.ok) {
                 setData(json.data || []);

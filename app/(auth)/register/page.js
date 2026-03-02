@@ -37,7 +37,7 @@ export default function RegisterPage() {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
@@ -62,7 +62,7 @@ export default function RegisterPage() {
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp: otpValue }),
       });
 

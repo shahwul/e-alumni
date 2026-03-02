@@ -38,7 +38,7 @@ export function useDiklat() {
         else if (val && !Array.isArray(val)) params.append(key, val);
       });
 
-      const res = await fetch(`/api/diklat?${params.toString()}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+      const res = await fetch(`/api/diklat?${params.toString()}`);
       const result = await res.json();
 
       setData(result.data || []);

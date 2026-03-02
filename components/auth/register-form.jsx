@@ -87,7 +87,7 @@ export function SignupForm({ className, ...props }) {
   const checkAvailability = async (field, value) => {
     setIsChecking(prev => ({ ...prev, [field]: true }));
     try {
-      const res = await fetch(`/api/auth/register?${field}=${value}`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+      const res = await fetch(`/api/auth/register?${field}=${value}`);
       const data = await res.json();
       if (field === "username") setUsernameError(data.available ? "" : data.message);
       if (field === "email") setEmailError(data.available ? "" : data.message);
@@ -107,7 +107,7 @@ export function SignupForm({ className, ...props }) {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       if (res.ok) setStep(2);
@@ -128,7 +128,7 @@ export function SignupForm({ className, ...props }) {
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, otp }),
       });
       if (res.ok) {

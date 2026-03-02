@@ -26,7 +26,7 @@ export function PesertaDialog({ open, onOpenChange, diklatId, judulDiklat }) {
   useEffect(() => {
     if (open && diklatId) {
       setLoading(true);
-      fetch(`/api/diklat/${diklatId}/peserta`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } })
+      fetch(`/api/diklat/${diklatId}/peserta`)
         .then((res) => res.json())
         .then((data) => {
           setPeserta(data);

@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const ALLOWED_FRONTEND_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:80'
-];
-
 export async function proxy(request) {
+  const ipListArray = (process.env.IP_ADDRESS)
+    .split(',')
+    .map(ip => ip.trim())
+    .filter(ip => ip !== '');
+
+  const ALLOWED_FRONTEND_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:80',
+    ...ipListArray.map(ip => `http://${ip}`),
+    ...ipListArray.map(ip => `http://${ip}:3000`)
+  ];
+
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin") ?? '';
 
@@ -42,47 +49,40 @@ export async function proxy(request) {
 
   if (isApiRoute) {
     const apiKey = request.headers.get('x-api-key');
-    const validFrontendKey = process.env.NEXT_PUBLIC_FRONTEND_API_KEY;
     const validBackendKey = process.env.BACKEND_API_KEY;
 
-    if (apiKey === validBackendKey) {
+    if (apiKey && apiKey === validBackendKey) {
       return addCorsToResponse(NextResponse.next(), "*");
     }
 
-    if (apiKey === validFrontendKey) {
-      if (origin && !ALLOWED_FRONTEND_ORIGINS.includes(origin)) {
-        return addCorsToResponse(
-          NextResponse.json({ message: 'Akses Ditolak: Origin tidak terdaftar (CORS Blocked)' }, { status: 403 })
-        );
-      }
-
-      const frontendCorsOrigin = origin || "*";
-
-      if (isPublicApi) {
-        return addCorsToResponse(NextResponse.next(), frontendCorsOrigin);
-      }
-      const token = request.cookies.get('auth_token')?.value;
-      if (!token) {
-        return addCorsToResponse(
-          NextResponse.json({ message: 'Authentication required' }, { status: 401 }),
-          frontendCorsOrigin
-        );
-      }
-
-      try {
-        await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-        return addCorsToResponse(NextResponse.next(), frontendCorsOrigin);
-      } catch (err) {
-        console.error("Middleware Frontend Auth Error:", err.message);
-        const res = addCorsToResponse(NextResponse.json({ message: 'Session expired or invalid' }, { status: 401 }), frontendCorsOrigin);
-        res.cookies.delete('auth_token');
-        return res;
-      }
+    if (origin && !ALLOWED_FRONTEND_ORIGINS.includes(origin)) {
+      return addCorsToResponse(
+        NextResponse.json({ message: 'Akses Ditolak: Origin tidak terdaftar (CORS Blocked)' }, { status: 403 })
+      );
     }
 
-    return addCorsToResponse(
-      NextResponse.json({ message: 'Akses Ditolak: Invalid or missing x-api-key header' }, { status: 401 })
-    );
+    const frontendCorsOrigin = origin || "*";
+
+    if (isPublicApi) {
+      return addCorsToResponse(NextResponse.next(), frontendCorsOrigin);
+    }
+    const token = request.cookies.get('auth_token')?.value;
+    if (!token) {
+      return addCorsToResponse(
+        NextResponse.json({ message: 'Authentication required' }, { status: 401 }),
+        frontendCorsOrigin
+      );
+    }
+
+    try {
+      await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+      return addCorsToResponse(NextResponse.next(), frontendCorsOrigin);
+    } catch (err) {
+      console.error("Middleware Frontend Auth Error:", err.message);
+      const res = addCorsToResponse(NextResponse.json({ message: 'Session expired or invalid' }, { status: 401 }), frontendCorsOrigin);
+      res.cookies.delete('auth_token');
+      return res;
+    }
   }
 
   const token = request.cookies.get('auth_token')?.value;

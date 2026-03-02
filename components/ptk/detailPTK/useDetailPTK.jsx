@@ -12,7 +12,7 @@ export function useDetailPTK(nik) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/ptk/${nik}/details`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+      const res = await fetch(`/api/ptk/${nik}/details`);
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       const json = await res.json();
       setData(json);
@@ -38,7 +38,7 @@ export function useDetailPTK(nik) {
     try {
       const res = await fetch(`/api/sync/ptk`, {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nik, npsn }),
       });
 
@@ -69,7 +69,7 @@ export function usePelatihanPTK(nik) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/ptk/${nik}/pelatihan`, { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } });
+        const res = await fetch(`/api/ptk/${nik}/pelatihan`);
 
         if (!res.ok) {
           throw new Error(`Error: ${res.status}`);

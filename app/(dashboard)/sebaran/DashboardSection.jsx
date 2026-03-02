@@ -23,7 +23,7 @@ export default function DashboardClient() {
       .then(setGeoJsonData)
       .catch(console.error);
 
-    fetch("/api/ref/wilayah", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } })
+    fetch("/api/ref/wilayah")
       .then((res) => res.json())
       .then((data) => {
         setWilayahData(data);

@@ -27,7 +27,7 @@ export function AddToDiklatModal({ isOpen, onClose, selectedNiks, onSuccess }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetch("/api/diklat/kandidat", { headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY } })
+      fetch("/api/diklat/kandidat")
         .then((res) => res.json())
         .then((json) => setDiklatOptions(json.data || []));
     }
@@ -43,7 +43,7 @@ export function AddToDiklatModal({ isOpen, onClose, selectedNiks, onSuccess }) {
     try {
       const res = await fetch("/api/diklat/kandidat", {
         method: "POST",
-        headers: { 'x-api-key': process.env.NEXT_PUBLIC_FRONTEND_API_KEY,  "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           diklat_id: selectedDiklat,
           nik_list: selectedNiks,
