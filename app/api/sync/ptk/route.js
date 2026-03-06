@@ -38,6 +38,47 @@ async function getDapodikToken() {
 const escapeSql = (v) => v === null || v === undefined ? 'NULL' : `'${String(v).replace(/'/g, "''").trim()}'`;
 const formatDSql = (v) => !v || v === "0000-00-00" ? 'NULL' : `'${v}'::date`;
 
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const nik = searchParams.get('nik');
+    const npsn = searchParams.get('npsn');
+
+    if (!nik || !npsn) {
+      return NextResponse.json({ error: "Query param nik dan npsn wajib ada!" }, { status: 400 });
+    }
+
+    const dapoToken = await getDapodikToken();
+    if (!dapoToken) throw new Error("Gagal mendapatkan akses token.");
+
+    const ptkDetail = await withRetry(async () => {
+      const url = `${DAPODIK_CONFIG.baseUrl}${DAPODIK_CONFIG.endpoints.ptkDetail}?nik=${nik}&npsn=${npsn}`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${dapoToken}`,
+          'X-API-KEY': DAPODIK_CONFIG.apiKey,
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!res.ok) throw new Error(`API Pusat Error ${res.status}`);
+      
+      const json = await res.json();
+      return json.data?.[0] || json.data || json;
+    }, 2); 
+
+    if (!ptkDetail || !ptkDetail.nik) {
+      return NextResponse.json({ message: "Data PTK tidak ditemukan di pusat" }, { status: 404 });
+    }
+
+    return NextResponse.json(ptkDetail);
+
+  } catch (error) {
+    console.error("GET Sync Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(req) {
   try {
     const { nik, npsn } = await req.json();
